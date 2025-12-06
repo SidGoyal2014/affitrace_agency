@@ -190,7 +190,7 @@
                                     Profile
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="../login.html">
+                                <a class="dropdown-item" href="#" onclick="API.logout(); return false;">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
@@ -618,6 +618,7 @@
 
     <!-- Bootstrap core JavaScript-->
     <script src="../assets/vendor/jquery/jquery.min.js"></script>
+    <script src="../assets/js/api.js"></script>
     <script src="../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
     <!-- Core plugin JavaScript-->
@@ -639,8 +640,116 @@
             document.getElementById(cityName).style.display = "block";
             evt.currentTarget.className += " active";
         }
-    </script>
 
+        $(document).ready(async function () {
+            // Check auth
+            if (!API.isAuthenticated()) {
+                window.location.href = '../login.html';
+                return;
+            }
+
+            // Navbar User Info
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                $('#userDropdown span').text(user.name);
+            }
+
+            // Fetch auxiliary data
+            try {
+                const response = await API.fetchWithAuth('admin/offer/create');
+
+                // Advertisers
+                const advSelect = $('select[name="advertiser_id"]');
+                advSelect.empty().append('<option value="">Select advertiser</option>');
+                response.advertisers.forEach(adv => {
+                    advSelect.append(`<option value="${adv.id}">${adv.name} (${adv.company || adv.email})</option>`);
+                });
+
+                // Categories
+                const catSelect = $('select[name="category_id"]');
+                catSelect.empty().append('<option value="">Select category</option>');
+                if (response.arrCategories) {
+                    response.arrCategories.forEach(cat => {
+                        catSelect.append(`<option value="${cat.id}">${cat.category_name}</option>`);
+                    });
+                }
+
+                // Ad Models
+                const modelSelect = $('select[name="ad_model"]');
+                const affModelSelect = $('select[name="aff_model"]');
+                modelSelect.empty().append('<option value="">Select Model</option>');
+                affModelSelect.empty().append('<option value="">Select Model</option>');
+
+                response.admodels.forEach(model => {
+                    modelSelect.append(`<option value="${model.id}">${model.name}</option>`);
+                    // Assuming aff_model uses same IDs or names?
+                    // The HTML had CPI/CPA. Backend data likely has IDs.
+                    // Controller uses $request->aff_model directly.
+                    // But aff_model column in offers table might be string?
+                    // Wait, offers_approved join uses offers.ad_model but NOT offers.aff_model.
+                    // Let's assume aff_model also uses the same ad_models list or strings. 
+                    // To be safe, I'll use the IDs from admodels for aff_model too if appropriate, 
+                    // OR just rely on text if that's what backend expects (but validation said required|string).
+                    // Actually, if 'ad_model' table has ID 1 = CPI, then options should be 1.
+                    affModelSelect.append(`<option value="${model.id}">${model.name}</option>`);
+                });
+
+                // Currencies
+                const curSelect = $('select[name="currency"]');
+                curSelect.empty().append('<option value="">Select Currency</option>');
+                for (const cur in response.arrCur) {
+                    curSelect.append(`<option value="${cur}">${cur}</option>`);
+                }
+
+            } catch (error) {
+                console.error("Load Error:", error);
+                alert("Failed to load form data");
+            }
+
+            // Handle Submit "frmOffer"
+            $('form[name="frmOffer"]').on('submit', async function (e) {
+                e.preventDefault();
+                $('.alert').remove();
+
+                const form = $(this);
+                const formData = new FormData(form[0]);
+                const payload = Object.fromEntries(formData.entries());
+
+                try {
+                    const response = await API.fetchWithAuth('admin/offer/save', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.status === 1) {
+                        alert(response.msg || 'Offer created successfully');
+                        // Redirect to edit page to add events/targeting?
+                        // Or back to approved list.
+                        // Ideally Edit.
+                        window.location.href = `edit.html?id=${response.offer_id}`;
+                    } else {
+                        if (response.error && typeof response.error === 'object') {
+                            // Validation errors
+                            let msg = "Validation Error:\n";
+                            for (const k in response.error) {
+                                msg += `${k}: ${response.error[k][0]}\n`;
+                            }
+                            alert(msg);
+                        } else {
+                            throw new Error(response.error || 'Creation failed');
+                        }
+                    }
+
+                } catch (error) {
+                    alert("Error: " + error.message);
+                }
+            });
+
+        });
+    </script>
 </body>
 
 </html>

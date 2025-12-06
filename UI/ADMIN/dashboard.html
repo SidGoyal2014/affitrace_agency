@@ -188,7 +188,7 @@
                                     Profile
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="login.html">
+                                <a class="dropdown-item" href="#" onclick="API.logout(); return false;">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
@@ -219,7 +219,8 @@
                                                         <div
                                                             class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                                             Total Offers </div>
-                                                        <div class="h5 mb-0 font-weight-bold text-gray-800">125</div>
+                                                        <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                                            id="total_offers">...</div>
                                                     </div>
                                                     <div class="col-auto">
                                                         <i class="fas fa-calendar fa-2x text-gray-300"></i>
@@ -238,8 +239,8 @@
                                                         <div
                                                             class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                                             Total Revenue</div>
-                                                        <div class="h5 mb-0 font-weight-bold text-gray-800">15000.00
-                                                        </div>
+                                                        <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                                            id="total_revenue">...</div>
                                                     </div>
                                                     <div class="col-auto">
                                                         <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -258,8 +259,8 @@
                                                         <div
                                                             class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                                             Total Payouts</div>
-                                                        <div class="h5 mb-0 font-weight-bold text-gray-800">12000.00
-                                                        </div>
+                                                        <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                                            id="total_payouts">...</div>
                                                     </div>
                                                     <div class="col-auto">
                                                         <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -277,7 +278,8 @@
                                                         <div
                                                             class="text-xs font-weight-bold text-danger text-uppercase mb-1">
                                                             Total Affiliates </div>
-                                                        <div class="h5 mb-0 font-weight-bold text-gray-800">50</div>
+                                                        <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                                            id="total_affiliates">...</div>
                                                     </div>
                                                     <div class="col-auto">
                                                         <i class="fas fa-calendar fa-2x text-gray-300"></i>
@@ -301,7 +303,8 @@
                                                         <div
                                                             class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                                             Average Revenue Per Offer</div>
-                                                        <div class="h5 mb-0 font-weight-bold text-gray-800">120.00</div>
+                                                        <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                                            id="avg_rev_offer">...</div>
                                                     </div>
                                                     <div class="col-auto">
                                                         <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -320,7 +323,8 @@
                                                         <div
                                                             class="text-xs font-weight-bold text-danger text-uppercase mb-1">
                                                             Average Revenue Per Affiliate</div>
-                                                        <div class="h5 mb-0 font-weight-bold text-gray-800">300.00</div>
+                                                        <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                                            id="avg_rev_aff">...</div>
                                                     </div>
                                                     <div class="col-auto">
                                                         <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -338,7 +342,8 @@
                                                         <div
                                                             class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                                             Average Payout Per Offer</div>
-                                                        <div class="h5 mb-0 font-weight-bold text-gray-800">96.00</div>
+                                                        <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                                            id="avg_payout_offer">...</div>
                                                     </div>
                                                     <div class="col-auto">
                                                         <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -357,7 +362,8 @@
                                                         <div
                                                             class="text-xs font-weight-bold text-danger text-uppercase mb-1">
                                                             Average Payout Per Affiliate</div>
-                                                        <div class="h5 mb-0 font-weight-bold text-gray-800">240.00</div>
+                                                        <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                                            id="avg_payout_aff">...</div>
                                                     </div>
                                                     <div class="col-auto">
                                                         <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -389,41 +395,8 @@
                                                                 <th></th>
                                                             </tr>
                                                         </thead>
-                                                        <tbody>
-
-                                                            <tr>
-                                                                <td colspan="6">
-                                                                    <table id="border-none" style="width:100%">
-                                                                        <tr>
-                                                                            <td style="width:40%">
-                                                                                <strong>Affiliate: </strong><br />
-                                                                                <a href="#">John Doe</a>
-                                                                            </td>
-                                                                            <td style="width:40%">
-                                                                                <strong>Offer: </strong><br />
-                                                                                Sample Offer 1
-                                                                            </td>
-                                                                            <td style="width:15%">
-                                                                                <strong>Price: </strong><br />
-                                                                                2.50
-                                                                            </td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td colspan="3">Sample offer description
-                                                                                goes here.</td>
-                                                                        </tr>
-                                                                        <tr>
-                                                                            <td colspan="3" style="text-align:right;">
-                                                                                <a href="#"
-                                                                                    class="btn btn-warning">Reject</a>
-                                                                                <a href="#"
-                                                                                    class="btn btn-info">Assign</a>
-                                                                            </td>
-                                                                        </tr>
-                                                                    </table>
-                                                                </td>
-                                                            </tr>
-
+                                                        <tbody id="requests_table_body">
+                                                            <!-- Dynamic Content -->
                                                         </tbody>
                                                     </table>
                                                 </div>
@@ -444,9 +417,7 @@
                                             <!-- Card Body -->
                                             <div class="card-body">
                                                 <div class="chart-area">
-                                                    <script>
-                                                        var arrMonthlyRevenue = [1000, 2500, 3000, 4000, 3500, 5000];
-                                                    </script>
+
                                                     <canvas id="myAreaChart"></canvas>
                                                 </div>
                                             </div>
@@ -463,10 +434,7 @@
                                             <!-- Card Body -->
                                             <div class="card-body">
                                                 <div class="chart-pie pt-4 pb-2">
-                                                    <script>
-                                                        //var labelCategories = ["Cat1","Cat2"];
-                                                        var strRevenue = [55, 30, 15];
-                                                    </script>
+
                                                     <canvas id="myPieChart"></canvas>
                                                 </div>
                                                 <div class="mt-4 text-center small">
@@ -529,6 +497,111 @@
     <script src="assets/js/demo/chart-area-demo.js"></script>
     <script src="assets/js/demo/chart-pie-demo.js"></script>
 
+    <!-- API Integration -->
+    <script src="assets/js/api.js"></script>
+    <script>
+        $(document).ready(async function () {
+            // Check auth
+            if (!API.isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Navbar User Info
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                $('#userDropdown span').text(user.name);
+            }
+
+            try {
+                const data = await API.fetchWithAuth('admin/dashboard');
+
+                // Populate Stat Cards
+                $('#total_offers').text(data.total_offers);
+                $('#total_revenue').text(data.total_revenue);
+                $('#total_payouts').text(data.total_payouts);
+                $('#total_affiliates').text(data.total_no_of_affiliates);
+
+                $('#avg_rev_offer').text(data.average_revenue_per_offer);
+                $('#avg_rev_aff').text(data.average_revenue_per_affiliate);
+                $('#avg_payout_offer').text(data.average_payout_per_offer);
+                $('#avg_payout_aff').text(data.average_payout_per_affiliate);
+
+                // Populate Request Table
+                const tbody = $('#requests_table_body');
+                tbody.empty();
+
+                if (data.all_requests && data.all_requests.length > 0) {
+                    data.all_requests.forEach(req => {
+                        const row = `
+                            <tr>
+                                <td colspan="6">
+                                    <table id="border-none" style="width:100%">
+                                        <tr>
+                                            <td style="width:40%">
+                                                <strong>Affiliate: </strong><br />
+                                                <a href="#">${req.name} (ID: ${req.aid})</a>
+                                            </td>
+                                            <td style="width:40%">
+                                                <strong>Offer: </strong><br />
+                                                ${req.offer_name}
+                                            </td>
+                                            <td style="width:15%">
+                                                <strong>Price: </strong><br />
+                                                ${req.offer_payout || 'N/A'}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3">${req.offer_description || ''}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" style="text-align:right;">
+                                                <a href="#" class="btn btn-warning" onclick="rejectRequest(${req.oaid})">Reject</a>
+                                                <a href="#" class="btn btn-info" onclick="assignRequest(${req.oaid})">Assign</a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                         `;
+                        tbody.append(row);
+                    });
+                } else {
+                    tbody.append('<tr><td colspan="6" class="text-center">No pending requests</td></tr>');
+                }
+
+                // Initialize Charts
+                if (window.initAreaChart) {
+                    // Parse arrMonthlyRevenue which comes as string "[...]" from API
+                    let monthlyRevenue = [];
+                    try {
+                        monthlyRevenue = JSON.parse(data.arrMonthlyRevenue);
+                    } catch (e) {
+                        monthlyRevenue = [];
+                    }
+                    window.initAreaChart(monthlyRevenue);
+                }
+
+                if (window.initPieChart) {
+                    window.initPieChart(data.labelCategories, data.strRevenue);
+                }
+
+            } catch (error) {
+                console.error("Dashboard Load Error:", error);
+                alert("Failed to load dashboard data.");
+            }
+        });
+
+        // Placeholder functions for actions
+        function rejectRequest(id) {
+            console.log("Rejecting:", id);
+            // Implement reject API call
+        }
+        function assignRequest(id) {
+            console.log("Assigning:", id);
+            // Implement assign API call
+        }
+    </script>
 </body>
 
 </html>

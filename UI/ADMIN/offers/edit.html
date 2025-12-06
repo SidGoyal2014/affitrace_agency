@@ -174,7 +174,7 @@
                                     Profile
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="../login.html">
+                                <a class="dropdown-item" href="#" onclick="API.logout(); return false;">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
@@ -484,7 +484,7 @@
                                     <br /><br />
                                     <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                         <td width="40%">
-                                            <table class="table table-bordered" id="dataTable" width="100%"
+                                            <table class="table table-bordered" id="dataTableAffiliates" width="100%"
                                                 cellspacing="0">
                                                 <thead>
                                                     <tr>
@@ -492,15 +492,8 @@
                                                         <th width="35%">Action</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td>Affiliate 1</td>
-                                                        <td><a href="#" class="btn btn-primary">Assign</a></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Affiliate 2</td>
-                                                        <td><a href="#" class="btn btn-primary">Assign</a></td>
-                                                    </tr>
+                                                <tbody id="affiliateTableBody">
+                                                    <!-- Populated by JS -->
                                                 </tbody>
                                             </table>
 
@@ -510,7 +503,8 @@
                                                 style="text-align:left;">
                                                 <label for><strong>Tracking URL</strong></label>
                                             </div>
-                                            <div class="col-sm-12 mb-6 mb-sm-0"> <br /> Select an affiliate to generate
+                                            <div class="col-sm-12 mb-6 mb-sm-0" id="trackingUrlDisplay"> <br /> Select
+                                                an affiliate to generate
                                                 tracking URL. </div>
                                         </td>
                                     </table>
@@ -521,53 +515,25 @@
                             <div id="idEvents" class="tabcontent">
                                 <div class="form-group row">
                                     <div class="col-sm-10 mb-5 mb-sm-0"><strong>Events / Goals</strong></div>
-                                    <div class="col-sm-2 mb-1 mb-sm-0"><a href="#" class="btn btn-primary"
-                                            style="float:right;">Create Event</a></div>
+                                    <div class="col-sm-2 mb-1 mb-sm-0"><button onclick="createEvent()"
+                                            class="btn btn-primary" style="float:right;">Create Event</button></div>
                                 </div>
                                 <div class="form-group row">
                                     <div class="col-sm-12 mb-6 mb-sm-0">
 
                                         <div class="table-responsive">
-                                            <table class="table table-bordered" width="100%" cellspacing="0">
-                                                <td width="40%">
-                                                    <table class="table table-striped table-hover" id="dataTable"
-                                                        width="100%" cellspacing="0">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Event</th>
-                                                                <th>Token</th>
-                                                                <th width="50%"></th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody id="idListEvents">
-                                                            <tr>
-                                                                <td>Install</td>
-                                                                <td>install</td>
-                                                                <td>
-                                                                    <a href="#" class="btn btn-primary">Edit</a>
-                                                                    <a href="#"
-                                                                        class="btn btn-warning btn-payout">Payouts</a>
-                                                                    <a href="#"
-                                                                        class="btn btn-info btn-payout">Postback</a>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Purchase</td>
-                                                                <td>purchase</td>
-                                                                <td>
-                                                                    <a href="#" class="btn btn-primary">Edit</a>
-                                                                    <a href="#"
-                                                                        class="btn btn-warning btn-payout">Payouts</a>
-                                                                    <a href="#"
-                                                                        class="btn btn-info btn-payout">Postback</a>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </td>
-                                                <td width="60%">
-
-                                                </td>
+                                            <table class="table table-striped table-hover" id="dataTableEvents"
+                                                width="100%" cellspacing="0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Event</th>
+                                                        <th>Token</th>
+                                                        <th width="50%"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="idListEvents">
+                                                    <!-- Populated by JS -->
+                                                </tbody>
                                             </table>
                                         </div>
                                     </div>
@@ -622,6 +588,376 @@
             }
             document.getElementById(cityName).style.display = "block";
             evt.currentTarget.className += " active";
+        }
+    </script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const offerId = urlParams.get('id');
+
+        $(document).ready(async function () {
+            // Check auth
+            if (!API.isAuthenticated()) {
+                window.location.href = '../login.html';
+                return;
+            }
+            if (!offerId) {
+                alert("No offer ID specified");
+                window.location.href = 'approved.html';
+                return;
+            }
+
+            // Navbar User Info
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                $('#userDropdown span').text(user.name);
+            }
+
+            // Load Offer Data
+            try {
+                const response = await API.fetchWithAuth(`admin/offer/edit/${offerId}`);
+                console.log("Offer Data:", response);
+
+                const offer = response.offer;
+
+                // --- Populate General Tab ---
+                $('input[name="offer_id"]').val(offer.id);
+                $('input[name="offer_name"]').val(offer.offer_name);
+                $('input[name="app_id"]').val(offer.app_id);
+                $('input[name="external_offer_id"]').val(offer.external_offer_id);
+                $('textarea[name="offer_url"]').val(offer.offer_url);
+                $('textarea[name="attribution_link"]').val(offer.attribution_link);
+                $('input[name="ad_pricing"]').val(offer.ad_pricing);
+                $('input[name="aff_pricing"]').val(offer.aff_pricing);
+                $('input[name="campaign_start_date"]').val(offer.campaign_start_date); // Format might need adjustment if not 'Y-m-d\TH:i'
+                $('input[name="campaign_end_date"]').val(offer.campaign_end_date);
+                $('textarea[name="offer_desc"]').val(offer.offer_desc);
+                $('textarea[name="private_note"]').val(offer.private_note);
+                $('textarea[name="offer_terms"]').val(offer.offer_terms);
+
+                // Selects (Advertisers)
+                const advSelect = $('select[name="advertiser_id"]');
+                advSelect.empty().append('<option value="">Select advertiser</option>');
+                response.advertisers.forEach(adv => {
+                    const selected = adv.id == offer.advertiser_id ? 'selected' : '';
+                    advSelect.append(`<option value="${adv.id}" ${selected}>${adv.name} (${adv.company || adv.email})</option>`);
+                });
+
+                // Selects (Categories)
+                const catSelect = $('select[name="category_id"]');
+                catSelect.empty().append('<option value="">Select category</option>');
+                response.arrCategories.forEach(cat => {
+                    const selected = cat.id == offer.category_id ? 'selected' : '';
+                    catSelect.append(`<option value="${cat.id}" ${selected}>${cat.title}</option>`);
+                });
+
+                // Selects (Ad Models)
+                const adModelSelect = $('select[name="ad_model"]'); // This might map to ID if using admodels list, or string "CPI" etc. Offer table joins ad_models, but save expects "CPI" string? 
+                // Wait, Controller save uses $request->ad_model directly. In create logic, it fetches AdModel::all(). 
+                // Let's check logic: $offer->ad_model = $request->ad_model. In approved list, it joins with ad_models table! 
+                // This means ad_model in Offers table is an INTEGER FK?
+                // `offers_approved` query: ->join('ad_models', 'offers.ad_model', '=', 'ad_models.id')
+                // YES, it is an ID.
+                // The HTML create.html hardcoded "CPI", "CPA". That was wrong if it expects ID.
+                // `create` API returns `admodels`.
+
+                adModelSelect.empty().append('<option value="">Select Model</option>');
+                response.admodels.forEach(model => {
+                    // Assuming admodel has id and name/key
+                    const selected = model.id == offer.ad_model ? 'selected' : '';
+                    // Or model.name if it stores string? The join implies ID.
+                    adModelSelect.append(`<option value="${model.id}" ${selected}>${model.name}</option>`);
+                });
+                // Affiliate Model (Using same list? Or hardcoded?)
+                // Controller: $offer->aff_model = $request->aff_model; (No join in controller query usually, maybe hardcoded string or same FK).
+                // Let's assume text for now or reuse admodels if relevant. The UI has hardcoded CPI/CPA.
+                // If it stores string:
+                $('select[name="aff_model"]').val(offer.aff_model);
+
+
+                // Currency
+                const curSelect = $('select[name="currency"]');
+                curSelect.empty().append('<option value="">Select Currency</option>');
+                // API returns arrCur which is array of strings maybe? Or objects?
+                // OfferController getCurrency()
+                if (Array.isArray(response.arrCur)) {
+                    response.arrCur.forEach(cur => {
+                        const selected = cur == offer.currency ? 'selected' : '';
+                        curSelect.append(`<option value="${cur}" ${selected}>${cur}</option>`);
+                    });
+                }
+
+                // Status
+                $('select[name="offer_status"]').val(offer.offer_status);
+
+
+                // --- Populate Targeting Tab ---
+                $('select[name="country_permission"]').val(offer.country_permission || 'allow');
+                $('select[name="target_country"]').val(offer.target_country); // Single select logic from UI
+
+                $('select[name="browser_permission"]').val(offer.browser_permission || 'allow');
+                $('select[name="browser"]').val(offer.browser);
+                $('select[name="device_permission"]').val(offer.device_permission || 'allow');
+                $('select[name="target_device"]').val(offer.target_device);
+
+                // --- Populate Affiliate Tab ---
+                const affTbody = $('#affiliateTableBody');
+                affTbody.empty();
+                // Map assigned affiliates to easy lookup
+                const assignedAffiliates = {};
+                if (response.arrOA) {
+                    response.arrOA.forEach(oa => {
+                        assignedAffiliates[oa.affiliate_id] = oa;
+                    });
+                }
+
+                if (response.arrAffiliates) {
+                    response.arrAffiliates.forEach(aff => {
+                        const assigned = assignedAffiliates[aff.id];
+                        let actionBtns = '';
+                        let statusText = '';
+
+                        if (assigned) {
+                            statusText = `(${assigned.request_status})`;
+                            actionBtns += `<button onclick="unassignOffer(${offer.id}, ${aff.id})" class="btn btn-warning btn-sm">Unassign</button> `;
+                            if (assigned.request_status !== 'Rejected') {
+                                actionBtns += `<button onclick="rejectOffer(${offer.id}, ${aff.id})" class="btn btn-danger btn-sm">Reject</button> `;
+                            }
+                            actionBtns += `<button onclick="showTrackingUrl('${assigned.tracking_url}')" class="btn btn-info btn-sm">Get URL</button>`;
+
+                        } else {
+                            actionBtns = `<button onclick="assignOffer(${offer.id}, ${aff.id})" class="btn btn-primary btn-sm">Assign</button>`;
+                        }
+
+                        const tr = `
+                            <tr>
+                                <td>${aff.name} ${statusText}</td>
+                                <td>${actionBtns}</td>
+                            </tr>
+                        `;
+                        affTbody.append(tr);
+                    });
+                }
+
+                // --- Populate Events Tab ---
+                const eventTbody = $('#idListEvents');
+                eventTbody.empty();
+                if (response.arrEvents) {
+                    response.arrEvents.forEach(evt => {
+                        const tr = `
+                            <tr>
+                                <td>${evt.event_name}</td>
+                                <td>${evt.event_token}</td>
+                                <td>
+                                    <button onclick="editEvent(${evt.id}, '${evt.event_name}', '${evt.event_token}')" class="btn btn-primary btn-sm">Edit</button>
+                                </td>
+                            </tr>
+                        `;
+                        eventTbody.append(tr);
+                    });
+                }
+
+            } catch (error) {
+                console.error("Load Data Error:", error);
+                alert("Failed to load offer data");
+            }
+
+            // General Form Submit
+            $('form[name="frmOffer"]').on('submit', async function (e) {
+                e.preventDefault();
+                try {
+                    const data = {
+                        offer_id: offerId,
+                        offer_name: $('input[name="offer_name"]').val(),
+                        advertiser_id: $('select[name="advertiser_id"]').val(),
+                        category_id: $('select[name="category_id"]').val(),
+                        app_id: $('input[name="app_id"]').val(),
+                        external_offer_id: $('input[name="external_offer_id"]').val(),
+                        offer_url: $('textarea[name="offer_url"]').val(),
+                        attribution_link: $('textarea[name="attribution_link"]').val(),
+
+                        ad_model: $('select[name="ad_model"]').val(),
+                        ad_pricing: $('input[name="ad_pricing"]').val(),
+                        currency: $('select[name="currency"]').val(),
+
+                        aff_model: $('select[name="aff_model"]').val(),
+                        aff_pricing: $('input[name="aff_pricing"]').val(),
+
+                        campaign_start_date: $('input[name="campaign_start_date"]').val(),
+                        campaign_end_date: $('input[name="campaign_end_date"]').val(),
+
+                        offer_status: $('select[name="offer_status"]').val(),
+                        offer_desc: $('textarea[name="offer_desc"]').val(),
+                        private_note: $('textarea[name="private_note"]').val(),
+                        offer_terms: $('textarea[name="offer_terms"]').val()
+                    };
+
+                    const res = await API.fetchWithAuth('admin/offer/update_offer', {
+                        method: 'POST',
+                        body: JSON.stringify(data)
+                    });
+
+                    if (res.status === 1) {
+                        alert("Offer updated successfully");
+                    } else {
+                        alert("Update failed: " + JSON.stringify(res.error));
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Error updating offer");
+                }
+            });
+
+            // Targeting Form Submit
+            $('form[name="frmUpdateTargetting"]').on('submit', async function (e) {
+                e.preventDefault();
+                try {
+                    const data = {
+                        offer_id: offerId,
+                        country_permission: $('select[name="country_permission"]').val(),
+                        target_country: $('select[name="target_country"]').val(),
+                        browser_permission: $('select[name="browser_permission"]').val(),
+                        browser: $('select[name="browser"]').val(),
+                        device_permission: $('select[name="device_permission"]').val(),
+                        target_device: $('select[name="target_device"]').val()
+                    };
+
+                    const res = await API.fetchWithAuth('admin/offer/update-targetting', {
+                        method: 'POST',
+                        body: JSON.stringify(data)
+                    });
+                    if (res.status === 1) {
+                        alert("Targeting updated successfully");
+                    } else {
+                        alert("Update failed: " + JSON.stringify(res.error));
+                    }
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Error updating targeting");
+                }
+            });
+
+
+        });
+
+        // --- Actions ---
+
+        async function assignOffer(oid, aid) {
+            try {
+                const res = await API.fetchWithAuth(`admin/offer/assign/${oid}/${aid}`);
+                if (res.status === 1) {
+                    alert("Assigned");
+                    location.reload(); // Reload to refresh list/status
+                } else {
+                    alert("Assign failed: " + res.error);
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        }
+
+        async function unassignOffer(oid, aid) {
+            if (!confirm("Unassign this affiliate?")) return;
+            try {
+                const res = await API.fetchWithAuth(`admin/offer/unassign/${oid}/${aid}`);
+                if (res.status === 1) {
+                    alert("Unassigned");
+                    location.reload();
+                } else {
+                    alert("Unassign failed: " + res.error);
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        }
+
+        async function rejectOffer(oid, aid) {
+            if (!confirm("Reject this affiliate?")) return;
+            try {
+                const res = await API.fetchWithAuth(`admin/offer/reject/${oid}/${aid}`);
+                if (res.status === 1) {
+                    alert("Rejected");
+                    location.reload();
+                } else {
+                    alert("Reject failed: " + res.error);
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        }
+
+        function showTrackingUrl(url) {
+            if (url && url !== 'null') {
+                $('#trackingUrlDisplay').html(`<br><strong>URL:</strong> <input type="text" class="form-control" value="${url}" readonly>`);
+            } else {
+                $('#trackingUrlDisplay').text("No tracking URL available.");
+            }
+        }
+
+        async function createEvent() {
+            const name = prompt("Enter Event Name:");
+            if (!name) return;
+            const token = prompt("Enter Event Token (e.g. install, purchase):");
+            if (!token) return;
+
+            try {
+                const data = {
+                    offer_id: offerId,
+                    event_name: name,
+                    event_token: token,
+                    multi_conv: 0,
+                    multi_conv_ip: 0,
+                    approval: 'manual' // Default
+                };
+
+                const res = await API.fetchWithAuth('admin/offer/save-event', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+
+                if (res.status === 1) {
+                    alert("Event created");
+                    location.reload();
+                } else {
+                    alert("Create failed: " + JSON.stringify(res.error));
+                }
+
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        }
+
+        async function editEvent(eid, currentName, currentToken) {
+            const name = prompt("Edit Event Name:", currentName);
+            if (name === null) return;
+            const token = prompt("Edit Event Token:", currentToken);
+            if (token === null) return;
+
+            try {
+                const data = {
+                    event_id: eid,
+                    event_name: name,
+                    event_token: token,
+                    // Sending defaults for others to avoid erasing if API requires all
+                    multi_conv: 0,
+                    multi_conv_ip: 0,
+                    approval: 'manual'
+                };
+                const res = await API.fetchWithAuth('admin/offer/update-event', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+
+                if (res.status === 1) {
+                    alert("Event updated");
+                    location.reload();
+                } else {
+                    alert("Update failed: " + JSON.stringify(res.error));
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
         }
     </script>
 

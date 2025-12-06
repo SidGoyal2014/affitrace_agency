@@ -188,7 +188,7 @@
                                     Profile
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="../login.html">
+                                <a class="dropdown-item" href="#" onclick="API.logout(); return false;">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
@@ -303,8 +303,110 @@
     <!-- Core plugin JavaScript-->
     <script src="../assets/vendor/jquery-easing/jquery.easing.min.js"></script>
 
-    <!-- Custom scripts for all pages-->
-    <script src="../assets/js/sb-admin-2.min.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        $(document).ready(async function () {
+            // Check auth
+            if (!API.isAuthenticated()) {
+                window.location.href = '../login.html';
+                return;
+            }
+
+            // Navbar User Info
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                $('#userDropdown span').text(user.name);
+            }
+
+            // Get ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+
+            if (!id) {
+                alert("No ID provided");
+                window.location.href = 'list.html';
+                return;
+            }
+
+            // Fetch
+            try {
+                const response = await API.fetchWithAuth(`admin/affiliates/edit/${id}`);
+                const data = response.user;
+
+                if (data) {
+                    $('input[name="name"]').val(data.name);
+                    $('input[name="email"]').val(data.email);
+                    $('input[name="company"]').val(data.company);
+                    $('input[name="country"]').val(data.country);
+                    $('input[name="phone"]').val(data.phone);
+                }
+            } catch (error) {
+                console.error("Load Error:", error);
+                alert("Failed to load data");
+            }
+
+            // Submit
+            $('.user').on('submit', async function (e) {
+                e.preventDefault();
+                $('.alert').remove();
+                $('span[style="color:#f00;"]').text('');
+
+                const form = $(this);
+                const formData = new FormData(form[0]);
+                const payload = Object.fromEntries(formData.entries());
+
+                // Requirements
+                payload.uid = id;
+                if (!payload.job_title) payload.job_title = 'Affiliate';
+                if (!payload.instant_messenger_name) payload.instant_messenger_name = 'Skype';
+                if (!payload.instant_messenger_value) payload.instant_messenger_value = 'N/A';
+
+                try {
+                    const response = await API.fetchWithAuth('admin/update_affiliate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.status === 1) {
+                        alert(response.msg || 'Updated successfully');
+                        window.location.href = 'list.html';
+                    } else {
+                        if (response.error && typeof response.error === 'object') {
+                            for (const field in response.error) {
+                                const input = form.find(`[name="${field}"]`);
+                                if (input.length) {
+                                    input.closest('.form-group').find('span[style="color:#f00;"]').text(response.error[field][0]);
+                                } else {
+                                    // Show general error if field not found
+                                    const alertHtml = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        ${field}: ${response.error[field][0]}
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>`;
+                                    $('.card-body').prepend(alertHtml);
+                                }
+                            }
+                        } else {
+                            throw new Error(response.error || 'Update failed');
+                        }
+                    }
+
+                } catch (error) {
+                    const alertHtml = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            ${error.message}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>`;
+                    $('.card-body').prepend(alertHtml);
+                }
+            });
+        });
+    </script>
 
 </body>
 

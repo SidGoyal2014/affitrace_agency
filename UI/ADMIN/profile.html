@@ -173,7 +173,7 @@
                                     Profile
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="login.html">
+                                <a class="dropdown-item" href="#" onclick="API.logout(); return false;">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
@@ -266,6 +266,97 @@
 
     <!-- Custom scripts for all pages-->
     <script src="assets/js/sb-admin-2.min.js"></script>
+    <script src="assets/js/api.js"></script>
+
+    <script>
+        $(document).ready(async function () {
+            // Check auth
+            if (!API.isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Navbar User Info
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                $('#userDropdown span').text(user.name);
+            }
+
+            // Fetch Profile Data
+            try {
+                const data = await API.fetchWithAuth('admin/profile');
+                if (data.user) {
+                    $('input[name="name"]').val(data.user.name);
+                    $('input[name="email"]').val(data.user.email);
+                    $('input[name="phone"]').val(data.user.phone);
+                    // Password left empty
+                }
+            } catch (error) {
+                console.error("Profile Load Error:", error);
+                alert("Failed to load profile data.");
+            }
+
+            // Handle Profile Update
+            $('form[name="frmCreatePlan"]').on('submit', async function (e) {
+                e.preventDefault();
+                $('.alert').remove(); // Clear previous alerts
+
+                const formData = {
+                    name: $('input[name="name"]').val(),
+                    email: $('input[name="email"]').val(),
+                    phone: $('input[name="phone"]').val(),
+                    password: $('input[name="password"]').val()
+                };
+
+                try {
+                    const response = await API.fetchWithAuth('admin/update_profile', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.status === 1) {
+                        const alertHtml = `<div class="alert alert-success alert-dismissible fade show" role="alert">
+                            ${response.msg}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>`;
+                        $('.card-body').prepend(alertHtml);
+
+                        // Update local storage user name if changed
+                        if (user) {
+                            user.name = formData.name;
+                            localStorage.setItem('user', JSON.stringify(user));
+                            $('#userDropdown span').text(user.name);
+                        }
+
+                    } else {
+                        let errorMsg = 'Update failed';
+                        if (response.error) {
+                            if (typeof response.error === 'object') {
+                                errorMsg = Object.values(response.error).join('<br>');
+                            } else {
+                                errorMsg = response.error;
+                            }
+                        }
+                        throw new Error(errorMsg);
+                    }
+
+                } catch (error) {
+                    const alertHtml = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            ${error.message}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>`;
+                    $('.card-body').prepend(alertHtml);
+                }
+            });
+        });
+    </script>
 
 </body>
 

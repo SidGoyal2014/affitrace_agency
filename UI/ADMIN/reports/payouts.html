@@ -190,7 +190,7 @@
                                     Profile
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="../login.html">
+                                <a class="dropdown-item" href="#" onclick="API.logout(); return false;">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
@@ -224,30 +224,8 @@
                                     </tr>
                                 </thead>
 
-                                <tbody>
-                                    <tr>
-                                        <td><a href="affiliate_payouts.html">John Doe</a></td>
-                                        <td><a href="offer_payouts.html">Sample Offer 1</a></td>
-                                        <td>10</td>
-                                        <td>sub1_val</td>
-                                        <td>Initial</td>
-                                        <td>2.50 USD</td>
-                                        <td>25.00 USD</td>
-                                        <td>1.50 USD</td>
-                                        <td>15.00 USD</td>
-                                    </tr>
-                                    <tr>
-                                        <td><a href="affiliate_payouts.html">Jane Smith</a></td>
-                                        <td><a href="offer_payouts.html">Sample Offer 2</a></td>
-                                        <td>5</td>
-                                        <td>sub1_val_2</td>
-                                        <td>Purchase</td>
-                                        <td>10.00 USD</td>
-                                        <td>50.00 USD</td>
-                                        <td>8.00 USD</td>
-                                        <td>40.00 USD</td>
-                                    </tr>
-
+                                <tbody id="payoutTableBody">
+                                    <!-- Populated by JS -->
                                 </tbody>
                             </table>
                         </div>
@@ -288,9 +266,52 @@
     <!-- Page level plugins -->
     <script src="../assets/vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="../assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="../assets/js/api.js"></script>
     <script>
-        $(document).ready(function () {
-            $('#dataTable').DataTable();
+        $(document).ready(async function () {
+            // Check auth
+            if (!API.isAuthenticated()) {
+                window.location.href = '../login.html';
+                return;
+            }
+
+            // Navbar User Info
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                $('#userDropdown span').text(user.name);
+            }
+
+            try {
+                const response = await API.fetchWithAuth('admin/reports/all-payouts');
+                console.log("Payouts Data:", response);
+
+                const payouts = response.data || [];
+                const tbody = $('#payoutTableBody');
+                tbody.empty();
+
+                payouts.forEach(p => {
+                    const tr = `
+                        <tr>
+                            <td><a href="affiliate_payouts.html?aid=${p.aff_id}">${p.affiliate_name || 'Unknown'}</a></td>
+                            <td><a href="offer_payouts.html?oid=${p.offer_id}">${p.offer_name || 'Unknown'}</a></td>
+                            <td>${p.total_conversions}</td>
+                            <td>${p.sub1 || '-'}</td>
+                            <td>${p.event_name || 'Initial'}</td>
+                            <td>${parseFloat(p.revenue).toFixed(2)} ${p.ot_currency}</td>
+                            <td>${parseFloat(p.total_revenue).toFixed(2)} ${p.ot_currency}</td>
+                            <td>${parseFloat(p.payout).toFixed(2)} ${p.ot_currency}</td>
+                            <td>${parseFloat(p.total_payout).toFixed(2)} ${p.ot_currency}</td>
+                        </tr>
+                    `;
+                    tbody.append(tr);
+                });
+
+                $('#dataTable').DataTable();
+
+            } catch (error) {
+                console.error("Error loading payouts:", error);
+                alert("Failed to load payouts report");
+            }
         });
     </script>
 </body>
