@@ -16,6 +16,7 @@ Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login'])-
 Route::middleware(['auth:sanctum', 'api.tenant'])->group(function () {
 
     Route::post('logout', [App\Http\Controllers\Api\AuthController::class, 'logout']);
+    Route::post('refresh-token', [App\Http\Controllers\Api\AuthController::class, 'refreshToken']);
     Route::get('me', [App\Http\Controllers\Api\AuthController::class, 'me']);
 
     // Admin Routes
