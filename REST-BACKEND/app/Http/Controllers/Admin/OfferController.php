@@ -55,7 +55,6 @@ class OfferController extends Controller
 		$admodels = AdModel::all();
 		$devices = Device::all();
 		$categories = Category::all();
-		$offer = new Offer();
 		$offerTokens = OfferToken::all();
 
 		$logged_in_user_type = $request->user()->user_type;
@@ -67,7 +66,6 @@ class OfferController extends Controller
 				'action_url' => 'admin/offer/save',
 				'advertisers' => $advertisers,
 				'admodels' => $admodels,
-				'offer' => $offer,
 				'offerTokens' => $offerTokens,
 				'arrCur' => $this->getCurrency(),
 				'arrCountry' => $this->getCountry(),
@@ -78,7 +76,7 @@ class OfferController extends Controller
 				'tracking_url' => '',
 				'arrCategories' => $categories,
 				'logged_in_user_type' => $logged_in_user_type
-			]);
+			], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
 
 		} else {
 			return response()->json(['error' => 'Unauthorized'], 403);
@@ -101,16 +99,15 @@ class OfferController extends Controller
 			'currency' => 'required|string',
 			'aff_model' => 'required|string'
 		]);
-
 		if ($validator->fails()) {
 			return response()->json(['status' => 0, 'error' => $validator->errors()->toArray()], 422);
 
 		}
 
-		if ($this->get_total_offers() >= $this->get_settings("num_offers")) {
-			return response()->json(['status' => 0, 'error' => "you already reached to the number of offers allowed in your plan. Please upgrade for higher limit."], 403);
+		// if ($this->get_total_offers() >= $this->get_settings("num_offers")) {
+		// 	return response()->json(['status' => 0, 'error' => "you already reached to the number of offers allowed in your plan. Please upgrade for higher limit."], 403);
 
-		}
+		// }
 
 
 		$offer = new Offer();
@@ -238,7 +235,7 @@ class OfferController extends Controller
 					'tracking_url' => $tracking_url,
 					'arrCategories' => $categories,
 					'logged_in_user_type' => $logged_in_user_type
-				]);
+				], 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
 
 			}//if
 
@@ -344,6 +341,10 @@ class OfferController extends Controller
 		try {
 
 			$offer = Offer::find($request->offer_id);
+
+			if (!$offer) {
+				return response()->json(['status' => 0, 'error' => 'Offer not found'], 404);
+			}
 
 			if (strlen(trim($request->target_country)) > 0) {
 
@@ -710,6 +711,7 @@ class OfferController extends Controller
 		$rules = array();
 		$rules['event_name'] = 'required';
 		$rules['event_token'] = 'required';
+		$rules['event_id'] = 'required|integer';
 
 		$validator = Validator::make($request->all(), $rules);
 

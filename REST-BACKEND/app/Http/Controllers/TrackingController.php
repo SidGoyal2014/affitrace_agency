@@ -294,6 +294,7 @@ class TrackingController extends Controller
 		$ot->offer_id = $oid;
 		$ot->aff_id = $aid;
 		//$ot->event_id = $event_id;
+		$ot->event = '';
 
 		$ot->revenue = $offer->ad_pricing;
 		$ot->payout = $offer->aff_pricing;
@@ -665,6 +666,9 @@ class TrackingController extends Controller
 		}//if
 
 
+		return $offer_url;
+
+
 	}//replacing_branch_macros
 
 
@@ -699,6 +703,9 @@ class TrackingController extends Controller
 		}//if
 
 
+		return $offer_url;
+
+
 	}//replacing_singular_macros
 
 
@@ -722,6 +729,9 @@ class TrackingController extends Controller
 			$offer_url = str_replace("{androidid}", $android_id, $offer_url);
 
 		}//if
+
+
+		return $offer_url;
 
 
 	}//replacing_kochava_macros
