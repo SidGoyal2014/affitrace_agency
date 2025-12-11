@@ -190,7 +190,7 @@
                                     Profile
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="../login.html">
+                                <a class="dropdown-item" href="#" onclick="API.logout(); return false;">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
@@ -220,48 +220,7 @@
                                     </tr>
                                 </thead>
 
-                                <tbody>
-                                    <tr>
-                                        <td>2001</td>
-                                        <td>Ad Manager One</td>
-                                        <td>ad1@example.com</td>
-                                        <td>3334445555</td>
-                                        <td>AdCorp</td>
-                                        <td>US</td>
-                                        <td>
-                                            <div id="idDropDown" class="dropdown">
-
-                                                <button onclick="myFunction('myDropdown_2001')"
-                                                    class="dropbtn">Options</button>
-
-                                                <div id="myDropdown_2001" class="dropdown-content">
-                                                    <a href="edit.html">Edit</a>
-                                                </div>
-
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>2002</td>
-                                        <td>Global Ads</td>
-                                        <td>global@example.com</td>
-                                        <td>6667778888</td>
-                                        <td>Global Media</td>
-                                        <td>DE</td>
-                                        <td>
-                                            <div id="idDropDown" class="dropdown">
-
-                                                <button onclick="myFunction('myDropdown_2002')"
-                                                    class="dropbtn">Options</button>
-
-                                                <div id="myDropdown_2002" class="dropdown-content">
-                                                    <a href="edit.html">Edit</a>
-                                                </div>
-
-                                            </div>
-                                        </td>
-                                    </tr>
-
+                                <tbody id="table_body">
                                 </tbody>
                             </table>
                         </div>
@@ -302,9 +261,56 @@
     <!-- Page level plugins -->
     <script src="../assets/vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="../assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="../assets/js/api.js"></script>
     <script>
-        $(document).ready(function () {
-            $('#dataTable').DataTable();
+        $(document).ready(async function () {
+            // Check auth
+            if (!API.isAuthenticated()) {
+                window.location.href = '../login.html';
+                return;
+            }
+
+            // Navbar User Info
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                $('#userDropdown span').text(user.name);
+            }
+
+            try {
+                const response = await API.fetchWithAuth('admin/advertisers/list');
+                const data = response.data;
+                const tbody = $('#table_body');
+                tbody.empty();
+
+                data.forEach(adv => {
+                    const row = `
+                        <tr>
+                            <td>${adv.uid}</td>
+                            <td>${adv.name}</td>
+                            <td>${adv.email}</td>
+                            <td>${adv.phone || ''}</td>
+                            <td>${adv.company || ''}</td>
+                            <td>${adv.country || ''}</td>
+                            <td>
+                                <div id="idDropDown" class="dropdown">
+                                    <button onclick="myFunction('myDropdown_${adv.uid}')" class="dropbtn">Options</button>
+                                    <div id="myDropdown_${adv.uid}" class="dropdown-content">
+                                        <a href="edit.html?id=${adv.uid}">Edit</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.append(row);
+                });
+
+                // Initialize DataTable after data population
+                $('#dataTable').DataTable();
+
+            } catch (error) {
+                console.error("Load Error:", error);
+                alert("Failed to load advertisers.");
+            }
         });
 
         function myFunction(id) {

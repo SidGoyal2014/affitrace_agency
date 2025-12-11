@@ -191,7 +191,7 @@
                                     Profile
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="../login.html">
+                                <a class="dropdown-item" href="#" onclick="API.logout(); return false;">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
@@ -224,21 +224,8 @@
                                                 </tr>
                                             </thead>
 
-                                            <tbody>
-                                                <tr>
-                                                    <td><a href="affiliate_payouts.html">John Doe</a></td>
-                                                    <td><a href="offer_payouts.html">Sample Offer 1</a></td>
-                                                    <td>Offer</td>
-                                                    <td>Updated offer payout rules</td>
-                                                    <td>01-12-2023 10:30:00</td>
-                                                </tr>
-                                                <tr>
-                                                    <td><a href="affiliate_payouts.html">Jane Smith</a></td>
-                                                    <td><a href="offer_payouts.html">Sample Offer 2</a></td>
-                                                    <td>Capping</td>
-                                                    <td>Cap reached for offer</td>
-                                                    <td>01-12-2023 11:00:00</td>
-                                                </tr>
+                                            <tbody id="logsTableBody">
+                                                <!-- Populated by JS -->
                                             </tbody>
                                         </table>
                                     </div>
@@ -300,12 +287,50 @@
     <!-- Page level plugins -->
     <script src="../assets/vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="../assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="../assets/js/api.js"></script>
     <script>
-        $(document).ready(function () {
-            $('#dataTable').DataTable({
-                "paging": false,
-                "info": false
-            });
+        $(document).ready(async function () {
+            // Check auth
+            if (!API.isAuthenticated()) {
+                window.location.href = '../login.html';
+                return;
+            }
+
+            // Navbar User Info
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                $('#userDropdown span').text(user.name);
+            }
+
+            try {
+                const response = await API.fetchWithAuth('admin/reports/logs');
+                console.log("Logs Data:", response);
+
+                const logs = response.data || [];
+                const tbody = $('#logsTableBody');
+                tbody.empty();
+
+                logs.forEach(log => {
+                    const tr = `
+                        <tr>
+                            <td><a href="affiliate_payouts.html?aid=${log.aff_id}">${log.affiliate_name || 'System'}</a></td>
+                            <td><a href="offer_payouts.html?oid=${log.offer_id}">${log.offer_name || 'N/A'}</a></td>
+                            <td>${log.module}</td>
+                            <td>${log.description}</td>
+                            <td>${log.logs_created_at}</td>
+                        </tr>
+                    `;
+                    tbody.append(tr);
+                });
+
+                $('#dataTable').DataTable({
+                    "order": [[4, "desc"]] // Sort by Created At desc
+                });
+
+            } catch (error) {
+                console.error("Error loading logs:", error);
+                alert("Failed to load logs");
+            }
         });
     </script>
 </body>

@@ -174,7 +174,7 @@
                                     Profile
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="../login.html">
+                                <a class="dropdown-item" href="#" onclick="API.logout(); return false;">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
@@ -209,19 +209,8 @@
                                                 </tr>
                                             </thead>
 
-                                            <tbody>
-                                                <tr>
-                                                    <td>Deleted Offer Item</td>
-                                                    <td>Global</td>
-                                                    <td>CPA</td>
-                                                    <td>0.00 USD</td>
-                                                    <td>0.00 USD</td>
-                                                    <td>deleted</td>
-                                                    <td>
-                                                        <a href="#" class="btn btn-success">Restore</a>
-                                                    </td>
-                                                </tr>
-
+                                            <tbody id="offersTableBody">
+                                                <!-- Populated by JS -->
                                             </tbody>
                                         </table>
                                     </div>
@@ -267,10 +256,69 @@
     <!-- Page level plugins -->
     <script src="../assets/vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="../assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="../assets/js/api.js"></script>
     <script>
-        $(document).ready(function () {
-            $('#dataTable').DataTable();
+        $(document).ready(async function () {
+            // Check auth
+            if (!API.isAuthenticated()) {
+                window.location.href = '../login.html';
+                return;
+            }
+
+            // Navbar User Info
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                $('#userDropdown span').text(user.name);
+            }
+
+            try {
+                const response = await API.fetchWithAuth('admin/offer/deleted');
+                const tbody = $('#offersTableBody');
+
+                if (response.offers && response.offers.length > 0) {
+                    response.offers.forEach(offer => {
+                        const tr = `
+                            <tr>
+                                <td>${offer.offer_name} (ID: ${offer.id})</td>
+                                <td>${offer.target_country || 'Global'}</td>
+                                <td>${offer.name || offer.ad_model}</td> 
+                                <td>${offer.ad_pricing} ${offer.currency}</td>
+                                <td>${offer.aff_pricing} ${offer.currency}</td>
+                                <td>${offer.offer_status} (Deleted)</td>
+                                <td>
+                                    <button onclick="restoreOffer(${offer.id})" class="btn btn-success btn-sm">Restore</button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(tr);
+                    });
+                }
+
+                $('#dataTable').DataTable();
+
+            } catch (error) {
+                console.error("Load Error:", error);
+            }
         });
+
+        async function restoreOffer(id) {
+            if (!confirm("Are you sure you want to restore this offer?")) return;
+
+            try {
+                const response = await API.fetchWithAuth(`admin/offer/restore/${id}`, {
+                    method: 'POST'
+                });
+
+                if (response.status === 1) {
+                    alert('Offer restored');
+                    location.reload();
+                } else {
+                    alert(response.error || 'Restore failed');
+                }
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        }
     </script>
 </body>
 

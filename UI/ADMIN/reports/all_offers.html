@@ -190,7 +190,7 @@
                                     Profile
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="../login.html">
+                                <a class="dropdown-item" href="#" onclick="API.logout(); return false;">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
@@ -219,39 +219,12 @@
                                                     <th>Offer Name</th>
                                                     <th>Total Clicks</th>
                                                     <th>Total Conversions</th>
-                                                    <th></th>
+                                                    <th>Actions</th>
                                                 </tr>
                                             </thead>
 
-                                            <tbody>
-                                                <tr>
-                                                    <td>1</td>
-                                                    <td>Sample Offer 1</td>
-                                                    <td><a href="offer_clicks.html"><strong>150</strong></a></td>
-                                                    <td><a href="offer_conversions.html"><strong>10</strong></a></td>
-                                                    <td></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>2</td>
-                                                    <td>Sample Offer 2</td>
-                                                    <td><a href="offer_clicks.html"><strong>300</strong></a></td>
-                                                    <td><a href="offer_conversions.html"><strong>25</strong></a></td>
-                                                    <td></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>3</td>
-                                                    <td>Sample Offer 3</td>
-                                                    <td><a href="offer_clicks.html"><strong>50</strong></a></td>
-                                                    <td>-</td>
-                                                    <td></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>4</td>
-                                                    <td>Sample Offer 4</td>
-                                                    <td><a href="offer_clicks.html"><strong>500</strong></a></td>
-                                                    <td><a href="offer_conversions.html"><strong>100</strong></a></td>
-                                                    <td></td>
-                                                </tr>
+                                            <tbody id="reportTableBody">
+                                                <!-- Populated by JS -->
                                             </tbody>
                                         </table>
                                     </div>
@@ -312,6 +285,63 @@
 
     <!-- Custom scripts for all pages-->
     <script src="../assets/js/sb-admin-2.min.js"></script>
+    <script src="../assets/vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="../assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script>
+        $(document).ready(async function () {
+            // Check auth
+            if (!API.isAuthenticated()) {
+                window.location.href = '../login.html';
+                return;
+            }
+
+            // Navbar User Info
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                $('#userDropdown span').text(user.name);
+            }
+
+            try {
+                const response = await API.fetchWithAuth('admin/reports/all-offers');
+                console.log("Reports Data:", response);
+
+                // Response structure: { module_name: "...", data: { current_page: 1, data: [...], ... } } (Paginated)
+                // OR might be just array if not paginated (but controller says paginate(50))
+
+                let offers = [];
+                if (response.data && response.data.data) {
+                    offers = response.data.data;
+                } else if (Array.isArray(response.data)) {
+                    offers = response.data;
+                }
+
+                const tbody = $('#reportTableBody');
+                tbody.empty();
+
+                offers.forEach(offer => {
+                    const tr = `
+                        <tr>
+                            <td>${offer.id}</td>
+                            <td>${offer.offer_name}</td>
+                            <td><a href="offer_clicks.html?id=${offer.id}"><strong>${offer.total_clicks}</strong></a></td>
+                            <td><a href="offer_conversions.html?id=${offer.id}"><strong>${offer.total_conversions}</strong></a></td>
+                            <td>
+                                <a href="../offers/edit.html?id=${offer.id}" class="btn btn-primary btn-sm">Edit Offer</a>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.append(tr);
+                });
+
+                $('#dataTable_ALL').DataTable();
+
+            } catch (error) {
+                console.error("Error loading reports:", error);
+                alert("Failed to load reports");
+            }
+        });
+    </script>
 
 </body>
 

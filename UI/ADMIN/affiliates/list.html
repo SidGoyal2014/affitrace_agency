@@ -190,7 +190,7 @@
                                     Profile
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="../login.html">
+                                <a class="dropdown-item" href="#" onclick="API.logout(); return false;">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
@@ -220,52 +220,7 @@
                                     </tr>
                                 </thead>
 
-                                <tbody>
-                                    <tr>
-                                        <td>1001</td>
-                                        <td>John Doe</td>
-                                        <td>john@example.com</td>
-                                        <td>1234567890</td>
-                                        <td>Doe Inc.</td>
-                                        <td>US</td>
-                                        <td>
-                                            <div id="idDropDown" class="dropdown">
-
-                                                <button onclick="myFunction('myDropdown_1')"
-                                                    class="dropbtn">Options</button>
-
-                                                <div id="myDropdown_1" class="dropdown-content">
-                                                    <a href="edit.html">Edit</a>
-                                                    <a href="#">Reports</a>
-                                                    <a href="#">Offers</a>
-                                                </div>
-
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>1002</td>
-                                        <td>Jane Smith</td>
-                                        <td>jane@example.com</td>
-                                        <td>0987654321</td>
-                                        <td>Smith LLC</td>
-                                        <td>UK</td>
-                                        <td>
-                                            <div id="idDropDown" class="dropdown">
-
-                                                <button onclick="myFunction('myDropdown_2')"
-                                                    class="dropbtn">Options</button>
-
-                                                <div id="myDropdown_2" class="dropdown-content">
-                                                    <a href="#">Edit</a>
-                                                    <a href="#">Reports</a>
-                                                    <a href="#">Offers</a>
-                                                </div>
-
-                                            </div>
-                                        </td>
-                                    </tr>
-
+                                <tbody id="table_body">
                                 </tbody>
                             </table>
                         </div>
@@ -306,9 +261,58 @@
     <!-- Page level plugins -->
     <script src="../assets/vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="../assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="../assets/js/api.js"></script>
     <script>
-        $(document).ready(function () {
-            $('#dataTable').DataTable();
+        $(document).ready(async function () {
+            // Check auth
+            if (!API.isAuthenticated()) {
+                window.location.href = '../login.html';
+                return;
+            }
+
+            // Navbar User Info
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                $('#userDropdown span').text(user.name);
+            }
+
+            try {
+                const response = await API.fetchWithAuth('admin/affiliates/list');
+                const data = response.data;
+                const tbody = $('#table_body');
+                tbody.empty();
+
+                data.forEach(aff => {
+                    const row = `
+                        <tr>
+                            <td>${aff.uid}</td>
+                            <td>${aff.name}</td>
+                            <td>${aff.email}</td>
+                            <td>${aff.phone || ''}</td>
+                            <td>${aff.company || ''}</td>
+                            <td>${aff.country || ''}</td>
+                            <td>
+                                <div id="idDropDown" class="dropdown">
+                                    <button onclick="myFunction('myDropdown_${aff.uid}')" class="dropbtn">Options</button>
+                                    <div id="myDropdown_${aff.uid}" class="dropdown-content">
+                                        <a href="edit.html?id=${aff.uid}">Edit</a>
+                                        <a href="../reports/payouts.html?aid=${aff.uid}">Reports</a>
+                                        <a href="../reports/offers_assigned.html?aid=${aff.uid}">Offers</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.append(row);
+                });
+
+                // Initialize DataTable
+                $('#dataTable').DataTable();
+
+            } catch (error) {
+                console.error("Load Error:", error);
+                alert("Failed to load affiliates.");
+            }
         });
 
         function myFunction(id) {

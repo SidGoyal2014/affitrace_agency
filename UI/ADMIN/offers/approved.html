@@ -175,7 +175,7 @@
                                     Profile
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="../login.html">
+                                <a class="dropdown-item" href="#" onclick="API.logout(); return false;">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
@@ -210,47 +210,8 @@
                                                 </tr>
                                             </thead>
 
-                                            <tbody>
-                                                <tr>
-                                                    <td>Sample Offer 1</td>
-                                                    <td>US</td>
-                                                    <td>CPI</td>
-                                                    <td>2.50 USD</td>
-                                                    <td>2.00 USD</td>
-                                                    <td>approve</td>
-                                                    <td>
-                                                        <a href="#" class="btn btn-primary">Reports</a>
-                                                        <a href="edit.html" class="btn btn-warning">Edit</a>
-                                                        <a href="#" class="btn btn-danger">Delete</a>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Sample Offer 2</td>
-                                                    <td>UK, CA</td>
-                                                    <td>CPA</td>
-                                                    <td>15.00 USD</td>
-                                                    <td>12.00 USD</td>
-                                                    <td>approve</td>
-                                                    <td>
-                                                        <a href="#" class="btn btn-primary">Reports</a>
-                                                        <a href="edit.html" class="btn btn-warning">Edit</a>
-                                                        <a href="#" class="btn btn-danger">Delete</a>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Gaming App Install</td>
-                                                    <td>Global</td>
-                                                    <td>CPI</td>
-                                                    <td>0.50 USD</td>
-                                                    <td>0.40 USD</td>
-                                                    <td>approve</td>
-                                                    <td>
-                                                        <a href="#" class="btn btn-primary">Reports</a>
-                                                        <a href="edit.html" class="btn btn-warning">Edit</a>
-                                                        <a href="#" class="btn btn-danger">Delete</a>
-                                                    </td>
-                                                </tr>
-
+                                            <tbody id="offersTableBody">
+                                                <!-- Populated by JS -->
                                             </tbody>
                                         </table>
                                     </div>
@@ -296,10 +257,72 @@
     <!-- Page level plugins -->
     <script src="../assets/vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="../assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="../assets/js/api.js"></script>
     <script>
-        $(document).ready(function () {
-            $('#dataTable').DataTable();
+        $(document).ready(async function () {
+            // Check auth
+            if (!API.isAuthenticated()) {
+                window.location.href = '../login.html';
+                return;
+            }
+
+            // Navbar User Info
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                $('#userDropdown span').text(user.name);
+            }
+
+            try {
+                const response = await API.fetchWithAuth('admin/offer/approved');
+                const tbody = $('#offersTableBody');
+
+                if (response.offers && response.offers.length > 0) {
+                    response.offers.forEach(offer => {
+                        const tr = `
+                            <tr>
+                                <td>${offer.offer_name} (ID: ${offer.id})</td>
+                                <td>${offer.target_country || 'Global'}</td>
+                                <td>${offer.name || offer.ad_model}</td> <!-- Join returns name as model name -->
+                                <td>${offer.ad_pricing} ${offer.currency}</td>
+                                <td>${offer.aff_pricing} ${offer.currency}</td>
+                                <td>${offer.offer_status}</td>
+                                <td>
+                                    <a href="../reports/offer-clicks/${offer.id}" class="btn btn-primary btn-sm">Reports</a>
+                                    <a href="edit.html?id=${offer.id}" class="btn btn-warning btn-sm">Edit</a>
+                                    <button onclick="deleteOffer(${offer.id})" class="btn btn-danger btn-sm">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(tr);
+                    });
+                }
+
+                $('#dataTable').DataTable();
+
+            } catch (error) {
+                console.error("Load Error:", error);
+                // alert("Failed to load offers");
+            }
         });
+
+        async function deleteOffer(id) {
+            if (!confirm("Are you sure you want to delete this offer?")) return;
+
+            try {
+                const response = await API.fetchWithAuth(`admin/offer/delete/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.status === 1) {
+                    alert('Offer deleted');
+                    location.reload();
+                } else {
+                    alert(response.error || 'Delete failed');
+                }
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        }
     </script>
 </body>
 
