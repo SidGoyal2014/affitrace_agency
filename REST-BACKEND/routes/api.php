@@ -97,6 +97,7 @@ Route::middleware(['auth:sanctum', 'api.tenant'])->group(function () {
         Route::post('reports/affiliate-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_affiliate_payouts']);
 
         Route::get('reports/offers-assigned/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'get_offers_assigned_to_affiliate']);
+        Route::post('reports/click-conversion-report', [App\Http\Controllers\Admin\ReportController::class, 'click_conversion_report']);
     });
 
     // Affiliate Routes

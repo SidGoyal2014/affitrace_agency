@@ -68,15 +68,15 @@ include $pathPrefix . '/includes/head.php';
                 tbody.empty();
 
                 if (data.length > 0) {
-                    data.forEach(adv => {
+                    data.forEach((adv, index) => {
                         tbody.append(`
                             <tr>
-                                <td><strong>${adv.id}</strong></td>
+                                <td><strong>${index + 1}</strong></td>
                                 <td>${adv.name}</td>
                                 <td>${adv.email}</td>
                                 <td>${adv.company || '-'}</td>
                                 <td>
-                                    <a href="edit.php?id=${adv.id}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                    <a href="edit.php?id=${adv.uid}" class="btn btn-sm btn-outline-primary">Edit</a>
                                 </td>
                             </tr>
                         `);
@@ -89,7 +89,7 @@ include $pathPrefix . '/includes/head.php';
                 console.error(error);
                 $('#table_body').html('<tr><td colspan="5" class="text-center py-4 text-danger">Failed to load</td></tr>');
             }
-        });
+    });
     </script>
 </body>
 

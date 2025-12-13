@@ -331,21 +331,42 @@ class AdminController extends Controller
 			$adud->tax_details = '';
 		}
 
-		return response()->json([
+		$responseData = [
 			'module_name' => 'Profile',
 			'title' => ucfirst($user_type) . ' Profile',
-			'user' => $user,
-			'adud' => $adud,
+			'user' => $user->toArray(),
+			'adud' => $adud->toArray(),
 			'uid' => $id,
 			'arrTimeZone' => $this->getTimeZone(),
 			'arrCur' => $this->getCurrency(),
 			'arrCountry' => $this->getCountry(),
 			'logged_in_user_type' => $user_type,
 			'form_action_url' => 'admin/update_advertiser'
-		]);
+		];
 
+		// Sanitize Response Data ensuring UTF-8 integrity
+		$responseData = $this->sanitize_utf8_recursive($responseData);
+
+		return response()->json($responseData);
 
 	}//edit_advertiser
+
+	private function sanitize_utf8_recursive($data)
+	{
+		if (is_string($data)) {
+			return mb_convert_encoding($data, 'UTF-8', 'UTF-8');
+		} elseif (is_array($data)) {
+			$ret = [];
+			foreach ($data as $i => $d)
+				$ret[$i] = $this->sanitize_utf8_recursive($d);
+			return $ret;
+		} elseif (is_object($data)) {
+			foreach ($data as $i => $d)
+				$data->$i = $this->sanitize_utf8_recursive($d);
+			return $data;
+		}
+		return $data;
+	}
 
 
 	function update_advertiser(Request $request)

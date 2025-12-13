@@ -19,6 +19,7 @@
 
     <!-- Custom styles for this template-->
     <link href="assets/css/sb-admin-2.css" rel="stylesheet">
+    <link href="assets/css/modern-theme.css" rel="stylesheet">
     <link href="assets/css/custom.css" rel="stylesheet">
 </head>
 

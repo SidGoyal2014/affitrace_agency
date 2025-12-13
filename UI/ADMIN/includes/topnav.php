@@ -88,6 +88,8 @@ function url($path)
                 <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
             </a>
             <div class="dropdown-menu">
+                <a class="dropdown-item" href="<?php echo url('reports/click_conversion_report.php'); ?>">Click &
+                    Conversion (Beta)</a>
                 <a class="dropdown-item" href="<?php echo url('reports/all_offers.php'); ?>">Clicks</a>
                 <a class="dropdown-item" href="<?php echo url('reports/conversions.php'); ?>">Conversions</a>
                 <a class="dropdown-item" href="<?php echo url('reports/payouts.php'); ?>">Payouts</a>

@@ -8,115 +8,113 @@ include $pathPrefix . '/includes/head.php';
 
 <body id="page-top">
 
-    <!-- Page Wrapper -->
-    <div id="wrapper">
+    <?php include $pathPrefix . '/includes/topnav.php'; ?>
 
-        <?php include $pathPrefix . '/includes/sidebar.php'; ?>
+    <main id="main-content">
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
 
-        <!-- Content Wrapper -->
-        <div id="content-wrapper" class="d-flex flex-column">
-
-            <!-- Main Content -->
-            <div id="content">
-
-                <?php include $pathPrefix . '/includes/topbar.php'; ?>
-
-                <!-- Begin Page Content -->
-                <div class="container-fluid">
-
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary"><span style='color:#f00;'>* marked values are
-                                mandatory</span></h6>
-                    </div>
-
-                    <div class="card-body">
-
-                        <form class="user" method='post' action="#">
-
-                            <div class="row">
-
-                                <div class="form-group col-lg-6">
-                                    <input type="text" name="name" class="form-control form-control"
-                                        id="exampleInputName" aria-describedby="nameHelp" placeholder="Enter Name"
-                                        value="John Doe">
-                                    <span style='color:#f00;'></span>
-                                </div>
-
-                                <div class="form-group col-lg-6">
-                                    <input type="email" name="email" class="form-control form-control"
-                                        id="exampleInputEmail" aria-describedby="emailHelp"
-                                        placeholder="Enter Email Address..." value="john@example.com">
-                                    <span style='color:#f00;'></span>
-                                </div>
-
-                                <div class="form-group col-lg-6">
-                                    <input type="password" name="password" class="form-control form-control"
-                                        id="exampleInputPassword" placeholder="Enter Password">
-                                    <span style='color:#f00;'></span>
-                                </div>
-
-                                <div class="form-group col-lg-6">
-                                    <input type="password" name="password_confirmation"
-                                        class="form-control form-control" id="exampleInputConfirmPassword"
-                                        placeholder="Confirm password">
-                                    <span style='color:#f00;'></span>
-                                </div>
-
-                                <div class="form-group col-lg-6">
-                                    <input type="text" name="company" class="form-control form-control"
-                                        id="exampleInputCompany" placeholder="Enter company" value="Doe Inc.">
-                                    <span style='color:#f00;'></span>
-                                </div>
-
-                                <div class="form-group col-lg-6">
-                                    <input type="text" name="country" class="form-control form-control"
-                                        id="exampleInputCountry" placeholder="Enter country" value="US">
-                                    <span style='color:#f00;'></span>
-                                </div>
-
-                                <div class="form-group col-lg-6">
-                                    <input type="text" name="phone" class="form-control form-control"
-                                        id="exampleInputMobile" placeholder="Enter phone no" value="1234567890">
-                                    <span style='color:#f00;'></span>
-                                </div>
-
-
-                            </div>
-
-
-
-                            <div class="row">
-                                <div class="form-group col-lg-12">
-                                    <input type="submit" value="Update" class="btn btn-primary" style="float:right;">
-                                </div>
-                            </div>
-
-                            <input type="hidden" name="user_type" value="affiliate">
-                        </form>
-                    </div>
-
-                </div>
-                <!-- /.container-fluid -->
-
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><span style='color:#f00;'>* marked values are
+                        mandatory</span></h6>
             </div>
-            <!-- End of Main Content -->
 
-            <?php include $pathPrefix . '/includes/footer.php'; ?>
+            <div class="card-body">
+
+                <form class="user" method='post' action="#">
+
+                    <div class="row">
+
+                        <div class="form-group col-lg-6">
+                            <input type="text" name="name" class="form-control form-control" id="exampleInputName"
+                                aria-describedby="nameHelp" placeholder="Enter Name" value="John Doe">
+                            <span style='color:#f00;'></span>
+                        </div>
+
+                        <div class="form-group col-lg-6">
+                            <input type="email" name="email" class="form-control form-control" id="exampleInputEmail"
+                                aria-describedby="emailHelp" placeholder="Enter Email Address..."
+                                value="john@example.com">
+                            <span style='color:#f00;'></span>
+                        </div>
+
+                        <div class="form-group col-lg-6">
+                            <input type="password" name="password" class="form-control form-control"
+                                id="exampleInputPassword" placeholder="Enter Password">
+                            <span style='color:#f00;'></span>
+                        </div>
+
+                        <div class="form-group col-lg-6">
+                            <input type="password" name="password_confirmation" class="form-control form-control"
+                                id="exampleInputConfirmPassword" placeholder="Confirm password">
+                            <span style='color:#f00;'></span>
+                        </div>
+
+                        <div class="form-group col-lg-6">
+                            <input type="text" name="company" class="form-control form-control" id="exampleInputCompany"
+                                placeholder="Enter company" value="Doe Inc.">
+                            <span style='color:#f00;'></span>
+                        </div>
+
+                        <div class="form-group col-lg-6">
+                            <input type="text" name="country" class="form-control form-control" id="exampleInputCountry"
+                                placeholder="Enter country" value="US">
+                            <span style='color:#f00;'></span>
+                        </div>
+
+                        <div class="form-group col-lg-6">
+                            <input type="text" name="phone" class="form-control form-control" id="exampleInputMobile"
+                                placeholder="Enter phone no" value="1234567890">
+                            <span style='color:#f00;'></span>
+                        </div>
+
+
+                    </div>
+
+
+
+                    <div class="row">
+                        <div class="form-group col-lg-12">
+                            <input type="submit" value="Update" class="btn btn-primary" style="float:right;">
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="user_type" value="affiliate">
+                </form>
+            </div>
 
         </div>
-        <!-- End of Content Wrapper -->
+        <!-- /.container-fluid -->
+    </main>
 
-    </div>
-    <!-- End of Page Wrapper -->
+    <footer class="footer">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6 order-last order-md-first">
+                    <div class="copyright text-center text-md-start">
+                        <p class="text-sm">
+                            Designed and Developed by <a href="#" class="">AffiTrace</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="terms d-flex justify-content-center justify-content-md-end">
+                        <a href="#" class="text-sm">Term & Conditions</a>
+                        <a href="#" class="text-sm">Privacy & Policy</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
-    
-    
 
-    
-    
 
-    
+
+
+
+
+
     <script>
         $(document).ready(async function () {
             // Check auth

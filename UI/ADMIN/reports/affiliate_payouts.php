@@ -8,111 +8,111 @@ include $pathPrefix . '/includes/head.php';
 
 <body id="page-top">
 
-    <!-- Page Wrapper -->
-    <div id="wrapper">
+    <?php include $pathPrefix . '/includes/topnav.php'; ?>
 
-        <?php include $pathPrefix . '/includes/sidebar.php'; ?>
+    <main id="main-content">
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
 
-        <!-- Content Wrapper -->
-        <div id="content-wrapper" class="d-flex flex-column">
+            <div class="card-body">
+                <div class="table-responsive">
 
-            <!-- Main Content -->
-            <div id="content">
-
-                <?php include $pathPrefix . '/includes/topbar.php'; ?>
-
-                <!-- Begin Page Content -->
-                <div class="container-fluid">
-
-                    <div class="card-body">
-                        <div class="table-responsive">
-
-                            <!-- Search Form Placeholder -->
-                            <div class="card mb-4">
-                                <div class="card-body">
-                                    <form class="form-inline">
-                                        <label class="sr-only" for="inlineFormInputName2">Name</label>
-                                        <input type="text" class="form-control mb-2 mr-sm-2" id="inlineFormInputName2"
-                                            placeholder="Search...">
-                                        <button type="submit" class="btn btn-primary mb-2">Search</button>
-                                    </form>
-                                </div>
-                            </div>
-
-
-                            <table class="table table-striped table-hover" id="dataTable" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>Offer Name</th>
-                                        <th>Payout</th>
-                                        <th>Affiliate Click Id</th>
-                                        <th>IP</th>
-                                        <th>Device</th>
-                                        <th>Country</th>
-                                        <th>Os</th>
-                                        <th>Browser</th>
-                                        <th>Sub1</th>
-                                        <th>Conversion Date</th>
-                                        <th>Event Name</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    <tr>
-                                        <td><a href="#">Sample Offer 1</a></td>
-                                        <td>2.00 USD</td>
-                                        <td>aff_click_123</td>
-                                        <td>192.168.1.1</td>
-                                        <td>iPhone</td>
-                                        <td>US</td>
-                                        <td>iOS</td>
-                                        <td>Safari</td>
-                                        <td>sub_val_1</td>
-                                        <td>06-12-2023 10:00:00</td>
-                                        <td>Install</td>
-                                    </tr>
-                                    <tr>
-                                        <td><a href="#">Sample Offer 2</a></td>
-                                        <td>12.00 USD</td>
-                                        <td>aff_click_456</td>
-                                        <td>10.0.0.1</td>
-                                        <td>Desktop</td>
-                                        <td>UK</td>
-                                        <td>Windows</td>
-                                        <td>Chrome</td>
-                                        <td>sub_val_2</td>
-                                        <td>06-12-2023 11:30:00</td>
-                                        <td>Purchase</td>
-                                    </tr>
-
-                                </tbody>
-                            </table>
+                    <!-- Search Form Placeholder -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <form class="form-inline">
+                                <label class="sr-only" for="inlineFormInputName2">Name</label>
+                                <input type="text" class="form-control mb-2 mr-sm-2" id="inlineFormInputName2"
+                                    placeholder="Search...">
+                                <button type="submit" class="btn btn-primary mb-2">Search</button>
+                            </form>
                         </div>
                     </div>
 
+
+                    <table class="table table-striped table-hover" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Offer Name</th>
+                                <th>Payout</th>
+                                <th>Affiliate Click Id</th>
+                                <th>IP</th>
+                                <th>Device</th>
+                                <th>Country</th>
+                                <th>Os</th>
+                                <th>Browser</th>
+                                <th>Sub1</th>
+                                <th>Conversion Date</th>
+                                <th>Event Name</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td><a href="#">Sample Offer 1</a></td>
+                                <td>2.00 USD</td>
+                                <td>aff_click_123</td>
+                                <td>192.168.1.1</td>
+                                <td>iPhone</td>
+                                <td>US</td>
+                                <td>iOS</td>
+                                <td>Safari</td>
+                                <td>sub_val_1</td>
+                                <td>06-12-2023 10:00:00</td>
+                                <td>Install</td>
+                            </tr>
+                            <tr>
+                                <td><a href="#">Sample Offer 2</a></td>
+                                <td>12.00 USD</td>
+                                <td>aff_click_456</td>
+                                <td>10.0.0.1</td>
+                                <td>Desktop</td>
+                                <td>UK</td>
+                                <td>Windows</td>
+                                <td>Chrome</td>
+                                <td>sub_val_2</td>
+                                <td>06-12-2023 11:30:00</td>
+                                <td>Purchase</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
                 </div>
-                <!-- /.container-fluid -->
-
             </div>
-            <!-- End of Main Content -->
-
-            <?php include $pathPrefix . '/includes/footer.php'; ?>
 
         </div>
-        <!-- End of Content Wrapper -->
+        <!-- /.container-fluid -->
+    </main>
 
-    </div>
-    <!-- End of Page Wrapper -->
+    <footer class="footer">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6 order-last order-md-first">
+                    <div class="copyright text-center text-md-start">
+                        <p class="text-sm">
+                            Designed and Developed by <a href="#" class="">AffiTrace</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="terms d-flex justify-content-center justify-content-md-end">
+                        <a href="#" class="text-sm">Term & Conditions</a>
+                        <a href="#" class="text-sm">Privacy & Policy</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
-    
-    
 
-    
-    
 
-    
-    
+
+
+
+
+
+
 
     <!-- Page level plugins -->
     <script src="../assets/vendor/datatables/jquery.dataTables.min.js"></script>
