@@ -53,7 +53,7 @@ class AffiliateDashboardController extends Controller
 			'title' => ucfirst($logged_in_user_type) . ' Dashboard',
 			'module_name' => ucfirst($logged_in_user_type) . ' Dashboard',
 			'logged_in_user_type' => $logged_in_user_type,
-			'all_offers' => $this->get_all_offers(),
+			'all_offers' => $this->get_offers_assigned(),
 			'arr_affiliate_offers' => $arr_affiliate_offers,
 			'offers_assigned' => $this->get_offers_assigned(),
 
@@ -72,7 +72,7 @@ class AffiliateDashboardController extends Controller
 	{
 		// Always return data
 		$strLimit = " LIMIT 0,5";
-		$sql = "SELECT U.id as uid, OT.aff_id, U.name, sum(OT.payout) as payout FROM  users U INNER JOIN offer_trackings OT ON U.id=OT.aff_id GROUP BY OT.aff_id ORDER BY revenue DESC" . $strLimit;
+		$sql = "SELECT U.id as uid, OT.aff_id, U.name, sum(OT.payout) as payout FROM  users U INNER JOIN offer_trackings OT ON U.id=OT.aff_id GROUP BY OT.aff_id, U.id, U.name ORDER BY payout DESC" . $strLimit;
 		$data = DB::select($sql);
 		return $data;
 	}//top_affiliates
@@ -81,7 +81,7 @@ class AffiliateDashboardController extends Controller
 	public function top_offers($dod = "Y")
 	{
 		// Always return data
-		$sql = "SELECT OT.offer_id, O.offer_name, sum(OT.revenue) as revenue, O.offer_status FROM  offers O INNER JOIN offer_trackings OT ON O.id=OT.offer_id GROUP BY OT.offer_id ORDER BY revenue DESC LIMIT 0,5";
+		$sql = "SELECT OT.offer_id, O.offer_name, sum(OT.revenue) as revenue, O.offer_status FROM  offers O INNER JOIN offer_trackings OT ON O.id=OT.offer_id GROUP BY OT.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 0,5";
 		$arr = DB::select($sql);
 		return $arr;
 	}//top_offers
@@ -146,7 +146,7 @@ class AffiliateDashboardController extends Controller
 
 
 
-		for ($index = 1; $index < 12; $index++) {
+		for ($index = 1; $index <= 12; $index++) {
 
 			if (!isset($arrSTR[$index])) {
 				$arrSTR[$index] = 0;
@@ -169,16 +169,15 @@ class AffiliateDashboardController extends Controller
 
 		$sql = "
                 SELECT 
-                    *, offers.id as oid 
-
+                    offers.*, 
+                    categories.category_name,
+                    offers.id as oid 
                 FROM 
-                    categories 
-
-                INNER JOIN 
                     offers 
-
+                LEFT JOIN 
+                    categories 
                 ON 
-                    categories.id = offers.category_id 
+                    offers.category_id = categories.id 
             ";
 
 		$all_offers = DB::select($sql);
@@ -216,11 +215,19 @@ class AffiliateDashboardController extends Controller
 
 			$sql = "
 					SELECT 
-						* 
+						offers.*,
+                        categories.category_name,
+                        offers.id as oid 
 					FROM 
-						offers INNER JOIN offer_affiliates 
+						offers 
+                    INNER JOIN 
+                        offer_affiliates 
 					ON 
 						offers.id = offer_affiliates.offer_id 
+                    LEFT JOIN 
+                        categories 
+                    ON 
+                        offers.category_id = categories.id
 					WHERE 
 						offer_affiliates.affiliate_id = " . Auth::id();
 
@@ -233,7 +240,7 @@ class AffiliateDashboardController extends Controller
 			return []; // Return empty array on error instead of redirect
 		}
 
-	}//get_offer_assign_requests
+	}//get_offers_assigned
 
 
 

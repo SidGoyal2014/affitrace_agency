@@ -103,12 +103,11 @@ Route::middleware(['auth:sanctum', 'api.tenant'])->group(function () {
     // Affiliate Routes
     Route::prefix('affiliate')->middleware(['affiliate'])->group(function () {
         Route::get('dashboard', [App\Http\Controllers\Affiliate\AffiliateDashboardController::class, 'dashboard']);
-        Route::post('offer-assign-request/{oid}', [App\Http\Controllers\Affiliate\AffiliateDashboardController::class, 'send_offer_assign_request']);
-
-        // Reports
-        Route::get('reports', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'summary']);
+        Route::get('reports/summary', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'summary']);
         Route::get('reports/offer-clicks/{offer_id}', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'offer_clicks']);
         Route::post('reports/offer-clicks/search', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'search_offer_clicks']);
+        Route::get('reports/click-conversion-report', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'click_conversion_report']);
+
         Route::get('reports/offer-payouts/{oid}', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'offer_payouts']);
         Route::post('reports/offer-payouts/search', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'search_offer_payouts']);
         Route::get('reports/payouts', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'payouts']);
