@@ -149,11 +149,11 @@ class AdminController extends Controller
 			$aud->add_tax = '';
 		}
 
-		return response()->json([
+		$responseData = [
 			'module_name' => 'Profile',
 			'title' => ucfirst($user_type) . ' Profile',
-			'user' => $user,
-			'aud' => $aud,
+			'user' => $user->toArray(),
+			'aud' => $aud->toArray(),
 			'uid' => $id,
 			'arrTimeZone' => $this->getTimeZone(),
 			'pmtArray' => $this->getPaymentMethod(),
@@ -161,7 +161,12 @@ class AdminController extends Controller
 			'arrCountry' => $this->getCountry(),
 			'logged_in_user_type' => $user_type,
 			'form_action_url' => 'admin/update_affiliate'
-		]);
+		];
+
+		// Sanitize Response Data ensuring UTF-8 integrity
+		$responseData = $this->sanitize_utf8_recursive($responseData);
+
+		return response()->json($responseData);
 
 	}//edit_affiliate
 
