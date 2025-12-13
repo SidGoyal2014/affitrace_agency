@@ -191,22 +191,19 @@ class AdminController extends Controller
 
 
 
-			if ($this->get_total_affiliates() >= $this->get_settings("num_affiliates")) {
+			/* if ($this->get_total_affiliates() >= $this->get_settings("num_affiliates")) {
 				return response()->json(['status' => 0, 'error' => "We are not accepting new affiliates as of now."], 403);
 
-			}//if
+			}//if */
 
 
 			$code = bin2hex(random_bytes(5));
 			$user = new User();
 			$user->code = $code;
-			$user->agency_id = $request->header('X-Agency-ID'); // Use header or determine from context
-			// Assuming agency_id logic is handled or nullable for now if not in session
-			// If strictly needed from session/context, ensure middleware sets it.
-			// For now, let's assume if session exists great, else null or handle appropriately.
+			/* $user->agency_id = $request->header('X-Agency-ID'); 
 			if (session('agency_id')) {
 				$user->agency_id = session('agency_id');
-			}
+			} */
 
 			$user->name = $request->name;
 			$user->username = str_replace(' ', '', strtolower($request->name));
@@ -281,9 +278,9 @@ class AdminController extends Controller
 			$code = bin2hex(random_bytes(5));
 			$user = new User();
 			$user->code = $code;
-			if (session('agency_id')) {
+			/* if (session('agency_id')) {
 				$user->agency_id = session('agency_id');
-			}
+			} */
 			$user->name = $request->name;
 			$user->username = str_replace(' ', '', strtolower($request->name));
 			$user->email = $request->email;

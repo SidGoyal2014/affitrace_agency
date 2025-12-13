@@ -130,8 +130,14 @@
 
                 try {
                     const data = await API.login(email, password, user_type, eai);
-                    // Redirect based on user type or just to dashboard for now
-                    window.location.href = 'dashboard.php';
+
+                    if (data.user.user_type === 'affiliate') {
+                        window.location.href = '../AFFILIATE/dashboard.php';
+                    } else if (data.user.user_type === 'advertiser') {
+                        window.location.href = '../ADVERTISER/dashboard.php';
+                    } else {
+                        window.location.href = 'dashboard.php';
+                    }
                 } catch (error) {
                     const errorMsg = error.message || 'Login failed';
                     const alertHtml = `<div class="alert alert-danger alert-block">

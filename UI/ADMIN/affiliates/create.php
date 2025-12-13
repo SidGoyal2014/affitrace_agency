@@ -42,14 +42,14 @@ include $pathPrefix . '/includes/head.php';
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>Phone</label>
-                                            <input type="text" name="phone" class="form-control">
+                                            <label>Phone *</label>
+                                            <input type="text" name="phone" class="form-control" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>Company</label>
-                                            <input type="text" name="company" class="form-control">
+                                            <label>Company *</label>
+                                            <input type="text" name="company" class="form-control" required>
                                         </div>
                                     </div>
                                 </div>
@@ -62,8 +62,23 @@ include $pathPrefix . '/includes/head.php';
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
+                                            <label>User Type</label>
+                                            <input type="text" class="form-control" value="Affiliate" disabled>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
                                             <label>Password *</label>
                                             <input type="password" name="password" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Confirm Password *</label>
+                                            <input type="password" name="password_confirmation" class="form-control"
+                                                required>
                                         </div>
                                     </div>
                                 </div>
@@ -99,7 +114,9 @@ include $pathPrefix . '/includes/head.php';
                             phone: $('input[name="phone"]').val(),
                             company: $('input[name="company"]').val(),
                             country: $('input[name="country"]').val(),
-                            password: $('input[name="password"]').val()
+                            password: $('input[name="password"]').val(),
+                            password_confirmation: $('input[name="password_confirmation"]').val(),
+                            user_type: 'affiliate'
                         })
                     });
                     if (response.status === 1) {
