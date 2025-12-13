@@ -7,19 +7,22 @@ include $pathPrefix . '/includes/head.php';
 
 <style>
     .form-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #6366F1;
         border-radius: 20px;
         padding: 3px;
     }
+
     .form-card-inner {
         background: #fff;
         border-radius: 18px;
         padding: 40px;
     }
+
     .form-floating {
         position: relative;
         margin-bottom: 1.5rem;
     }
+
     .form-floating input {
         width: 100%;
         padding: 20px 16px 8px;
@@ -29,12 +32,14 @@ include $pathPrefix . '/includes/head.php';
         transition: all 0.3s ease;
         background: #f8fafc;
     }
+
     .form-floating input:focus {
         border-color: #667eea;
         background: #fff;
         box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         outline: none;
     }
+
     .form-floating label {
         position: absolute;
         left: 16px;
@@ -47,19 +52,22 @@ include $pathPrefix . '/includes/head.php';
         background: transparent;
         padding: 0 4px;
     }
-    .form-floating input:focus + label,
-    .form-floating input:not(:placeholder-shown) + label {
+
+    .form-floating input:focus+label,
+    .form-floating input:not(:placeholder-shown)+label {
         top: 0;
         font-size: 12px;
         color: #667eea;
         background: #fff;
         font-weight: 600;
     }
+
     .form-floating input::placeholder {
         color: transparent;
     }
+
     .btn-gradient {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #6366F1;
         border: none;
         color: #fff;
         padding: 16px 32px;
@@ -69,32 +77,39 @@ include $pathPrefix . '/includes/head.php';
         width: 100%;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
     }
+
     .btn-gradient:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+        background: #4f46e5;
         color: #fff;
     }
+
     .btn-gradient:disabled {
         opacity: 0.7;
         cursor: not-allowed;
         transform: none;
     }
+
     .header-section {
         text-align: center;
         margin-bottom: 40px;
     }
+
     .header-section h1 {
         font-size: 28px;
         font-weight: 700;
         color: #1e293b;
         margin-bottom: 8px;
     }
+
     .header-section p {
         color: #64748b;
         font-size: 15px;
     }
+
     .back-link {
         display: inline-flex;
         align-items: center;
@@ -104,21 +119,26 @@ include $pathPrefix . '/includes/head.php';
         margin-bottom: 24px;
         transition: color 0.2s;
     }
+
     .back-link:hover {
         color: #667eea;
         text-decoration: none;
     }
+
     .back-link i {
         margin-right: 8px;
     }
+
     .alert-modern {
         border-radius: 12px;
         border: none;
         padding: 16px 20px;
     }
+
     .row-gap {
         gap: 0 24px;
     }
+
     .divider {
         display: flex;
         align-items: center;
@@ -126,12 +146,15 @@ include $pathPrefix . '/includes/head.php';
         color: #94a3b8;
         font-size: 13px;
     }
-    .divider::before, .divider::after {
+
+    .divider::before,
+    .divider::after {
         content: '';
         flex: 1;
         height: 1px;
         background: #e2e8f0;
     }
+
     .divider span {
         padding: 0 16px;
     }
@@ -145,7 +168,7 @@ include $pathPrefix . '/includes/head.php';
         <div class="container-fluid py-4">
             <div class="row justify-content-center">
                 <div class="col-lg-6 col-xl-5">
-                    
+
                     <a href="list.php" class="back-link">
                         <i class="fas fa-arrow-left"></i> Back to Advertisers
                     </a>
@@ -190,13 +213,15 @@ include $pathPrefix . '/includes/head.php';
                                 <div class="row row-gap">
                                     <div class="col-md-6">
                                         <div class="form-floating">
-                                            <input type="password" name="password" id="password" placeholder=" " required>
+                                            <input type="password" name="password" id="password" placeholder=" "
+                                                required>
                                             <label for="password">Password</label>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-floating">
-                                            <input type="password" name="password_confirmation" id="password_confirmation" placeholder=" " required>
+                                            <input type="password" name="password_confirmation"
+                                                id="password_confirmation" placeholder=" " required>
                                             <label for="password_confirmation">Confirm Password</label>
                                         </div>
                                     </div>
@@ -215,9 +240,7 @@ include $pathPrefix . '/includes/head.php';
         </div>
     </main>
 
-    <footer class="footer">
-        <span class="text-muted small">© 2024 Affitrace. All rights reserved.</span>
-    </footer>
+    <?php include $pathPrefix . '/includes/footer.php'; ?>
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
 
@@ -230,10 +253,10 @@ include $pathPrefix . '/includes/head.php';
             $('#createForm').on('submit', async function (e) {
                 e.preventDefault();
                 $('#alert-container').empty();
-                
+
                 const password = $('#password').val();
                 const confirm = $('#password_confirmation').val();
-                
+
                 if (password !== confirm) {
                     $('#alert-container').html('<div class="alert alert-danger alert-modern">Passwords do not match.</div>');
                     return;

@@ -7,7 +7,7 @@ include $pathPrefix . '/includes/head.php';
 
 <style>
     .form-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #6366F1;
         border-radius: 20px;
         padding: 3px;
     }
@@ -67,7 +67,7 @@ include $pathPrefix . '/includes/head.php';
     }
 
     .btn-gradient {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #6366F1;
         border: none;
         color: #fff;
         padding: 16px 32px;
@@ -77,12 +77,13 @@ include $pathPrefix . '/includes/head.php';
         width: 100%;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
     }
 
     .btn-gradient:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+        background: #4f46e5;
         color: #fff;
     }
 
@@ -274,9 +275,7 @@ include $pathPrefix . '/includes/head.php';
         </div>
     </main>
 
-    <footer class="footer">
-        <span class="text-muted small">© 2024 Affitrace. All rights reserved.</span>
-    </footer>
+    <?php include $pathPrefix . '/includes/footer.php'; ?>
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
 

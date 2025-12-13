@@ -87,25 +87,7 @@ include $pathPrefix . '/includes/head.php';
         <!-- /.container-fluid -->
     </main>
 
-    <footer class="footer">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-6 order-last order-md-first">
-                    <div class="copyright text-center text-md-start">
-                        <p class="text-sm">
-                            Designed and Developed by <a href="#" class="">AffiTrace</a>
-                        </p>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="terms d-flex justify-content-center justify-content-md-end">
-                        <a href="#" class="text-sm">Term & Conditions</a>
-                        <a href="#" class="text-sm">Privacy & Policy</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <?php include $pathPrefix . '/includes/footer.php'; ?>
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
 

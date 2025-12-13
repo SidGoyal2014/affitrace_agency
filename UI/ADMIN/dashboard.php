@@ -207,10 +207,7 @@ include $pathPrefix . '/includes/head.php';
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <span>© 2024 Affitrace. All rights reserved.</span>
-    </footer>
+    <?php include $pathPrefix . '/includes/footer.php'; ?>
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
 

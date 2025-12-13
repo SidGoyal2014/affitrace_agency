@@ -47,9 +47,7 @@ include $pathPrefix . '/includes/head.php';
         </div>
     </main>
 
-    <footer class="footer">
-        <span>© 2024 Affitrace. All rights reserved.</span>
-    </footer>
+    <?php include $pathPrefix . '/includes/footer.php'; ?>
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
     <script src="../assets/vendor/datatables/jquery.dataTables.min.js"></script>
@@ -89,7 +87,7 @@ include $pathPrefix . '/includes/head.php';
                 console.error(error);
                 $('#table_body').html('<tr><td colspan="5" class="text-center py-4 text-danger">Failed to load</td></tr>');
             }
-    });
+        });
     </script>
 </body>
 

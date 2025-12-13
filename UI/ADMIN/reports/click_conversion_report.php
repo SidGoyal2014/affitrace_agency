@@ -130,13 +130,7 @@ include $pathPrefix . '/includes/head.php';
         </div>
     </main>
 
-    <footer class="footer">
-        <div class="container-fluid">
-            <div class="copyright text-center">
-                <span>&copy; Affitrace 2024</span>
-            </div>
-        </div>
-    </footer>
+    <?php include $pathPrefix . '/includes/footer.php'; ?>
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
 
