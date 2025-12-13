@@ -80,15 +80,16 @@ const API = {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'X-Agency-ID': localStorage.getItem('agency_id')
                     }
                 });
             } catch (e) {
                 // Ignore logout errors
             }
         }
-        this.clearToken();
-        window.location.reload();
+        API.clearToken();
+        window.location.href = 'login.php';
     },
 
     clearToken: () => {

@@ -1,3 +1,4 @@
+<?php $pathPrefix = '.'; ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -89,13 +90,14 @@
         </div>
     </div>
 
+    <?php include $pathPrefix . '/includes/footer.php'; ?>
 
-    <div class="row">
+    <!-- <div class="row">
         <div class="col-lg-12" style="text-align:center;">
             <span>Copyright &copy; Affitrace 2023</span>
         </div>
     </div>
-    </div>
+    </div> -->
 
     <!-- Bootstrap core JavaScript-->
     <script src="assets/vendor/jquery/jquery.min.js"></script>
