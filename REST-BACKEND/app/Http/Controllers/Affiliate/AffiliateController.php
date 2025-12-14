@@ -126,7 +126,9 @@ class AffiliateController extends Controller
 		$logged_in_user_type = $request->user()->user_type;
 
 		$tokens = OfferToken::where('token_micro', '!=', 'sub1')->get()->toArray();
-		$pCols = AffiliatePostbackColumn::where('uid', Auth::id())->first();
+		$pCols = AffiliatePostbackColumn::where('uid', Auth::id())
+			->whereNull('oid')
+			->first();
 
 		if (!is_null($pCols)) {
 			$aCols = $pCols->toArray();
@@ -153,33 +155,47 @@ class AffiliateController extends Controller
 
 		try {
 
-			$arrCondition = array();
-			$arr = array();
+			\Log::info('update_a_postback_cols Request:', $request->all());
+
+			// Always use Auth::id() for the condition
+			$arrCondition = [
+				'uid' => Auth::id(),
+				'oid' => null
+			];
+
+			$arr = [];
 
 			foreach ($request->all() as $k => $v) {
 
-				if ($k == '_token') {
+				\Log::info("Inside the forEach Loop");
+				\Log::info("key : " . $k);
+				\Log::info("value : " . $v);
+
+				if ($k == '_token' || $k == 'uid' || $k == 'oid') {
 					continue;
-
-				} elseif ($k == 'uid') {
-					$arrCondition[$k] = Auth::id();
-
-				} elseif ($k == 'oid') {
-					$arrCondition[$k] = '';
-				} else {
-					$arr[$k] = $v;
-
 				}
+
+				$arr[$k] = $v;
 
 			}//foreach
 
+			DB::enableQueryLog();
+
+			\Log::info("arrCondition : ", $arrCondition);
+			\Log::info("arr : ", $arr);
+
+
 			DB::table('affiliate_postback_columns')
 				->updateOrInsert($arrCondition, $arr);
+
+			$queries = DB::getQueryLog();
+			\Log::info('update_a_postback_cols Queries:', $queries);
 
 			return response()->json(['message' => 'Postback columns updated successfully']);
 
 
 		} catch (\Exception $e) {
+			\Log::error('update_a_postback_cols Error: ' . $e->getMessage());
 			return response()->json(['error' => 'Postback columns could not be updated', 'details' => $e->getMessage()], 500);
 		}
 
