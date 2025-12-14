@@ -17,7 +17,7 @@
         if (window.location.pathname.endsWith('login.php') || window.location.pathname.endsWith('login.html')) return;
 
         if (!API.isAuthenticated()) {
-            window.location.href = '<?php echo $pathPrefix; ?>/../ADMIN/login.php';
+            window.location.href = '<?php echo $pathPrefix; ?>/../login.php';
         } else {
             const user = JSON.parse(localStorage.getItem('user'));
             if (user && user.user_type !== 'affiliate') {

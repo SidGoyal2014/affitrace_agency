@@ -91,7 +91,7 @@ const API = {
             }
         }
         API.clearToken();
-        window.location.href = 'login.php';
+        window.location.href = '../login.php';
     },
 
     clearToken: () => {
@@ -107,7 +107,7 @@ const API = {
         let accessToken = localStorage.getItem('access_token');
 
         if (!accessToken) {
-            window.location.reload();
+            API.logout();
             return;
         }
 
