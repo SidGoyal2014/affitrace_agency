@@ -56,27 +56,35 @@ include $pathPrefix . '/includes/head.php';
     <script src="<?php echo $pathPrefix; ?>/assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
 
     <script>
-        $(document).ready(function () {
-            // TODO: Load offers from API
-            // Sample data for now
-            const offers = [
-                { id: 1, name: 'Mobile Game Install', budget: '$10,000', conversions: 500, status: 'Active' },
-                { id: 2, name: 'Dating App Signup', budget: '$5,000', conversions: 200, status: 'Paused' }
-            ];
+        $(document).ready(async function () {
+            try {
+                const data = await API.fetchWithAuth('advertiser/offers/my');
 
-            let html = '';
-            offers.forEach(offer => {
-                const badgeClass = offer.status === 'Active' ? 'badge-success' : 'badge-warning';
-                html += `<tr>
-                    <td>${offer.id}</td>
-                    <td>${offer.name}</td>
-                    <td>${offer.budget}</td>
-                    <td>${offer.conversions}</td>
-                    <td><span class="badge ${badgeClass}">${offer.status}</span></td>
-                </tr>`;
-            });
-            $('#offersTableBody').html(html);
-            $('#dataTable').DataTable();
+                // console.log("data : " + JSON.stringify(data));
+
+                console.log("data : ", data.offers);
+
+                let html = '';
+                if (data.offers && data.offers.length > 0) {
+                    data.offers.forEach(offer => {
+                        const statusClass = offer.offer_status === 'Approved' ? 'badge-success' :
+                            offer.offer_status === 'Pending' ? 'badge-warning' : 'badge-secondary';
+                        html += `<tr>
+                            <td>${offer.id || offer.oid}</td>
+                            <td>${offer.offer_name}</td>
+                            <td>$${Number(offer.offer_budget || 0).toLocaleString()}</td>
+                            <td>${offer.conversions || 0}</td>
+                            <td><span class="badge ${statusClass}">${offer.offer_status || 'N/A'}</span></td>
+                        </tr>`;
+                    });
+                }
+                 // If no offers, leave html empty. DataTable will show "No data available in table"
+                 $('#offersTableBody').html(html);
+                $('#dataTable').DataTable();
+            } catch (error) {
+                console.error('Offers load failed:', error);
+                $('#offersTableBody').html('<tr><td colspan="5" class="text-center text-danger">Failed to load offers: ' + error.message + '</td></tr>');
+            }
         });
     </script>
 </body>

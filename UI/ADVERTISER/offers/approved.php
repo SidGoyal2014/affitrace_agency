@@ -55,23 +55,27 @@ include $pathPrefix . '/includes/head.php';
     <script src="<?php echo $pathPrefix; ?>/assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
 
     <script>
-        $(document).ready(function () {
-            // Sample data
-            const offers = [
-                { id: 1, name: 'Mobile Game Install', budget: '$10,000', status: 'Active' }
-            ];
+        $(document).ready(async function () {
+            try {
+                const data = await API.fetchWithAuth('advertiser/offers/approved');
 
-            let html = '';
-            offers.forEach(offer => {
-                html += `<tr>
-                    <td>${offer.id}</td>
-                    <td>${offer.name}</td>
-                    <td>${offer.budget}</td>
-                    <td><span class="badge badge-success">${offer.status}</span></td>
-                </tr>`;
-            });
-            $('#approvedTableBody').html(html);
-            $('#dataTable').DataTable();
+                let html = '';
+                if (data.offers && data.offers.length > 0) {
+                    data.offers.forEach(offer => {
+                        html += `<tr>
+                            <td>${offer.id || offer.oid}</td>
+                            <td>${offer.offer_name}</td>
+                            <td>$${Number(offer.offer_budget || 0).toLocaleString()}</td>
+                            <td><span class="badge badge-success">${offer.offer_status || 'Approved'}</span></td>
+                        </tr>`;
+                    });
+                }
+                $('#approvedTableBody').html(html);
+                $('#dataTable').DataTable();
+            } catch (error) {
+                console.error('Approved offers load failed:', error);
+                $('#approvedTableBody').html('<tr><td colspan="4" class="text-center text-danger">Failed to load offers: ' + error.message + '</td></tr>');
+            }
         });
     </script>
 </body>

@@ -126,8 +126,19 @@ Route::middleware(['auth:sanctum', 'api.tenant'])->group(function () {
 
     // Advertiser Routes
     Route::prefix('advertiser')->middleware(['advertiser'])->group(function () {
+        Route::get('dashboard', [App\Http\Controllers\Advertiser\AdvertiserDashboardController::class, 'dashboard']);
+
+        // Profile
         Route::get('profile', [App\Http\Controllers\Advertiser\AdvertiserController::class, 'profile']);
         Route::post('update_profile', [App\Http\Controllers\Advertiser\AdvertiserController::class, 'update_profile']);
+
+        // Offers
+        Route::get('offers/my', [App\Http\Controllers\Advertiser\AdvertiserOfferController::class, 'my_offers']);
+        Route::get('offers/approved', [App\Http\Controllers\Advertiser\AdvertiserOfferController::class, 'approved_offers']);
+
+        // Reports
+        Route::get('reports/summary', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'summary']);
+        Route::get('invoices', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'invoices']);
     });
 
     // Employee Routes

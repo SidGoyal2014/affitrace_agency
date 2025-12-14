@@ -92,17 +92,20 @@ include $pathPrefix . '/includes/head.php';
     <script>
         $(document).ready(async function () {
             try {
-                // TODO: Implement advertiser dashboard API call
-                // const data = await API.fetchWithAuth('advertiser/dashboard');
+                const data = await API.fetchWithAuth('advertiser/dashboard');
 
-                // Placeholder data for now
-                $('#total_offers').text('12');
-                $('#total_budget').text('$50,000');
-                $('#conversions').text('1,250');
-                $('#pending_invoices').text('2');
+                // Update Stats
+                $('#total_offers').text(data.total_offers || 0);
+                $('#total_budget').text('$' + Number(data.total_budget || 0).toLocaleString());
+                $('#conversions').text(Number(data.conversions || 0).toLocaleString());
+                $('#pending_invoices').text(data.pending_invoices || 0);
 
             } catch (error) {
                 console.error('Dashboard load failed:', error);
+                $('#total_offers').text('Error');
+                $('#total_budget').text('Error');
+                $('#conversions').text('Error');
+                $('#pending_invoices').text('Error');
             }
         });
     </script>

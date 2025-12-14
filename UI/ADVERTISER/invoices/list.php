@@ -56,27 +56,31 @@ include $pathPrefix . '/includes/head.php';
     <script src="<?php echo $pathPrefix; ?>/assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
 
     <script>
-        $(document).ready(function () {
-            // Sample data
-            const invoices = [
-                { id: 'INV-001', date: '2023-10-01', amount: '$500.00', status: 'Paid', action: 'Download' },
-                { id: 'INV-002', date: '2023-11-01', amount: '$600.00', status: 'Unpaid', action: 'Pay Now' }
-            ];
+        $(document).ready(async function () {
+            try {
+                const data = await API.fetchWithAuth('advertiser/invoices');
 
-            let html = '';
-            invoices.forEach(inv => {
-                const badgeClass = inv.status === 'Paid' ? 'badge-success' : 'badge-warning';
-                const btnClass = inv.status === 'Paid' ? 'btn-info' : 'btn-primary';
-                html += `<tr>
-                    <td>${inv.id}</td>
-                    <td>${inv.date}</td>
-                    <td>${inv.amount}</td>
-                    <td><span class="badge ${badgeClass}">${inv.status}</span></td>
-                    <td><a href="#" class="btn ${btnClass} btn-sm">${inv.action}</a></td>
-                </tr>`;
-            });
-            $('#invoicesTableBody').html(html);
-            $('#dataTable').DataTable();
+                let html = '';
+                if (data.invoices && data.invoices.length > 0) {
+                    data.invoices.forEach(inv => {
+                        const badgeClass = inv.status === 'Paid' ? 'badge-success' : 'badge-warning';
+                        const btnClass = inv.status === 'Paid' ? 'btn-info' : 'btn-primary';
+                        const action = inv.status === 'Paid' ? 'Download' : 'Pay Now';
+                        html += `<tr>
+                            <td>${inv.id || inv.invoice_number}</td>
+                            <td>${inv.date || inv.created_at}</td>
+                            <td>$${Number(inv.amount || 0).toLocaleString()}</td>
+                            <td><span class="badge ${badgeClass}">${inv.status}</span></td>
+                            <td><a href="#" class="btn ${btnClass} btn-sm">${action}</a></td>
+                        </tr>`;
+                    });
+                }
+                $('#invoicesTableBody').html(html);
+                $('#dataTable').DataTable();
+            } catch (error) {
+                console.error('Invoices load failed:', error);
+                $('#invoicesTableBody').html('<tr><td colspan="5" class="text-center text-danger">Failed to load invoices: ' + error.message + '</td></tr>');
+            }
         });
     </script>
 </body>

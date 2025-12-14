@@ -56,25 +56,28 @@ include $pathPrefix . '/includes/head.php';
     <script src="<?php echo $pathPrefix; ?>/assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
 
     <script>
-        $(document).ready(function () {
-            // Sample data
-            const data = [
-                { date: '2023-10-01', impressions: 10000, clicks: 500, conversions: 20, cost: '$100.00' },
-                { date: '2023-10-02', impressions: 12000, clicks: 600, conversions: 25, cost: '$125.00' }
-            ];
+        $(document).ready(async function () {
+            try {
+                const data = await API.fetchWithAuth('advertiser/reports/summary');
 
-            let html = '';
-            data.forEach(row => {
-                html += `<tr>
-                    <td>${row.date}</td>
-                    <td>${row.impressions}</td>
-                    <td>${row.clicks}</td>
-                    <td>${row.conversions}</td>
-                    <td>${row.cost}</td>
-                </tr>`;
-            });
-            $('#summaryTableBody').html(html);
-            $('#dataTable').DataTable();
+                let html = '';
+                if (data.stats && data.stats.length > 0) {
+                    data.stats.forEach(row => {
+                        html += `<tr>
+                            <td>${row.date}</td>
+                            <td>${Number(row.impressions || 0).toLocaleString()}</td>
+                            <td>${Number(row.clicks || 0).toLocaleString()}</td>
+                            <td>${Number(row.conversions || 0).toLocaleString()}</td>
+                            <td>$${Number(row.cost || 0).toFixed(2)}</td>
+                        </tr>`;
+                    });
+                }
+                $('#summaryTableBody').html(html);
+                $('#dataTable').DataTable();
+            } catch (error) {
+                console.error('Summary load failed:', error);
+                $('#summaryTableBody').html('<tr><td colspan="5" class="text-center text-danger">Failed to load report: ' + error.message + '</td></tr>');
+            }
         });
     </script>
 </body>
