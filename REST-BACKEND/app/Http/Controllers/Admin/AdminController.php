@@ -97,7 +97,7 @@ class AdminController extends Controller
 
 			}
 
-			$user = Auth::user();
+			$user = User::find(Auth::id());
 
 			$user->name = $request->name;
 			$user->email = $request->email;

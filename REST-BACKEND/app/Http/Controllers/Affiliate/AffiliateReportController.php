@@ -46,7 +46,7 @@ class AffiliateReportController extends Controller
 			WHERE
 				ot.aff_id = " . Auth::id() . " 
 			GROUP BY
-				offers.id
+				offers.id, offers.offer_name
 			Order By 
 				total_clicks DESC
 		";
@@ -348,5 +348,95 @@ class AffiliateReportController extends Controller
 		]);
 
 	}//search_affiliate_payouts
+
+	public function click_conversion_report(Request $request)
+	{
+		try {
+			$data = DB::table('offer_trackings')
+				->select(
+					'offer_trackings.*',
+					'offer_trackings.id as otid',
+					'offer_trackings.created_at as link_clicked_at',
+					'offer_trackings.country as ot_country',
+					'offer_trackings.os as ot_os',
+					'offer_trackings.browser as ot_browser',
+					'affis.id as aff_id',
+					'affis.name as aff_name',
+					'offers.id as offer_id',
+					'offers.offer_name',
+					'devices.device_name',
+					// Hiding Advertiser info for Affiliate by default unless needed
+					DB::raw("CASE WHEN offer_trackings.aff_click_id != '' THEN 1 ELSE 0 END as is_conversion")
+				)
+				->leftJoin('offers', 'offer_trackings.offer_id', '=', 'offers.id')
+				->leftJoin('categories', 'offers.category_id', '=', 'categories.id')
+				->leftJoin('devices', 'offer_trackings.device_id', '=', 'devices.id')
+				->leftJoin('users as affis', 'offer_trackings.aff_id', '=', 'affis.id')
+				// ->leftJoin('users as adverts', 'offer_trackings.adv_id', '=', 'adverts.id') // Affiliate doesn't need to filter by advertiser usually
+				->where('offer_trackings.aff_id', Auth::id()); // Enforce Affiliate security
+
+
+			if ($request->has('from') && $request->has('to') && $request->from != "" && $request->to != "") {
+				if ($request->from != $request->to) {
+					$data = $data->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
+				} else {
+					$data = $data->whereDate('offer_trackings.created_at', $request->from);
+				}
+			}
+
+			if ($request->has('offer_id') && $request->offer_id != "") {
+				$data = $data->where('offers.id', $request->offer_id);
+			}
+
+			// Ignored affiliate_id and advertiser_id matching
+
+			$arrC = $this->getCountry();
+			if ($request->has('country') && $request->country != "") {
+				$country = isset($arrC[$request->country]) ? $arrC[$request->country] : $request->country;
+				$data = $data->where('offer_trackings.country', $country);
+			}
+
+			if ($request->has('os') && $request->os != "") {
+				$data = $data->where('offer_trackings.os', 'LIKE', "%{$request->os}%");
+			}
+
+			if ($request->has('browser') && $request->browser != "") {
+				$data = $data->where('offer_trackings.browser', $request->browser);
+			}
+
+			if ($request->has('device') && $request->device != "") {
+				$data = $data->where('offer_trackings.device_id', $request->device);
+			}
+
+			if ($request->has('category') && $request->category != "") {
+				$data = $data->where('offers.category_id', $request->category);
+			}
+
+			if ($request->has('conversion_status') && $request->conversion_status != "") {
+				if ($request->conversion_status == 'converted') {
+					$data = $data->where('offer_trackings.aff_click_id', '!=', '');
+				} elseif ($request->conversion_status == 'pending') {
+					$data = $data->where('offer_trackings.aff_click_id', '=', '');
+				}
+			}
+
+			$perPage = $request->get('limit', 50);
+			$results = $data->orderBy('offer_trackings.id', 'desc')->paginate($perPage);
+
+			return response()->json([
+				'module_name' => "Click & Conversion Report",
+				'data' => $results,
+				'filters' => $request->all()
+			]);
+
+		} catch (\Exception $e) {
+			return response()->json([
+				'error' => true,
+				'message' => 'An error occurred while fetching report data.',
+				'details' => $e->getMessage()
+			], 500);
+		}
+
+	}
 
 }//AffiliateReportController
