@@ -5,9 +5,11 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
+use App\Http\Traits\MultiTenantResolver;
 
 class ApiSetTenantConnection
 {
+    use MultiTenantResolver;
     /**
      * Handle an incoming request.
      *
@@ -17,16 +19,11 @@ class ApiSetTenantConnection
      */
     public function handle(Request $request, Closure $next)
     {
-        // 1. Get Agency ID from Header (e.g. the username of the agency admin, 'eai')
-        $agencyId = $request->header('X-Agency-ID');
+        // 1. Get Agency ID using the 3-Strategy Resolver
+        $agencyId = $this->resolve_agency_username($request);
 
         if (!$agencyId) {
-            // If not in header, check input (for login)
-            $agencyId = $request->input('eai');
-        }
-
-        if (!$agencyId) {
-            return response()->json(['error' => 'X-Agency-ID header or eai parameter is required'], 400);
+            return response()->json(['error' => 'Agency identity not found. Check hostname or aff_click_id.'], 400);
         }
 
         // 2. Find the Tenant in Main DB

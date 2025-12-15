@@ -19,7 +19,9 @@ Route::get('/', function () {
 });
 
 // Tracking Redirects
-Route::get('offer/gourl/{oid}/{aid}', [TrackingController::class, 'gourl']);
+Route::middleware('api.tenant')->group(function () {
+	Route::get('offer/gourl/{oid}/{aid}', [TrackingController::class, 'gourl']);
+});
 
 // Verification / Error Pages
 Route::get('invalid_country', [WebsiteController::class, 'invalid_country'])->name('ic');

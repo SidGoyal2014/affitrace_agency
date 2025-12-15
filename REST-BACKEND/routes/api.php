@@ -12,6 +12,12 @@ use Illuminate\Support\Facades\Route;
 // Public Authentication
 Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login'])->middleware('api.tenant');
 
+// Public Tracking (Server-to-Server)
+Route::middleware('api.tenant')->group(function () {
+    Route::post('offer/sed/{oid}/{eid}', [App\Http\Controllers\TrackingController::class, 'sed']);
+    Route::get('offer/sd', [App\Http\Controllers\TrackingController::class, 'sd']);
+});
+
 // Protected Routes
 Route::middleware(['auth:sanctum', 'api.tenant'])->group(function () {
 
@@ -148,8 +154,7 @@ Route::middleware(['auth:sanctum', 'api.tenant'])->group(function () {
     });
 
     // Tracking (Server-to-Server)
-    Route::post('offer/sed/{oid}/{eid}', [App\Http\Controllers\TrackingController::class, 'sed']);
-    Route::get('offer/sd', [App\Http\Controllers\TrackingController::class, 'sd']);
+
 
 });
 
