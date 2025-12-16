@@ -22,7 +22,7 @@ include $pathPrefix . '/includes/head.php';
             <!-- Stats Grid -->
             <div class="row">
                 <!-- Total Active Offers -->
-                <div class="col-xl-4 col-md-6 mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
                     <div class="card-modern h-100">
                         <div class="stat-card">
                             <div class="stat-icon primary">
@@ -37,22 +37,84 @@ include $pathPrefix . '/includes/head.php';
                 </div>
 
                 <!-- Monthly Revenue -->
-                <div class="col-xl-4 col-md-6 mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
                     <div class="card-modern h-100">
                         <div class="stat-card">
                             <div class="stat-icon success">
                                 <i class="fas fa-dollar-sign"></i>
                             </div>
                             <div class="stat-content">
-                                <div class="stat-label">Monthly Revenue</div>
+                                <div class="stat-label">Month's Earnings</div>
                                 <div class="stat-value" id="monthly_revenue">...</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Today's Revenue -->
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card-modern h-100">
+                        <div class="stat-card">
+                            <div class="stat-icon info">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Today's Earnings</div>
+                                <div class="stat-value" id="today_revenue">...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Earnings -->
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card-modern h-100">
+                        <div class="stat-card">
+                            <div class="stat-icon warning">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Earnings</div>
+                                <div class="stat-value" id="total_earnings">...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Total Clicks -->
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card-modern h-100">
+                        <div class="stat-card">
+                            <div class="stat-icon primary">
+                                <i class="fas fa-mouse-pointer"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Clicks</div>
+                                <div class="stat-value" id="total_clicks">...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Conversions -->
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card-modern h-100">
+                        <div class="stat-card">
+                            <div class="stat-icon success">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Conversions</div>
+                                <div class="stat-value" id="total_conversions">...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Offers Assigned -->
-                <div class="col-xl-4 col-md-6 mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
                     <div class="card-modern h-100">
                         <div class="stat-card">
                             <div class="stat-icon info">
@@ -172,11 +234,12 @@ include $pathPrefix . '/includes/head.php';
                 // Update Stats
                 $('#total_offers').text(data.all_offers ? data.all_offers.length : 0);
 
-                let totalRev = 0;
-                if (data.strRevenue) {
-                    totalRev = data.strRevenue.reduce((a, b) => a + parseFloat(b), 0);
-                }
-                $('#monthly_revenue').text('$' + number_format(totalRev));
+                // Use the backend provided dynamic values
+                $('#monthly_revenue').text('$' + (data.month_earnings || '0.00'));
+                $('#today_revenue').text('$' + (data.today_earnings || '0.00'));
+                $('#total_earnings').text('$' + (data.total_earnings || '0.00'));
+                $('#total_clicks').text(data.total_clicks || 0);
+                $('#total_conversions').text(data.total_conversions || 0);
 
                 $('#offers_assigned').text(data.offers_assigned ? data.offers_assigned.length : 0);
 
