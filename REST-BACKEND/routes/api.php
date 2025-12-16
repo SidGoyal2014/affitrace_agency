@@ -10,16 +10,15 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public Authentication
-Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login'])->middleware('api.tenant');
+Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login']);
 
 // Public Tracking (Server-to-Server)
-Route::middleware('api.tenant')->group(function () {
-    Route::post('offer/sed/{oid}/{eid}', [App\Http\Controllers\TrackingController::class, 'sed']);
-    Route::get('offer/sd', [App\Http\Controllers\TrackingController::class, 'sd']);
-});
+// api.tenant is now in Kernel, so it applies to all API routes
+Route::post('offer/sed/{oid}/{eid}', [App\Http\Controllers\TrackingController::class, 'sed']);
+Route::get('offer/sd', [App\Http\Controllers\TrackingController::class, 'sd']);
 
 // Protected Routes
-Route::middleware(['auth:sanctum', 'api.tenant'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::post('logout', [App\Http\Controllers\Api\AuthController::class, 'logout']);
     Route::post('refresh-token', [App\Http\Controllers\Api\AuthController::class, 'refreshToken']);
@@ -159,7 +158,7 @@ Route::middleware(['auth:sanctum', 'api.tenant'])->group(function () {
 });
 
 // Admin Dashboard Extra
-Route::middleware(['auth:sanctum', 'api.tenant', 'admin'])->group(function () {
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('admin/reject-assign-request/{oaid}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'reject_offer_assign_requests']);
     Route::get('admin/reports/top-offers/{dod}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'top_offers']);
     Route::get('admin/reports/top-affiliates/{dod}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'top_affiliates']);

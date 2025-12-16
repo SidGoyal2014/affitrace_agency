@@ -91,7 +91,9 @@ const API = {
             }
         }
         API.clearToken();
-        window.location.href = '../login.php';
+        // Navigate to global login - handle both root and subdirectory pages
+        const basePath = window.location.pathname.split('/AFFILIATE')[0];
+        window.location.href = basePath + '/login.php';
     },
 
     clearToken: () => {

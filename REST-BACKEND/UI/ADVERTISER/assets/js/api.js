@@ -91,7 +91,7 @@ const API = {
             }
         }
         API.clearToken();
-        // Navigate to login - handle both root and subdirectory pages
+        // Navigate to global login - handle both root and subdirectory pages
         const basePath = window.location.pathname.split('/ADVERTISER')[0];
         window.location.href = basePath + '/login.php';
     },
