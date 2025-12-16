@@ -15,12 +15,13 @@ use App\Models\OfferTracking;
 use App\Http\Traits\CommonFunctions;
 use App\Http\Traits\TrackingUrlValidation;
 use App\Http\Traits\SystemSettings;
+use App\Http\Traits\MultiTenantResolver;
 //use App\Jobs\SaveClickDetailsJob;
 
 class TrackingController extends Controller
 {
 
-	use CommonFunctions, TrackingUrlValidation, SystemSettings;
+	use CommonFunctions, TrackingUrlValidation, SystemSettings, MultiTenantResolver;
 
 
 	public function gourl($oid, $aid, Request $request)
@@ -93,7 +94,13 @@ class TrackingController extends Controller
 
 		if ($response) {
 
-			$click_id = md5($this->generateUniqueValue());
+			$agency_prefix = $this->resolve_agency_username($request);
+			// Fallback if no agency found (e.g. direct IP access)
+			if (!$agency_prefix) {
+				$agency_prefix = 'unknown';
+			}
+
+			$click_id = sprintf('%s-%s', $agency_prefix, md5($this->generateUniqueValue()));
 
 			$eid = NULL;
 

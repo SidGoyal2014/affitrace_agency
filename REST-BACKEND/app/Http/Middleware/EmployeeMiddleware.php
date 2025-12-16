@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -17,14 +18,22 @@ class EmployeeMiddleware
     {
         //return $next($request);
 
-	   	if(Auth::user()->user_type != 'employee'){
+        if (strtolower(Auth::user()->user_type) != 'employee') {
 
-			Auth::logout();
+            // Revoke the token if it's not transient
+            $accessToken = $request->user()->currentAccessToken();
+            if ($accessToken && !($accessToken instanceof \Laravel\Sanctum\TransientToken)) {
+                $accessToken->delete();
+            }
 
-			return redirect()->to('/login')->withErrors(['message'=>'Unauthorised attempt.']);
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'Unauthorised attempt.'], 403);
+            }
 
-	   	}
+            return redirect()->to('/login')->withErrors(['message' => 'Unauthorised attempt.']);
 
-		return $next($request);
+        }
+
+        return $next($request);
     }
 }

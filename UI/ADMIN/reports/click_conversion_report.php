@@ -90,7 +90,7 @@ include $pathPrefix . '/includes/head.php';
                             cellspacing="0">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th>Click ID</th>
                                     <th>Status</th>
                                     <th>Click Time</th>
                                     <th>Offer</th>
@@ -234,7 +234,7 @@ include $pathPrefix . '/includes/head.php';
 
                 const tr = `
                     <tr>
-                        <td>${row.otid}</td>
+                        <td>${row.tid}</td>
                         <td>${statusBadge}</td>
                         <td><small>${dateStr}</small></td>
                         <td>

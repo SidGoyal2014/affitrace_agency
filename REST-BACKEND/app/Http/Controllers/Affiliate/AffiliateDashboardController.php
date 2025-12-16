@@ -62,7 +62,14 @@ class AffiliateDashboardController extends Controller
 			'labelCategories' => $arrCats,
 			'strRevenue' => $arrRevenue,
 			'topEarningOffers' => $this->top_offers(),
-			'topEarningAffiliates' => $this->top_affiliates()
+			'topEarningAffiliates' => $this->top_affiliates(),
+
+			// New Dynamic Data
+			'total_clicks' => $this->get_total_clicks(),
+			'total_conversions' => $this->get_total_conversions(),
+			'total_earnings' => $this->get_total_earnings(),
+			'today_earnings' => $this->get_today_earnings(),
+			'month_earnings' => $this->get_month_earnings()
 		]);
 
 	}//dashboard
@@ -265,5 +272,41 @@ class AffiliateDashboardController extends Controller
 
 	}//send_offer_assign_request
 
+
+	//New Calculation Methods
+	private function get_total_clicks()
+	{
+		return OfferTracking::where('aff_id', Auth::id())->count();
+	}
+
+	private function get_total_conversions()
+	{
+		return OfferTracking::where('aff_id', Auth::id())
+			->where('payout_usd', '>', 0)
+			->count();
+	}
+
+	private function get_total_earnings()
+	{
+		$total = OfferTracking::where('aff_id', Auth::id())->sum('payout_usd');
+		return number_format((float) $total, 2, '.', '');
+	}
+
+	private function get_today_earnings()
+	{
+		$total = OfferTracking::where('aff_id', Auth::id())
+			->whereDate('created_at', date('Y-m-d'))
+			->sum('payout_usd');
+		return number_format((float) $total, 2, '.', '');
+	}
+
+	private function get_month_earnings()
+	{
+		$total = OfferTracking::where('aff_id', Auth::id())
+			->whereYear('created_at', date('Y'))
+			->whereMonth('created_at', date('m'))
+			->sum('payout_usd');
+		return number_format((float) $total, 2, '.', '');
+	}
 
 }//DashboardController

@@ -17,12 +17,16 @@ class AdminMiddleware
     {
         //return $next($request);
 
-        if (Auth::user()->user_type != 'admin') {
+        if (strtolower(Auth::user()->user_type) != 'admin') {
 
-            Auth::logout();
+            // Revoke the token if it's not transient
+            $accessToken = $request->user()->currentAccessToken();
+            if ($accessToken && !($accessToken instanceof \Laravel\Sanctum\TransientToken)) {
+                $accessToken->delete();
+            }
 
             if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json(['message' => 'Unauthorised attempt.'], 401);
+                return response()->json(['message' => 'Unauthorised attempt.'], 403);
             }
 
             return redirect()->to('/login')->withErrors(['message' => 'Unauthorised attempt.']);

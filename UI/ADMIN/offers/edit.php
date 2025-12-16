@@ -637,6 +637,14 @@ include $pathPrefix . '/includes/head.php';
                 return;
             }
             let finalUrl = currentBaseUrl;
+
+            // Append Agency ID from localStorage to ensure link works on localhost/single-domain
+            const agencyId = localStorage.getItem('agency_id');
+            if (agencyId && !finalUrl.includes('eai=')) {
+                // Check if URL already has query params
+                finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'eai=' + agencyId;
+            }
+
             $('.token-checkbox:checked').each(function () {
                 const macro = $(this).data('macro');
                 const key = macro.replace('{', '').replace('}', '');
