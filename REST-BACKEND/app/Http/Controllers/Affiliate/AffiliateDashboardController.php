@@ -20,18 +20,19 @@ use App\Models\AffiliateUserDetail;
 use App\Models\AdvertiserUserDetail;
 
 use App\Http\Traits\CommonFunctions;
+use App\Services\AffiliateDashboardService;
 
 class AffiliateDashboardController extends Controller
 {
 
 	use CommonFunctions;
 
-	public function dashboard(Request $request)
+	public function dashboard(Request $request, AffiliateDashboardService $service)
 	{
 
 		$logged_in_user_type = $request->user()->user_type; // From Token
 
-		$arr = $this->get_category_wise_revenue();
+		$arr = $service->get_category_wise_revenue();
 
 		$arrCats = array();
 		$arrRevenue = array();
@@ -41,7 +42,7 @@ class AffiliateDashboardController extends Controller
 			$arrRevenue[] = $obj->revenue;
 		}//foreach
 
-		$obj_offers = $this->get_affiliate_offers();
+		$obj_offers = $service->get_affiliate_offers();
 
 		// Safe check for all_offer_ids
 		$arr_affiliate_offers = [];
@@ -53,204 +54,26 @@ class AffiliateDashboardController extends Controller
 			'title' => ucfirst($logged_in_user_type) . ' Dashboard',
 			'module_name' => ucfirst($logged_in_user_type) . ' Dashboard',
 			'logged_in_user_type' => $logged_in_user_type,
-			'all_offers' => $this->get_offers_assigned(),
+			'all_offers' => $service->get_offers_assigned(),
 			'arr_affiliate_offers' => $arr_affiliate_offers,
-			'offers_assigned' => $this->get_offers_assigned(),
+			'offers_assigned' => $service->get_offers_assigned(),
 
-			'arrMonthlyRevenue' => $this->get_monthly_revenue(),
+			'arrMonthlyRevenue' => $service->get_monthly_revenue(),
 			'arrCats' => $arrCats, // Send array, frontend can stringify if needed
 			'labelCategories' => $arrCats,
 			'strRevenue' => $arrRevenue,
-			'topEarningOffers' => $this->top_offers(),
-			'topEarningAffiliates' => $this->top_affiliates(),
+			'topEarningOffers' => $service->top_offers(),
+			'topEarningAffiliates' => $service->top_affiliates(),
 
 			// New Dynamic Data
-			'total_clicks' => $this->get_total_clicks(),
-			'total_conversions' => $this->get_total_conversions(),
-			'total_earnings' => $this->get_total_earnings(),
-			'today_earnings' => $this->get_today_earnings(),
-			'month_earnings' => $this->get_month_earnings()
+			'total_clicks' => $service->get_total_clicks(),
+			'total_conversions' => $service->get_total_conversions(),
+			'total_earnings' => $service->get_total_earnings(),
+			'today_earnings' => $service->get_today_earnings(),
+			'month_earnings' => $service->get_month_earnings()
 		]);
 
 	}//dashboard
-
-
-	public function top_affiliates($dod = "Y")
-	{
-		// Always return data
-		$strLimit = " LIMIT 0,5";
-		$sql = "SELECT U.id as uid, OT.aff_id, U.name, sum(OT.payout) as payout FROM  users U INNER JOIN offer_trackings OT ON U.id=OT.aff_id GROUP BY OT.aff_id, U.id, U.name ORDER BY payout DESC" . $strLimit;
-		$data = DB::select($sql);
-		return $data;
-	}//top_affiliates
-
-
-	public function top_offers($dod = "Y")
-	{
-		// Always return data
-		$sql = "SELECT OT.offer_id, O.offer_name, sum(OT.revenue) as revenue, O.offer_status FROM  offers O INNER JOIN offer_trackings OT ON O.id=OT.offer_id GROUP BY OT.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 0,5";
-		$arr = DB::select($sql);
-		return $arr;
-	}//top_offers
-
-
-
-
-	private function get_category_wise_revenue()
-	{
-
-		$sql = "SELECT 
-		    MONTH(o.created_at) AS month,
-		    c.category_name,
-		    SUM(ot.revenue_usd) AS revenue
-		FROM 
-		    offer_trackings ot
-		JOIN 
-		    offers o ON ot.offer_id = o.id
-		JOIN 
-		    categories c ON o.category_id = c.id
-		WHERE
-			ot.aff_id = " . Auth::id() . "
-		GROUP BY 
-		    MONTH(o.created_at), c.category_name
-		ORDER BY 
-		    MONTH(o.created_at), c.category_name
-		LIMIT 0,5";
-
-
-		$arr = DB::select($sql);
-
-		return $arr;
-
-	}//get_category_wise_revenue
-
-
-	private function get_monthly_revenue()
-	{
-
-		//where year(campaign_start_date) = year(now()) 
-
-		$arrSTR = array();
-
-		$sql = "SELECT sum(revenue_usd) as revenue, month(created_at) as month FROM offer_trackings where aff_id = " . Auth::id() . " AND aff_click_id != '' group by month(created_at); ";
-
-		$arr = DB::select($sql);
-
-		foreach ($arr as $obj) {
-
-			$month = 0;
-
-			if (trim($obj->month) == "") {
-				$month = 0;
-			} else {
-				$month = $obj->month;
-
-			}
-
-			$arrSTR[$month] = $obj->revenue;
-
-		}//foreach
-
-
-
-		for ($index = 1; $index <= 12; $index++) {
-
-			if (!isset($arrSTR[$index])) {
-				$arrSTR[$index] = 0;
-			}
-
-		}//foreach
-
-		ksort($arrSTR, SORT_NUMERIC);
-
-		$arrMonthlyRevenue = '[' . implode(',', $arrSTR) . ']';
-
-
-		return $arrMonthlyRevenue;
-
-
-	}//get_monthly_revenue
-
-	private function get_all_offers()
-	{
-
-		$sql = "
-                SELECT 
-                    offers.*, 
-                    categories.category_name,
-                    offers.id as oid 
-                FROM 
-                    offers 
-                LEFT JOIN 
-                    categories 
-                ON 
-                    offers.category_id = categories.id 
-            ";
-
-		$all_offers = DB::select($sql);
-
-		return $all_offers;
-
-	}//get_all_offers
-
-
-	function get_affiliate_offers()
-	{
-
-		$sql = "
-                SELECT 
-                    GROUP_CONCAT( offer_id ) AS all_offer_ids
-                FROM 
-                    offer_affiliates 
-                WHERE
-                    affiliate_id = " . Auth::id();
-
-
-		$data = DB::select($sql);
-
-		return $data[0] ?? null;
-
-	}//get_affiliate_offers
-
-
-
-
-	private function get_offers_assigned()
-	{
-
-		try {
-
-			$sql = "
-					SELECT 
-						offers.*,
-                        categories.category_name,
-                        offers.id as oid 
-					FROM 
-						offers 
-                    INNER JOIN 
-                        offer_affiliates 
-					ON 
-						offers.id = offer_affiliates.offer_id 
-                    LEFT JOIN 
-                        categories 
-                    ON 
-                        offers.category_id = categories.id
-					WHERE 
-						offer_affiliates.affiliate_id = " . Auth::id();
-
-
-			$data = DB::select($sql);
-
-			return $data;
-
-		} catch (\Exception $e) {
-			return []; // Return empty array on error instead of redirect
-		}
-
-	}//get_offers_assigned
-
-
-
 
 	public function send_offer_assign_request($oid)
 	{
@@ -274,39 +97,6 @@ class AffiliateDashboardController extends Controller
 
 
 	//New Calculation Methods
-	private function get_total_clicks()
-	{
-		return OfferTracking::where('aff_id', Auth::id())->count();
-	}
 
-	private function get_total_conversions()
-	{
-		return OfferTracking::where('aff_id', Auth::id())
-			->where('payout_usd', '>', 0)
-			->count();
-	}
-
-	private function get_total_earnings()
-	{
-		$total = OfferTracking::where('aff_id', Auth::id())->sum('payout_usd');
-		return number_format((float) $total, 2, '.', '');
-	}
-
-	private function get_today_earnings()
-	{
-		$total = OfferTracking::where('aff_id', Auth::id())
-			->whereDate('created_at', date('Y-m-d'))
-			->sum('payout_usd');
-		return number_format((float) $total, 2, '.', '');
-	}
-
-	private function get_month_earnings()
-	{
-		$total = OfferTracking::where('aff_id', Auth::id())
-			->whereYear('created_at', date('Y'))
-			->whereMonth('created_at', date('m'))
-			->sum('payout_usd');
-		return number_format((float) $total, 2, '.', '');
-	}
 
 }//DashboardController
