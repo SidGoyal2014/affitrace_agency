@@ -12,12 +12,15 @@ class AffiliateDashboardService
     /**
      * Get category wise revenue for the logged-in affiliate.
      */
+    /**
+     * Get category wise revenue for the logged-in affiliate.
+     */
     public function get_category_wise_revenue()
     {
         $sql = "SELECT 
                     MONTH(o.created_at) AS month,
                     c.category_name,
-                    SUM(ot.revenue_usd) AS revenue
+                    SUM(ot.payout_usd) AS revenue
                 FROM 
                     offer_trackings ot
                 JOIN 
@@ -26,6 +29,9 @@ class AffiliateDashboardService
                     categories c ON o.category_id = c.id
                 WHERE
                     ot.aff_id = " . Auth::id() . "
+                    AND ot.aff_click_id IS NOT NULL
+                    AND ot.tid IS NOT NULL
+                    AND ot.aff_click_id = ot.tid
                 GROUP BY 
                     MONTH(o.created_at), c.category_name
                 ORDER BY 
@@ -42,7 +48,7 @@ class AffiliateDashboardService
     {
         $arrSTR = array();
 
-        $sql = "SELECT sum(revenue_usd) as revenue, month(created_at) as month FROM offer_trackings where aff_id = " . Auth::id() . " AND aff_click_id != '' group by month(created_at); ";
+        $sql = "SELECT sum(payout_usd) as revenue, month(created_at) as month FROM offer_trackings where aff_id = " . Auth::id() . " AND aff_click_id IS NOT NULL AND tid IS NOT NULL AND aff_click_id = tid group by month(created_at); ";
 
         $arr = DB::select($sql);
 
@@ -138,25 +144,40 @@ class AffiliateDashboardService
 
     public function get_total_clicks()
     {
-        return OfferTracking::where('aff_id', Auth::id())->count();
+        // 'aff_click_id' = 'tid' implies the initial click record (not a postback/duplicate)
+        // Correct logic: Count distinct TIDs (clicks)
+        return OfferTracking::where('aff_id', Auth::id())
+            ->distinct('tid')
+            ->count('tid');
     }
 
     public function get_total_conversions()
     {
+        // Conversions are where aff_click_id matches tid (click_id)
         return OfferTracking::where('aff_id', Auth::id())
-            ->where('payout_usd', '>', 0)
+            ->whereNotNull('aff_click_id')
+            ->whereNotNull('tid')
+            ->whereColumn('aff_click_id', 'tid')
             ->count();
     }
 
     public function get_total_earnings()
     {
-        $total = OfferTracking::where('aff_id', Auth::id())->sum('payout_usd');
+        // Earnings should only be calculated for valid conversions
+        $total = OfferTracking::where('aff_id', Auth::id())
+            ->whereNotNull('aff_click_id')
+            ->whereNotNull('tid')
+            ->whereColumn('aff_click_id', 'tid')
+            ->sum('payout_usd');
         return number_format((float) $total, 2, '.', '');
     }
 
     public function get_today_earnings()
     {
         $total = OfferTracking::where('aff_id', Auth::id())
+            ->whereNotNull('aff_click_id')
+            ->whereNotNull('tid')
+            ->whereColumn('aff_click_id', 'tid')
             ->whereDate('created_at', date('Y-m-d'))
             ->sum('payout_usd');
         return number_format((float) $total, 2, '.', '');
@@ -165,6 +186,9 @@ class AffiliateDashboardService
     public function get_month_earnings()
     {
         $total = OfferTracking::where('aff_id', Auth::id())
+            ->whereNotNull('aff_click_id')
+            ->whereNotNull('tid')
+            ->whereColumn('aff_click_id', 'tid')
             ->whereYear('created_at', date('Y'))
             ->whereMonth('created_at', date('m'))
             ->sum('payout_usd');
