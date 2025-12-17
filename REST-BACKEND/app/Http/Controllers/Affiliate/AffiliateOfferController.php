@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Affiliate;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Services\AffiliateOfferService;
+use App\Services\Affiliate\AffiliateOfferService;
 use App\Http\Traits\MultiTenantResolver;
 
 class AffiliateOfferController extends Controller

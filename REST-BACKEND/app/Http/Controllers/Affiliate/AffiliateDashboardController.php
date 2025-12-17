@@ -20,7 +20,7 @@ use App\Models\AffiliateUserDetail;
 use App\Models\AdvertiserUserDetail;
 
 use App\Http\Traits\CommonFunctions;
-use App\Services\AffiliateDashboardService;
+use App\Services\Affiliate\AffiliateDashboardService;
 
 class AffiliateDashboardController extends Controller
 {

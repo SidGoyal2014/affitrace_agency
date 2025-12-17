@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Affiliate;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Services\AffiliateReportService;
+use App\Services\Affiliate\AffiliateReportService;
 
 class AffiliateReportController extends Controller
 {
