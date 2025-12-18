@@ -32,6 +32,8 @@ class AdminDashboardService
             'module_name' => ucfirst($logged_in_user_type) . ' Dashboard',
             'logged_in_user_type' => $logged_in_user_type,
             'click_message' => $this->get_clicks_message(),
+            'clicks_consumed' => $this->get_total_clicks(),
+            'clicks_limit' => $this->get_settings("num_clicks"),
             'total_offers' => $this->get_total_offers(),
             'total_revenue' => $this->get_total_revenue(),
             'total_payouts' => $this->get_total_payouts(),

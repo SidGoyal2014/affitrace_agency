@@ -68,12 +68,16 @@ class TrackingController extends Controller
 
 		$offer = $offers[0];
 
+		\Log::info("Offer: " . json_encode($offer));
+
 		// User Data
 		$arrBrowserData = $this->getBrowswerData();
 
 		$client_ip = $this->get_client_ip(TRUE);
 
 		$arrLocation = $this->ip_info("location", $client_ip);
+
+		\Log::info("Location: " . json_encode($arrLocation));
 
 		// Get user country
 		$visitor_country = strtoupper($arrLocation['country']);
@@ -85,12 +89,16 @@ class TrackingController extends Controller
 			- Clicks not saved as maximum allowed limit as per purchased plan already reached
 			*/
 
+			\Log::info("Clicks not saved as maximum allowed limit as per purchased plan already reached");
+
 			return redirect('verify');
 
 		}
 
 
 		$response = $this->is_matching_target($offer, $payoutRule, $arrBrowserData, $arrLocation);
+
+		\Log::info('' . json_encode($response));
 
 		if ($response) {
 

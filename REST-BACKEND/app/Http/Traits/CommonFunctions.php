@@ -12,20 +12,22 @@ use App\Models\Device;
 use App\Models\OfferAffiliate;
 
 
-trait CommonFunctions{
+trait CommonFunctions
+{
 
 
-	public function isOfferAcceptedForAffiliate($oid, $aid){
+	public function isOfferAcceptedForAffiliate($oid, $aid)
+	{
 
 		$data = OfferAffiliate::select('*')
-					->where('offer_id', $oid)
-					->where('affiliate_id', $aid)
-					->get()->toArray();
+			->where('offer_id', $oid)
+			->where('affiliate_id', $aid)
+			->get()->toArray();
 
-		if($data[0]['request_status'] == "Accepted"){
+		if ($data[0]['request_status'] == "Accepted") {
 			return true;
 
-		}else{
+		} else {
 			return $data[0]['request_status'];
 
 		}
@@ -33,7 +35,8 @@ trait CommonFunctions{
 
 	}//isOfferAcceptedForAffiliate
 
-	public function getNewCurrencyValue($from, $to){
+	public function getNewCurrencyValue($from, $to)
+	{
 
 		return 1;
 		/**
@@ -47,7 +50,7 @@ trait CommonFunctions{
 		$curl = curl_init();
 
 		curl_setopt_array($curl, [
-			CURLOPT_URL => env('CURRENCY_RAPID_API_URL')."?from=".$from."&to=".$to."&q=1",
+			CURLOPT_URL => env('CURRENCY_RAPID_API_URL') . "?from=" . $from . "&to=" . $to . "&q=1",
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING => "",
 			CURLOPT_MAXREDIRS => 10,
@@ -55,8 +58,8 @@ trait CommonFunctions{
 			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 			CURLOPT_CUSTOMREQUEST => "GET",
 			CURLOPT_HTTPHEADER => [
-				"X-RapidAPI-Host: ".env('CURRENCY_RAPID_API_HOST'),
-				"X-RapidAPI-Key: ".env('CURRENCY_RAPID_API_KEY')
+				"X-RapidAPI-Host: " . env('CURRENCY_RAPID_API_HOST'),
+				"X-RapidAPI-Key: " . env('CURRENCY_RAPID_API_KEY')
 			],
 		]);
 
@@ -74,7 +77,8 @@ trait CommonFunctions{
 
 	}//getNewCurrencyValue
 
-	public function send_data($type, $data, $receiving_url){
+	public function send_data($type, $data, $receiving_url)
+	{
 
 
 		$header = array();
@@ -82,11 +86,11 @@ trait CommonFunctions{
 		$ch = curl_init($receiving_url);
 
 		// Creating Header
-		if($type == "jSON"){
+		if ($type == "jSON") {
 
 			$header = array(
 				'Content-Type: application/json'/*,
-				'Authorization: ' . $this->api_key*/
+'Authorization: ' . $this->api_key*/
 			);
 
 		}//if
@@ -94,15 +98,15 @@ trait CommonFunctions{
 
 		//options for curl
 		$array_options = array(
-			CURLOPT_POST=>true,
-			CURLOPT_POSTFIELDS=>http_build_query($data),
+			CURLOPT_POST => true,
+			CURLOPT_POSTFIELDS => http_build_query($data),
 			CURLOPT_SSL_VERIFYPEER => true,
 			CURLOPT_SSL_VERIFYHOST => 2
 
 		);
 
 		//setting multiple options using curl_setopt_array
-		curl_setopt_array($ch,$array_options);
+		curl_setopt_array($ch, $array_options);
 
 		// using curl_exec() is used to execute the POST request
 		$resp = curl_exec($ch);
@@ -111,7 +115,7 @@ trait CommonFunctions{
 		//decode the response
 		//$final_decoded_data = json_encode($resp);
 
-		
+
 		//echo $resp ;
 		/*
 		foreach($final_decoded_data as $key => $val){
@@ -119,7 +123,7 @@ trait CommonFunctions{
 
 		}//foreach
 		*/
-		
+
 
 		//close the cURL and load the page
 		curl_close($ch);
@@ -128,9 +132,10 @@ trait CommonFunctions{
 
 	}//send_data
 
-    public function createHashString($product_id){
+	public function createHashString($product_id)
+	{
 
-		$str = $product_id."+".Auth::id()."MtS_gEnErIc_PaYmEnT_SoLuTiOn_WiDgEt";
+		$str = $product_id . "+" . Auth::id() . "MtS_gEnErIc_PaYmEnT_SoLuTiOn_WiDgEt";
 
 		$token = password_hash($str, PASSWORD_DEFAULT);
 
@@ -138,13 +143,14 @@ trait CommonFunctions{
 
 	}//createHashString
 
-	public function verifyHashedString($product_id, $user_id, $hash){
-	
-		$str = $product_id."+".$user_id."MtS_gEnErIc_PaYmEnT_SoLuTiOn_WiDgEt";
+	public function verifyHashedString($product_id, $user_id, $hash)
+	{
+
+		$str = $product_id . "+" . $user_id . "MtS_gEnErIc_PaYmEnT_SoLuTiOn_WiDgEt";
 
 		return password_verify($str, $hash);
 
-	
+
 	}//verifyHashedString
 
 
@@ -153,10 +159,11 @@ trait CommonFunctions{
 		generateSequenceNumber('tablename',[],'prefix-',5); //prefix-00001
 		generateSequenceNumber('users',['role' => 'admin'],'admin-',5); //admin-00005
 		generateSequenceNumber('users',['is_active' => 1,'role' => 'client'],'client-',8);
-	
+
 	*/
 
-	function generateSequenceNumber($tablename, array $conditions = [], string $prefix, int $length = 5){
+	function generateSequenceNumber($tablename, array $conditions = [], string $prefix, int $length = 5)
+	{
 
 		$model = \DB::table($tablename);
 
@@ -165,45 +172,47 @@ trait CommonFunctions{
 		}
 
 		return $prefix . str_pad(
-				($model->count()) + 1,
-				$length,
-				'0',
-				STR_PAD_LEFT
+			($model->count()) + 1,
+			$length,
+			'0',
+			STR_PAD_LEFT
 		);
 
 	}//generateSequenceNumber
 
 
-	public function generateUniqueValue() {
-	    // Get the current microtime
-	    //$microtime = microtime(true);
+	public function generateUniqueValue()
+	{
+		// Get the current microtime
+		//$microtime = microtime(true);
 
-	    // Get a unique identifier based on an object
-	    //$uniqueIdentifier = spl_object_id(new \stdClass());
+		// Get a unique identifier based on an object
+		//$uniqueIdentifier = spl_object_id(new \stdClass());
 
-	    // Generate a random string using random_bytes
-	    $randomBytes = bin2hex(random_bytes(8)); // Adjust the number of bytes as needed
+		// Generate a random string using random_bytes
+		$randomBytes = bin2hex(random_bytes(8)); // Adjust the number of bytes as needed
 
-	    // Additional information
-	    $ip = $_SERVER['REMOTE_ADDR'];
+		// Additional information
+		$ip = $_SERVER['REMOTE_ADDR'];
 
-	    // Get user agent
-	    //$userAgent = $_SERVER['HTTP_USER_AGENT'];
-
-
-	    // Combine all components
-	    //$uniqueValue = $microtime . $uniqueIdentifier . $randomBytes . $ip . $userAgent;
-	    $uniqueValue = $randomBytes . $ip;
+		// Get user agent
+		//$userAgent = $_SERVER['HTTP_USER_AGENT'];
 
 
-	    return Hash::make($uniqueValue);
+		// Combine all components
+		//$uniqueValue = $microtime . $uniqueIdentifier . $randomBytes . $ip . $userAgent;
+		$uniqueValue = $randomBytes . $ip;
+
+
+		return Hash::make($uniqueValue);
 
 	}//generateUniqueValue
 
 
 
-	public function getCountry($cc=''){
-	
+	public function getCountry($cc = '')
+	{
+
 		$arr = array();
 		$arr['ALL'] = "All Countries";
 		$arr['AF'] = "Afghanistan";
@@ -455,7 +464,7 @@ trait CommonFunctions{
 		$arr['ZW'] = "Zimbabwe";
 
 
-		if($cc != ""){
+		if ($cc != "") {
 			return $arr[$cc];
 		}
 
@@ -465,239 +474,242 @@ trait CommonFunctions{
 	}//getCountry
 
 
-	public function getPaymentMethod(){
+	public function getPaymentMethod()
+	{
 
 		$arr = array();
 		$arr[''] = "Select Options";
-		$arr['paypal']="Paypal";
-		$arr['webmoney']="Webmoney";
-		$arr['paxum']="Paxum";
-		$arr['skrill']="Skrill";
-		$arr['bank']="Bank";
-		$arr['payza']="Payza";
-		$arr['payoneer']="Payoneer";
+		$arr['paypal'] = "Paypal";
+		$arr['webmoney'] = "Webmoney";
+		$arr['paxum'] = "Paxum";
+		$arr['skrill'] = "Skrill";
+		$arr['bank'] = "Bank";
+		$arr['payza'] = "Payza";
+		$arr['payoneer'] = "Payoneer";
 
 		return $arr;
 
-	
+
 	}//getPaymentMethod
 
 
-	public function getCurrency(){
-	
+	public function getCurrency()
+	{
+
 		$arr = array();
 
-		$arr['AED']= "AED";
-		$arr['AFN']= "AFN";
-		$arr['ALL']= "ALL";
-		$arr['AMD']= "AMD";
-		$arr['ANG']= "ANG";
-		$arr['AOA']= "AOA";
-		$arr['ARS']= "ARS";
-		$arr['AUD']= "AUD";
-		$arr['AWG']= "AWG";
-		$arr['AZN']= "AZN";
-		$arr['BAM']= "BAM";
-		$arr['BBD']= "BBD";
-		$arr['BDT']= "BDT";
-		$arr['BGN']= "BGN";
-		$arr['BHD']= "BHD";
-		$arr['BIF']= "BIF";
-		$arr['BMD']= "BMD";
-		$arr['BND']= "BND";
-		$arr['BOB']= "BOB";
-		$arr['BRL']= "BRL";
-		$arr['BSD']= "BSD";
-		$arr['BTC']= "BTC";
-		$arr['BTN']= "BTN";
-		$arr['BWP']= "BWP";
-		$arr['BYN']= "BYN";
-		$arr['BYR']= "BYR";
-		$arr['BZD']= "BZD";
-		$arr['CAD']= "CAD";
-		$arr['CDF']= "CDF";
-		$arr['CHF']= "CHF";
-		$arr['CLF']= "CLF";
-		$arr['CLP']= "CLP";
-		$arr['CNY']= "CNY";
-		$arr['COP']= "COP";
-		$arr['CRC']= "CRC";
-		$arr['CUC']= "CUC";
-		$arr['CUP']= "CUP";
-		$arr['CVE']= "CVE";
-		$arr['CZK']= "CZK";
-		$arr['DJF']= "DJF";
-		$arr['DKK']= "DKK";
-		$arr['DOP']= "DOP";
-		$arr['DZD']= "DZD";
-		$arr['EEK']= "EEK";
-		$arr['EGP']= "EGP";
-		$arr['ERN']= "ERN";
-		$arr['ETB']= "ETB";
-		$arr['EUR']= "EUR";
-		$arr['FJD']= "FJD";
-		$arr['FKP']= "FKP";
-		$arr['GBP']= "GBP";
-		$arr['GEL']= "GEL";
-		$arr['GGP']= "GGP";
-		$arr['GHS']= "GHS";
-		$arr['GIP']= "GIP";
-		$arr['GMD']= "GMD";
-		$arr['GNF']= "GNF";
-		$arr['GTQ']= "GTQ";
-		$arr['GYD']= "GYD";
-		$arr['HKD']= "HKD";
-		$arr['HNL']= "HNL";
-		$arr['HRK']= "HRK";
-		$arr['HTG']= "HTG";
-		$arr['HUF']= "HUF";
-		$arr['IDR']= "IDR";
-		$arr['ILS']= "ILS";
-		$arr['IMP']= "IMP";
-		$arr['INR']= "INR";
-		$arr['IQD']= "IQD";
-		$arr['IRR']= "IRR";
-		$arr['ISK']= "ISK";
-		$arr['JEP']= "JEP";
-		$arr['JMD']= "JMD";
-		$arr['JOD']= "JOD";
-		$arr['JPY']= "JPY";
-		$arr['KES']= "KES";
-		$arr['KGS']= "KGS";
-		$arr['KHR']= "KHR";
-		$arr['KMF']= "KMF";
-		$arr['KPW']= "KPW";
-		$arr['KRW']= "KRW";
-		$arr['KWD']= "KWD";
-		$arr['KYD']= "KYD";
-		$arr['KZT']= "KZT";
-		$arr['LAK']= "LAK";
-		$arr['LBP']= "LBP";
-		$arr['LKR']= "LKR";
-		$arr['LRD']= "LRD";
-		$arr['LSL']= "LSL";
-		$arr['LTL']= "LTL";
-		$arr['LVL']= "LVL";
-		$arr['LYD']= "LYD";
-		$arr['MAD']= "MAD";
-		$arr['MDL']= "MDL";
-		$arr['MGA']= "MGA";
-		$arr['MKD']= "MKD";
-		$arr['MMK']= "MMK";
-		$arr['MNT']= "MNT";
-		$arr['MOP']= "MOP";
-		$arr['MRO']= "MRO";
-		$arr['MUR']= "MUR";
-		$arr['MVR']= "MVR";
-		$arr['MWK']= "MWK";
-		$arr['MXN']= "MXN";
-		$arr['MYR']= "MYR";
-		$arr['MZN']= "MZN";
-		$arr['NAD']= "NAD";
-		$arr['NGN']= "NGN";
-		$arr['NIO']= "NIO";
-		$arr['NOK']= "NOK";
-		$arr['NPR']= "NPR";
-		$arr['NZD']= "NZD";
-		$arr['OMR']= "OMR";
-		$arr['PAB']= "PAB";
-		$arr['PEN']= "PEN";
-		$arr['PGK']= "PGK";
-		$arr['PHP']= "PHP";
-		$arr['PKR']= "PKR";
-		$arr['PLN']= "PLN";
-		$arr['PYG']= "PYG";
-		$arr['QAR']= "QAR";
-		$arr['RON']= "RON";
-		$arr['RSD']= "RSD";
-		$arr['RUB']= "RUB";
-		$arr['RWF']= "RWF";
-		$arr['SAR']= "SAR";
-		$arr['SBD']= "SBD";
-		$arr['SCR']= "SCR";
-		$arr['SDG']= "SDG";
-		$arr['SEK']= "SEK";
-		$arr['SGD']= "SGD";
-		$arr['SHP']= "SHP";
-		$arr['SLL']= "SLL";
-		$arr['SOS']= "SOS";
-		$arr['SRD']= "SRD";
-		$arr['STD']= "STD";
-		$arr['SVC']= "SVC";
-		$arr['SYP']= "SYP";
-		$arr['SZL']= "SZL";
-		$arr['THB']= "THB";
-		$arr['TJS']= "TJS";
-		$arr['TMT']= "TMT";
-		$arr['TND']= "TND";
-		$arr['TOP']= "TOP";
-		$arr['TRY']= "TRY";
-		$arr['TTD']= "TTD";
-		$arr['TWD']= "TWD";
-		$arr['TZS']= "TZS";
-		$arr['UAH']= "UAH";
-		$arr['UGX']= "UGX";
-		$arr['USD']= "USD";
-		$arr['UYU']= "UYU";
-		$arr['UZS']= "UZS";
-		$arr['VEF']= "VEF";
-		$arr['VND']= "VND";
-		$arr['VUV']= "VUV";
-		$arr['WST']= "WST";
-		$arr['XAF']= "XAF";
-		$arr['XAG']= "XAG";
-		$arr['XAU']= "XAU";
-		$arr['XCD']= "XCD";
-		$arr['XDR']= "XDR";
-		$arr['XOF']= "XOF";
-		$arr['XPF']= "XPF";
-		$arr['YER']= "YER";
-		$arr['ZAR']= "ZAR";
-		$arr['ZMK']= "ZMK";
-		$arr['ZMW']= "ZMW";
-		$arr['ZWL']= "ZWL";
+		$arr['AED'] = "AED";
+		$arr['AFN'] = "AFN";
+		$arr['ALL'] = "ALL";
+		$arr['AMD'] = "AMD";
+		$arr['ANG'] = "ANG";
+		$arr['AOA'] = "AOA";
+		$arr['ARS'] = "ARS";
+		$arr['AUD'] = "AUD";
+		$arr['AWG'] = "AWG";
+		$arr['AZN'] = "AZN";
+		$arr['BAM'] = "BAM";
+		$arr['BBD'] = "BBD";
+		$arr['BDT'] = "BDT";
+		$arr['BGN'] = "BGN";
+		$arr['BHD'] = "BHD";
+		$arr['BIF'] = "BIF";
+		$arr['BMD'] = "BMD";
+		$arr['BND'] = "BND";
+		$arr['BOB'] = "BOB";
+		$arr['BRL'] = "BRL";
+		$arr['BSD'] = "BSD";
+		$arr['BTC'] = "BTC";
+		$arr['BTN'] = "BTN";
+		$arr['BWP'] = "BWP";
+		$arr['BYN'] = "BYN";
+		$arr['BYR'] = "BYR";
+		$arr['BZD'] = "BZD";
+		$arr['CAD'] = "CAD";
+		$arr['CDF'] = "CDF";
+		$arr['CHF'] = "CHF";
+		$arr['CLF'] = "CLF";
+		$arr['CLP'] = "CLP";
+		$arr['CNY'] = "CNY";
+		$arr['COP'] = "COP";
+		$arr['CRC'] = "CRC";
+		$arr['CUC'] = "CUC";
+		$arr['CUP'] = "CUP";
+		$arr['CVE'] = "CVE";
+		$arr['CZK'] = "CZK";
+		$arr['DJF'] = "DJF";
+		$arr['DKK'] = "DKK";
+		$arr['DOP'] = "DOP";
+		$arr['DZD'] = "DZD";
+		$arr['EEK'] = "EEK";
+		$arr['EGP'] = "EGP";
+		$arr['ERN'] = "ERN";
+		$arr['ETB'] = "ETB";
+		$arr['EUR'] = "EUR";
+		$arr['FJD'] = "FJD";
+		$arr['FKP'] = "FKP";
+		$arr['GBP'] = "GBP";
+		$arr['GEL'] = "GEL";
+		$arr['GGP'] = "GGP";
+		$arr['GHS'] = "GHS";
+		$arr['GIP'] = "GIP";
+		$arr['GMD'] = "GMD";
+		$arr['GNF'] = "GNF";
+		$arr['GTQ'] = "GTQ";
+		$arr['GYD'] = "GYD";
+		$arr['HKD'] = "HKD";
+		$arr['HNL'] = "HNL";
+		$arr['HRK'] = "HRK";
+		$arr['HTG'] = "HTG";
+		$arr['HUF'] = "HUF";
+		$arr['IDR'] = "IDR";
+		$arr['ILS'] = "ILS";
+		$arr['IMP'] = "IMP";
+		$arr['INR'] = "INR";
+		$arr['IQD'] = "IQD";
+		$arr['IRR'] = "IRR";
+		$arr['ISK'] = "ISK";
+		$arr['JEP'] = "JEP";
+		$arr['JMD'] = "JMD";
+		$arr['JOD'] = "JOD";
+		$arr['JPY'] = "JPY";
+		$arr['KES'] = "KES";
+		$arr['KGS'] = "KGS";
+		$arr['KHR'] = "KHR";
+		$arr['KMF'] = "KMF";
+		$arr['KPW'] = "KPW";
+		$arr['KRW'] = "KRW";
+		$arr['KWD'] = "KWD";
+		$arr['KYD'] = "KYD";
+		$arr['KZT'] = "KZT";
+		$arr['LAK'] = "LAK";
+		$arr['LBP'] = "LBP";
+		$arr['LKR'] = "LKR";
+		$arr['LRD'] = "LRD";
+		$arr['LSL'] = "LSL";
+		$arr['LTL'] = "LTL";
+		$arr['LVL'] = "LVL";
+		$arr['LYD'] = "LYD";
+		$arr['MAD'] = "MAD";
+		$arr['MDL'] = "MDL";
+		$arr['MGA'] = "MGA";
+		$arr['MKD'] = "MKD";
+		$arr['MMK'] = "MMK";
+		$arr['MNT'] = "MNT";
+		$arr['MOP'] = "MOP";
+		$arr['MRO'] = "MRO";
+		$arr['MUR'] = "MUR";
+		$arr['MVR'] = "MVR";
+		$arr['MWK'] = "MWK";
+		$arr['MXN'] = "MXN";
+		$arr['MYR'] = "MYR";
+		$arr['MZN'] = "MZN";
+		$arr['NAD'] = "NAD";
+		$arr['NGN'] = "NGN";
+		$arr['NIO'] = "NIO";
+		$arr['NOK'] = "NOK";
+		$arr['NPR'] = "NPR";
+		$arr['NZD'] = "NZD";
+		$arr['OMR'] = "OMR";
+		$arr['PAB'] = "PAB";
+		$arr['PEN'] = "PEN";
+		$arr['PGK'] = "PGK";
+		$arr['PHP'] = "PHP";
+		$arr['PKR'] = "PKR";
+		$arr['PLN'] = "PLN";
+		$arr['PYG'] = "PYG";
+		$arr['QAR'] = "QAR";
+		$arr['RON'] = "RON";
+		$arr['RSD'] = "RSD";
+		$arr['RUB'] = "RUB";
+		$arr['RWF'] = "RWF";
+		$arr['SAR'] = "SAR";
+		$arr['SBD'] = "SBD";
+		$arr['SCR'] = "SCR";
+		$arr['SDG'] = "SDG";
+		$arr['SEK'] = "SEK";
+		$arr['SGD'] = "SGD";
+		$arr['SHP'] = "SHP";
+		$arr['SLL'] = "SLL";
+		$arr['SOS'] = "SOS";
+		$arr['SRD'] = "SRD";
+		$arr['STD'] = "STD";
+		$arr['SVC'] = "SVC";
+		$arr['SYP'] = "SYP";
+		$arr['SZL'] = "SZL";
+		$arr['THB'] = "THB";
+		$arr['TJS'] = "TJS";
+		$arr['TMT'] = "TMT";
+		$arr['TND'] = "TND";
+		$arr['TOP'] = "TOP";
+		$arr['TRY'] = "TRY";
+		$arr['TTD'] = "TTD";
+		$arr['TWD'] = "TWD";
+		$arr['TZS'] = "TZS";
+		$arr['UAH'] = "UAH";
+		$arr['UGX'] = "UGX";
+		$arr['USD'] = "USD";
+		$arr['UYU'] = "UYU";
+		$arr['UZS'] = "UZS";
+		$arr['VEF'] = "VEF";
+		$arr['VND'] = "VND";
+		$arr['VUV'] = "VUV";
+		$arr['WST'] = "WST";
+		$arr['XAF'] = "XAF";
+		$arr['XAG'] = "XAG";
+		$arr['XAU'] = "XAU";
+		$arr['XCD'] = "XCD";
+		$arr['XDR'] = "XDR";
+		$arr['XOF'] = "XOF";
+		$arr['XPF'] = "XPF";
+		$arr['YER'] = "YER";
+		$arr['ZAR'] = "ZAR";
+		$arr['ZMK'] = "ZMK";
+		$arr['ZMW'] = "ZMW";
+		$arr['ZWL'] = "ZWL";
 
 		return $arr;
 
 	}//getCurrency
 
 
-	public function getTimeZone(){
-	
-		$arr = array();
-		$arr['-12.0']="(GMT -12:00) Eniwetok, Kwajalein";
-		$arr['-11.0']="(GMT -11:00) Midway Island, Samoa";
-		$arr['-10.0']="(GMT -10:00) Hawaii";
-		$arr['-9.0']="(GMT -9:00) Alaska";
-		$arr['-8.0']="(GMT -8:00) Pacific Time (US &amp; Canada)";
-		$arr['-7.0']="(GMT -7:00) Mountain Time (US &amp; Canada)";
-		$arr['-6.0']="(GMT -6:00) Central Time (US &amp; Canada), Mexico City";
-		$arr['-5.0']="(GMT -5:00) Eastern Time (US &amp; Canada), Bogota, Lima";
-		$arr['-4.0']="(GMT -4:00) Atlantic Time (Canada), Caracas, La Paz";
-		$arr['-3.5']="(GMT -3:30) Newfoundland";
-		$arr['-3.0']="(GMT -3:00) Brazil, Buenos Aires, Georgetown";
-		$arr['-2.0']="(GMT -2:00) Mid-Atlantic";
-		$arr['-1.0']="(GMT -1:00 hour) Azores, Cape Verde Islands";
-		$arr['+0.0']="(GMT) Western Europe Time, London, Lisbon, Casablanca";
-		$arr['+1.0']="(GMT +1:00 hour) Brussels, Copenhagen, Madrid, Paris";
-		$arr['+2.0']="(GMT +2:00) Kaliningrad, South Africa";
+	public function getTimeZone()
+	{
 
-		$arr['+3.0']="(GMT +3:00) Baghdad, Riyadh, Moscow, St. Petersburg";
-		$arr['+3.5']="(GMT +3:30) Tehran";
-		$arr['+4.0']="(GMT +4:00) Abu Dhabi, Muscat, Baku, Tbilisi";
-		$arr['+4.5']="(GMT +4:30) Kabul";
-		$arr['+5.0']="(GMT +5:00) Ekaterinburg, Islamabad, Karachi, Tashkent";
-		$arr['+5.5']="(GMT +5:30) Bombay, Calcutta, Madras, New Delhi";
-		$arr['+5.75']="(GMT +5:45) Kathmandu";
-		$arr['+6.0']="(GMT +6:00) Almaty, Dhaka, Colombo";
-		$arr['+6.5']="(GMT +6:30) Myanmar";
-		$arr['+7.0']="(GMT +7:00) Bangkok, Hanoi, Jakarta";
-		$arr['+8.0']="(GMT +8:00) Beijing, Perth, Singapore, Hong Kong";
-		$arr['+9.0']="(GMT +9:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk";
-		$arr['+9.5']="(GMT +9:30) Adelaide, Darwin";
-		$arr['+10.0']="(GMT +10:00) Eastern Australia, Guam, Vladivostok";
-		$arr['+11.0']="(GMT +11:00) Magadan, Solomon Islands, New Caledonia";
-		$arr['+12.0']="(GMT +12:00) Auckland, Wellington, Fiji, Kamchatka";
+		$arr = array();
+		$arr['-12.0'] = "(GMT -12:00) Eniwetok, Kwajalein";
+		$arr['-11.0'] = "(GMT -11:00) Midway Island, Samoa";
+		$arr['-10.0'] = "(GMT -10:00) Hawaii";
+		$arr['-9.0'] = "(GMT -9:00) Alaska";
+		$arr['-8.0'] = "(GMT -8:00) Pacific Time (US &amp; Canada)";
+		$arr['-7.0'] = "(GMT -7:00) Mountain Time (US &amp; Canada)";
+		$arr['-6.0'] = "(GMT -6:00) Central Time (US &amp; Canada), Mexico City";
+		$arr['-5.0'] = "(GMT -5:00) Eastern Time (US &amp; Canada), Bogota, Lima";
+		$arr['-4.0'] = "(GMT -4:00) Atlantic Time (Canada), Caracas, La Paz";
+		$arr['-3.5'] = "(GMT -3:30) Newfoundland";
+		$arr['-3.0'] = "(GMT -3:00) Brazil, Buenos Aires, Georgetown";
+		$arr['-2.0'] = "(GMT -2:00) Mid-Atlantic";
+		$arr['-1.0'] = "(GMT -1:00 hour) Azores, Cape Verde Islands";
+		$arr['+0.0'] = "(GMT) Western Europe Time, London, Lisbon, Casablanca";
+		$arr['+1.0'] = "(GMT +1:00 hour) Brussels, Copenhagen, Madrid, Paris";
+		$arr['+2.0'] = "(GMT +2:00) Kaliningrad, South Africa";
+
+		$arr['+3.0'] = "(GMT +3:00) Baghdad, Riyadh, Moscow, St. Petersburg";
+		$arr['+3.5'] = "(GMT +3:30) Tehran";
+		$arr['+4.0'] = "(GMT +4:00) Abu Dhabi, Muscat, Baku, Tbilisi";
+		$arr['+4.5'] = "(GMT +4:30) Kabul";
+		$arr['+5.0'] = "(GMT +5:00) Ekaterinburg, Islamabad, Karachi, Tashkent";
+		$arr['+5.5'] = "(GMT +5:30) Bombay, Calcutta, Madras, New Delhi";
+		$arr['+5.75'] = "(GMT +5:45) Kathmandu";
+		$arr['+6.0'] = "(GMT +6:00) Almaty, Dhaka, Colombo";
+		$arr['+6.5'] = "(GMT +6:30) Myanmar";
+		$arr['+7.0'] = "(GMT +7:00) Bangkok, Hanoi, Jakarta";
+		$arr['+8.0'] = "(GMT +8:00) Beijing, Perth, Singapore, Hong Kong";
+		$arr['+9.0'] = "(GMT +9:00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk";
+		$arr['+9.5'] = "(GMT +9:30) Adelaide, Darwin";
+		$arr['+10.0'] = "(GMT +10:00) Eastern Australia, Guam, Vladivostok";
+		$arr['+11.0'] = "(GMT +11:00) Magadan, Solomon Islands, New Caledonia";
+		$arr['+12.0'] = "(GMT +12:00) Auckland, Wellington, Fiji, Kamchatka";
 		return $arr;
 
 
@@ -705,15 +717,16 @@ trait CommonFunctions{
 
 
 	//public function ip_info($purpose = "location", $deep_detect = TRUE) {
-	public function ip_info($purpose = "location", $ip) {
+	public function ip_info($purpose = "location", $ip)
+	{
 
 		$output = NULL;
 
 		// $ip = $this->get_client_ip($deep_detect);
 
-		$purpose    = str_replace(array("name", "\n", "\t", " ", "-", "_"), NULL, strtolower(trim($purpose)));
+		$purpose = str_replace(array("name", "\n", "\t", " ", "-", "_"), NULL, strtolower(trim($purpose)));
 
-		$support    = array("country", "countrycode", "state", "region", "city", "location", "address", "isp");
+		$support = array("country", "countrycode", "state", "region", "city", "location", "address", "isp");
 
 		$continents = array(
 			"AF" => "Africa",
@@ -729,14 +742,16 @@ trait CommonFunctions{
 
 			$data = $this->getIpBasedData($ip);
 
+			\Log::info("IP Data: " . json_encode($data));
+
 			switch ($purpose) {
 				case "location":
 					$output = array(
-						"city"           => @$data['city']['names']['en'],
-						"state"          => @$data['subdivisions'][0]['names']['en'],
-						"country"        => @$data['country']['names']['en'],
-						"country_code"   => @$data['country']['iso_code'],
-						"continent"      => @$data['continent']['names']['en'],
+						"city" => @$data['city']['names']['en'],
+						"state" => @$data['subdivisions'][0]['names']['en'],
+						"country" => @$data['country']['names']['en'],
+						"country_code" => @$data['country']['iso_code'],
+						"continent" => @$data['continent']['names']['en'],
 						"continent_code" => @$data['continent']['code']
 					);
 					break;
@@ -784,7 +799,8 @@ trait CommonFunctions{
 
 
 	// Return User Agent
-	public function getBrowswerData(){
+	public function getBrowswerData()
+	{
 
 		$useragent = $_SERVER['HTTP_USER_AGENT'];
 
@@ -798,43 +814,13 @@ trait CommonFunctions{
 	}//getBrowswerData
 
 
-	public function get_client_ip($deep_detect){
+	public function get_client_ip($deep_detect = true)
+	{
+		$ip = request()->ip();
 
+		\Log::info("IP (via request->ip()): " . $ip);
 
-		$ip = $_SERVER["REMOTE_ADDR"];
-
-		if($deep_detect){
-
-			if(filter_var(@$_SERVER['HTTP_X_FORWARDED_FOR'], FILTER_VALIDATE_IP)){
-				$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-
-			}//if
-
-			if(filter_var(@$_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)){
-				$ip = $_SERVER['HTTP_CLIENT_IP'];
-
-			}//if
-
-			if(filter_var(@$_SERVER['HTTP_X_FORWARDED'], FILTER_VALIDATE_IP)){
-				$ip = $_SERVER['HTTP_X_FORWARDED'];
-
-			}//if
-
-			if(filter_var(@$_SERVER['HTTP_FORWARDED_FOR'], FILTER_VALIDATE_IP)){
-				$ip = $_SERVER['HTTP_FORWARDED_FOR'];
-
-			}//if
-
-			if(filter_var(@$_SERVER['HTTP_FORWARDED'], FILTER_VALIDATE_IP)){
-				$ip = $_SERVER['HTTP_FORWARDED'];
-
-			}//if
-
-
-
-		}//if
-
-		if($ip == "127.0.0.1"){
+		if ($ip == "127.0.0.1" || $ip == "::1") {
 			// For local testing
 			$ip = "223.178.211.66";
 
@@ -844,7 +830,9 @@ trait CommonFunctions{
 
 	}//get_client_ip
 
-	public function getIpBasedData($ip){
+	public function getIpBasedData($ip)
+	{
+		\Log::info("IP: " . $ip);
 
 		$token = '428a5df9a35b4c53b942f0c9bfca9469';
 		$url = "https://api.findip.net/{$ip}/?token={$token}";
