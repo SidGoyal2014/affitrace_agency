@@ -22,6 +22,28 @@ include $pathPrefix . '/includes/head.php';
                 </a>
             </div>
 
+            <!-- Click Limit Status -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card-modern shadow-sm">
+                        <div class="card-body">
+                            <h6 class="font-weight-bold text-primary mb-3">Plan Usage: Clicks Consumed</h6>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small font-weight-bold" id="clicks_status_text">Loading...</span>
+                                <span class="small font-weight-bold" id="clicks_percentage_text">0%</span>
+                            </div>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-info" role="progressbar" id="clicks_progress_bar"
+                                    style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <div id="clicks_warning_alert" class="alert alert-danger mt-3 d-none">
+                                <i class="fas fa-exclamation-triangle mr-2"></i> <span id="clicks_warning_msg"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Stats Grid -->
             <div class="row">
                 <!-- Total Offers -->
@@ -245,7 +267,44 @@ include $pathPrefix . '/includes/head.php';
                 $('#avg_rev_offer').text(formatDecimal(data.average_revenue_per_offer));
                 $('#avg_rev_aff').text(formatDecimal(data.average_revenue_per_affiliate));
                 $('#avg_payout_offer').text(formatDecimal(data.average_payout_per_offer));
+                $('#avg_payout_offer').text(formatDecimal(data.average_payout_per_offer));
                 $('#avg_payout_aff').text(formatDecimal(data.average_payout_per_affiliate));
+
+                // Click Limit Logic
+                if (data.clicks_limit > 0) {
+                    const consumed = parseInt(data.clicks_consumed) || 0;
+                    const limit = parseInt(data.clicks_limit);
+                    const percent = Math.min(100, Math.round((consumed / limit) * 100));
+
+                    $('#clicks_status_text').text(`${consumed.toLocaleString()} / ${limit.toLocaleString()} Clicks`);
+                    $('#clicks_percentage_text').text(`${percent}%`);
+                    $('#clicks_progress_bar').css('width', `${percent}%`).attr('aria-valuenow', percent);
+
+                    // Color coding
+                    const progressBar = $('#clicks_progress_bar');
+                    progressBar.removeClass('bg-info bg-warning bg-danger bg-success');
+
+                    if (percent >= 90) {
+                        progressBar.addClass('bg-danger');
+                    } else if (percent >= 75) {
+                        progressBar.addClass('bg-warning');
+                    } else {
+                        progressBar.addClass('bg-success'); // or bg-info
+                    }
+
+                    // Warning Message
+                    if (data.click_message) {
+                        $('#clicks_warning_alert').removeClass('d-none');
+                        $('#clicks_warning_msg').text(data.click_message);
+                    } else {
+                        $('#clicks_warning_alert').addClass('d-none');
+                    }
+                } else {
+                    $('#clicks_status_text').text('Unlimited Plan / No Limit Set');
+                    $('#clicks_percentage_text').text('');
+                    $('#clicks_progress_bar').css('width', '100%').addClass('bg-secondary');
+                    $('#clicks_warning_alert').addClass('d-none');
+                }
 
                 const tbody = $('#requests_table_body');
                 tbody.empty();

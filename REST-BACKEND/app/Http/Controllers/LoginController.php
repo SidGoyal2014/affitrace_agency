@@ -15,139 +15,77 @@ use App\Models\AdvertiserUserDetail;
 
 use App\Http\Traits\SystemSettings;
 
-class LoginController extends Controller {
+class LoginController extends Controller
+{
 
 	use SystemSettings;
 
+	protected $loginService;
 
+	public function __construct(\App\Services\LoginService $loginService)
+	{
+		$this->loginService = $loginService;
+	}
 
-    public function loginform(Request $request){
-
-		//Session::flush(); // removes all session data
-		if (Auth::check()){
-
+	public function loginform(Request $request)
+	{
+		if (Auth::check()) {
 			return redirect('dashboard');
-
 		}
 
 		return view('gen_forms/loginform');
 
-
-
 	}//loginform
 
 
-    public function doLogin(Request $request){
+	public function doLogin(Request $request)
+	{
 
+		/*
+		This function is to login into the system
+		for for website internal purpose
 
-    	/*
-	    This function is to login into the system
-	    for for website internal purpose
+		Similar function in UserController is used for remote access for apis
+		*/
 
-	    Similar function in UserController is used for remote access for apis
-	    */
+		$loginPageUrl = loginPageUrl($request->eai);
 
-	    $loginPageUrl = loginPageUrl($request->eai);
+		try {
 
-		try{
+			$validator = Validator::make($request->all(), [
+				'eai' => 'required',
+				'email' => 'required|email',
+				'password' => 'required|string|min:1'
+			]);
 
-            $validator = Validator::make($request->all(), [
-                'eai' => 'required',
-                'email' => 'required|email',
-                'password' => 'required|string|min:1'
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json($validator->messages(), 400);
-            }
-
-
-			$password = $request->input('password'); // password is form field
-			$hashed = Hash::make($password);
-
+			if ($validator->fails()) {
+				return response()->json($validator->messages(), 400);
+			}
 
 			$user_type = $request->input('user_type');
 
-			//DB::enableQueryLog();
+			$result = $this->loginService->authenticateUser($request, $user_type);
 
-			$user = User::where('email', $request->email)->where('user_type', $user_type)->first();
-
-			
-
-
-			if($user->username != $request->eai){
-				return redirect(loginPageUrl())->with('error','Credentials are not correct, please try again');
-
+			if ($result['status']) {
+				$user_type = $result['user_type'];
+				return redirect($user_type . '/dashboard');
+			} else {
+				return redirect(loginPageUrl())->with('error', $result['message']);
 			}
 
+		} catch (\Exception $e) {
 
-
-            if (!$user || !Hash::check($request->password, $user->password)) {
-				return redirect(loginPageUrl())->with('error','Passwords not correct, please try again');
-
-            }
-
-
-            if (!$user) {
-                return redirect(loginPageUrl())->with('error','The email or password is incorrect, please try again 222');
-
-            }else{
-
-
-				if (Auth::attempt(
-						array(
-							'email' => $request->email,
-							'password' => $request->password,
-							'user_type' => $user_type  // ← FIXED: Remove ucfirst()
-						)
-				)){
-
-					$token = Auth::user()->createToken('authToken')->plainTextToken;
-
-					$request->session()->put('user_type', $user_type);
-					$request->session()->put('email', $request->email);
-					$request->session()->put('username', $request->eai);
-					$request->session()->put('agency_id', $user->agency_id);
-
-
-					// Auth token below will be used while accessing Apis from the logged in admin/affiliate panel
-					$request->session()->put('logged_in_user_token', $token); 
-
-
-					\Log::debug('LoginController - Session after login:', session()->all());
-					\Log::debug('LoginController - Auth user:', Auth::user() ? Auth::user()->toArray() : 'No user');
-
-					return redirect($user_type.'/dashboard');
-					//return redirect()->intended($user_type.'/dashboard');
-					
-
-				}else{
-
-					return redirect(loginPageUrl())->with('error','The email or password is incorrect, please try again 333');
-
-				}
-
-			}
-
-		}catch(\Exception $e){
-
-			return redirect(loginPageUrl())->with('error', $e->getMessage().'The email or password is incorrect, please try again 4444');
+			return redirect(loginPageUrl())->with('error', $e->getMessage() . 'The email or password is incorrect, please try again 4444');
 
 		}
 
 	}//doLogin
 
 
-	public function logout(Request $req){
+	public function logout(Request $req)
+	{
 
-		$username = session('username');
-
-		Auth::logout();
-
-        $req->session()->invalidate(); // Invalidate the current session
-        $req->session()->regenerateToken(); // Regenerate the CSRF token
-
-
+		$username = $this->loginService->logout($req);
 		return redirect(loginPageUrl($username));
 
 

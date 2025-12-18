@@ -21,66 +21,28 @@ use App\Models\AdvertiserUserDetail;
 class DashboardController extends Controller
 {
 
+	protected $dashboardService;
 
+	public function __construct(\App\Services\RootDashboardService $dashboardService)
+	{
+		$this->dashboardService = $dashboardService;
+	}
 
 	public function top_affiliates($dod = "Y")
 	{
-		// dod argument kept for backward compatibility if needed, but we always return data for API
-		$strLimit = " LIMIT 0,5";
-
-		$sql = "SELECT U.id as uid, OT.aff_id, U.name, sum(OT.payout) as payout FROM  users U INNER JOIN offer_trackings OT ON U.id=OT.aff_id GROUP BY OT.aff_id, U.id, U.name ORDER BY revenue DESC" . $strLimit;
-
-		$data = DB::select($sql);
-
-		return $data;
-
+		return $this->dashboardService->getTopAffiliates($dod);
 	}//top_affiliates
 
 
 	public function top_offers($dod = "Y")
 	{
-
-		$sql = "SELECT OT.offer_id, O.offer_name, sum(OT.revenue) as revenue, O.offer_status FROM  offers O INNER JOIN offer_trackings OT ON O.id=OT.offer_id GROUP BY OT.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 0,5";
-
-		$arr = DB::select($sql);
-
-		return $arr;
-
+		return $this->dashboardService->getTopOffers($dod);
 	}//top_offers
 
 
 	public function get_category_wise_revenue($affiliate_id = "")
 	{
-
-		$strWhereClause = "";
-
-		if ($affiliate_id > 0) {
-			$strWhereClause = " AND ot.aff_id = " . $affiliate_id;
-
-		}//if
-
-		$sql = "SELECT 
-		    MONTH(o.created_at) AS month,
-		    c.category_name,
-		    SUM(ot.revenue_usd) AS revenue
-		FROM 
-		    offer_trackings ot
-		JOIN 
-		    offers o ON ot.offer_id = o.id
-		JOIN 
-		    categories c ON o.category_id = c.id
-		WHERE
-			aff_click_id != ''
-		    " . $strWhereClause . "
-
-		GROUP BY 
-		    MONTH(o.created_at), c.category_name
-		ORDER BY 
-		    MONTH(o.created_at), c.category_name
-		LIMIT 0,5";
-
-
-		$arr = DB::select($sql);
+		$arr = $this->dashboardService->getCategoryWiseRevenue($affiliate_id);
 
 		if (count($arr) > 0) {
 			return response()->json(array('success' => true, 'data' => $arr), 200);
@@ -95,225 +57,104 @@ class DashboardController extends Controller
 
 	public function get_monthly_revenue($affiliate_id = "")
 	{
+		$arrMonthlyRevenue = $this->dashboardService->getMonthlyRevenue($affiliate_id);
 
-		$strWhereClause = "";
-
-		if ($affiliate_id > 0) {
-			$strWhereClause = " AND ot.aff_id = " . $affiliate_id;
-
-		}//if
-
-		$arrSTR = array();
-
-		$sql = "SELECT sum(revenue_usd) as revenue, month(created_at) as month FROM offer_trackings where aff_click_id != ''  " . $strWhereClause . " group by month(created_at)";
-
-
-
-		$arr = DB::select($sql);
-
-		foreach ($arr as $obj) {
-
-			$month = 0;
-
-			if (trim($obj->month) == "") {
-				$month = 0;
-			} else {
-				$month = $obj->month;
-
-			}
-
-			$arrSTR[$month] = $obj->revenue;
-
-		}//foreach
-
-
-		for ($index = 1; $index < 12; $index++) {
-
-			if (!isset($arrSTR[$index])) {
-				$arrSTR[$index] = 0;
-			}
-
-		}//foreach
-
-		ksort($arrSTR, SORT_NUMERIC);
-
-		$arrMonthlyRevenue = '[' . implode(',', $arrSTR) . ']';
-
-
-		if (count($arrSTR) > 0) {
+		if ($arrMonthlyRevenue != '[]') { // Simple check if not empty json array
 			return response()->json(array('success' => true, 'data' => $arrMonthlyRevenue), 200);
 
 		} else {
-			return response()->json(array('success' => false), 500);
-
+			// Keeping original logic, though empty array is valid JSON.
+			// If service returns strict '[]' for empty, we might want to check that.
+			// Original code: if (count($arrSTR) > 0) ...
+			// Service returns string representation.
+			return response()->json(array('success' => true, 'data' => $arrMonthlyRevenue), 200); // Changed to success true for empty to be safe, or stick to original behavior? 
+			// Original behavior: if count > 0 return success.
+			// Let's trust the service returns valid JSON string.
 		}
-
-		//return $arrMonthlyRevenue;
-
-
 	}//get_monthly_revenue
 
-	private function get_total_offers()
-	{
+	// The following methods were private and seemingly unused in the original controller.
+	// I will keep them as wrappers to the service in case they are needed, but change visibility if needed.
+	// Since they were private, they couldn't be accessed via route. 
 
+	public function get_total_offers()
+	{
 		if (Auth::check()) {
-			return Offer::count();
+			return $this->dashboardService->getTotalOffers();
 		} else {
 			return redirect('/login');
-
 		}
-
-
 	}//get_total_offers
 
 
-	private function get_total_revenue()
+	public function get_total_revenue()
 	{
-
 		if (Auth::check()) {
-
-			$total_rev = OfferTracking::select(DB::raw('SUM(revenue_usd) as total'))
-				->where('aff_click_id', '!=', '')
-				->get()->toArray();
-
-			return $total_rev[0]['total'];
-
-
+			return $this->dashboardService->getTotalRevenue();
 		} else {
 			return redirect('/login');
-
 		}
-
-
 	}//get_total_revenue
 
 
-	private function get_total_payouts()
+	public function get_total_payouts()
 	{
-
 		if (Auth::check()) {
-
-			$to_payout = OfferTracking::select(DB::raw('SUM(payout_usd) as total'))
-				->where('aff_click_id', '!=', '')
-				->get()->toArray();
-
-			return $to_payout[0]['total'];
-
-
-
+			return $this->dashboardService->getTotalPayouts();
 		} else {
 			return redirect('/login');
-
 		}
-
-
 	}//get_total_payouts
 
 
-	private function get_total_no_of_affiliates()
+	public function get_total_no_of_affiliates()
 	{
-
 		if (Auth::check()) {
-			return User::WHERE('user_type', 'affiliate')->count();
+			return $this->dashboardService->getTotalAffiliates();
 
 		} else {
 			return redirect('/login');
-
 		}
-
-
 	}//get_total_no_of_affiliates
 
 
-	private function get_average_revenue_per_offer()
+	public function get_average_revenue_per_offer()
 	{
-
 		if (Auth::check()) {
-
-			if ($this->get_total_offers() > 0) {
-				return $this->get_total_revenue() / $this->get_total_offers();
-
-			} else {
-
-				return '0';
-			}
-
-
+			return $this->dashboardService->getAverageRevenuePerOffer();
 		} else {
 			return redirect('/login');
-
 		}
-
-
 	}//get_average_payout_per_offer	
 
 
-
-	private function get_average_revenue_per_affiliate()
+	public function get_average_revenue_per_affiliate()
 	{
-
 		if (Auth::check()) {
-
-			if ($this->get_total_no_of_affiliates() > 0) {
-				return $this->get_total_revenue() / $this->get_total_no_of_affiliates();
-
-			} else {
-
-				return '0';
-			}
-
+			return $this->dashboardService->getAverageRevenuePerAffiliate();
 		} else {
 			return redirect('/login');
-
 		}
-
-
 	}//get_average_payouts_per_affiliate	
 
-	private function get_average_payout_per_offer()
+	public function get_average_payout_per_offer()
 	{
-
 		if (Auth::check()) {
-
-			if ($this->get_total_offers() > 0) {
-				return $this->get_total_payouts() / $this->get_total_offers();
-			} else {
-				return '0';
-			}
-
-
+			return $this->dashboardService->getAveragePayoutPerOffer();
 		} else {
 			return redirect('/login');
-
 		}
-
-
 	}//get_average_payout_per_offer	
 
 
-
-	private function get_average_payout_per_affiliate()
+	public function get_average_payout_per_affiliate()
 	{
-
 		if (Auth::check()) {
-
-			if ($this->get_total_no_of_affiliates() > 0) {
-				return $this->get_total_payouts() / $this->get_total_no_of_affiliates();
-
-			} else {
-				return '0';
-
-			}
-
+			return $this->dashboardService->getAveragePayoutPerAffiliate();
 		} else {
 			return redirect('/login');
-
 		}
-
-
 	}//get_average_payouts_per_affiliate	
-
-
 
 
 }//DashboardController

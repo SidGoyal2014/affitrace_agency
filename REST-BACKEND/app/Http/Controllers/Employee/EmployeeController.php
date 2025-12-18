@@ -16,19 +16,17 @@ use App\Models\User;
 class EmployeeController extends Controller
 {
 
+	protected $employeeService;
+
+	public function __construct(\App\Services\Employee\EmployeeService $employeeService)
+	{
+		$this->employeeService = $employeeService;
+	}
 
 	public function profile(Request $request)
 	{
-
-		$user = $request->user();
-		$logged_in_user_type = $user->user_type;
-
-		return response()->json([
-			'module_name' => 'Profile',
-			'user' => $user,
-			'title' => ucfirst($logged_in_user_type) . ' Profile',
-			'logged_in_user_type' => $logged_in_user_type
-		]);
+		$data = $this->employeeService->getProfile($request->user());
+		return response()->json($data);
 
 	}//profile
 
@@ -49,21 +47,8 @@ class EmployeeController extends Controller
 
 			}
 
-			$user = Auth::user();
-
-			$user->name = $request->name;
-			$user->email = $request->email;
-			$user->phone = $request->phone;
-			$user->gender = $request->gender;
-
-			if (strlen($request->password) > 0) {
-				$user->password = Hash::make($request->password);
-
-			}
-
-			$user->save();
-
-			return response()->json(['status' => 1, 'msg' => 'Profile Updated']);
+			$result = $this->employeeService->updateProfile($request);
+			return response()->json($result);
 
 
 		} catch (\Exception $e) {
