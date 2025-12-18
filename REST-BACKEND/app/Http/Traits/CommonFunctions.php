@@ -262,7 +262,7 @@ trait CommonFunctions{
 		$arr['CD'] = "Congo Democratic Republic of the";
 		$arr['CK'] = "Cook Islands";
 		$arr['CR'] = "Costa Rica";
-		$arr['CI'] = "Côte d Ivoire";
+		$arr['CI'] = "CÃ´te d Ivoire";
 		$arr['HR'] = "Croatia";
 		$arr['CU'] = "Cuba";
 		$arr['CY'] = "Cyprus";
@@ -386,11 +386,11 @@ trait CommonFunctions{
 		$arr['PT'] = "Portugal";
 		$arr['PR'] = "Puerto Rico";
 		$arr['QA'] = "Qatar";
-		$arr['RE'] = "Réunion";
+		$arr['RE'] = "RÃ©union";
 		$arr['RO'] = "Romania";
 		$arr['RU'] = "Russian Federation";
 		$arr['RW'] = "Rwanda";
-		$arr['BL'] = "Saint-Barthélemy";
+		$arr['BL'] = "Saint-BarthÃ©lemy";
 		$arr['SH'] = "Saint Helena";
 		$arr['KN'] = "Saint Kitts and Nevis";
 		$arr['LC'] = "Saint Lucia";
