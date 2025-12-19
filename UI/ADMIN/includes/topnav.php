@@ -101,7 +101,7 @@ function url($path)
         <li class="nav-item <?php echo isActiveNav('settings', $activePage); ?>">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-cog"></i>
-                Settings
+                Integrations
                 <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
             </a>
             <div class="dropdown-menu">
