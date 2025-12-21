@@ -36,11 +36,11 @@ include $pathPrefix . '/includes/head.php';
                                 <input type="date" class="form-control" id="to" name="to">
                             </div>
                             <div class="form-group col-md-3">
-                                <label for="conversion_status">Status</label>
+                                <label for="conversion_status">Conversion Status</label>
                                 <select class="form-control" id="conversion_status" name="conversion_status">
                                     <option value="">All</option>
                                     <option value="converted">Converted</option>
-                                    <option value="pending">Pending</option>
+                                    <option value="pending">Not Converted</option>
                                 </select>
                             </div>
                             <div class="form-group col-md-3">
@@ -96,6 +96,10 @@ include $pathPrefix . '/includes/head.php';
                                     <th>Offer</th>
                                     <th>Affiliate</th>
                                     <th>Advertiser</th>
+                                    <th>Source</th>
+                                    <th>Google AID</th>
+                                    <th>Android ID</th>
+                                    <th>IDFA</th>
                                     <th>Country</th>
                                     <th>Device</th>
                                     <th>OS</th>
@@ -103,7 +107,7 @@ include $pathPrefix . '/includes/head.php';
                             </thead>
                             <tbody id="reportTableBody">
                                 <tr>
-                                    <td colspan="9" class="text-center">Loading...</td>
+                                    <td colspan="13" class="text-center">Loading...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -167,7 +171,7 @@ include $pathPrefix . '/includes/head.php';
             const tbody = $('#reportTableBody');
 
             // Show loading
-            tbody.html('<tr><td colspan="9" class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div></td></tr>');
+            tbody.html('<tr><td colspan="13" class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div></td></tr>');
 
             try {
                 // Construct query params
@@ -206,7 +210,7 @@ include $pathPrefix . '/includes/head.php';
 
             } catch (error) {
                 console.error("Report Error:", error);
-                tbody.html('<tr><td colspan="9" class="text-center text-danger">Failed to load data. Please try again.</td></tr>');
+                tbody.html('<tr><td colspan="13" class="text-center text-danger">Failed to load data. Please try again.</td></tr>');
             }
         }
 
@@ -218,7 +222,7 @@ include $pathPrefix . '/includes/head.php';
             const rows = result.data;
 
             if (rows.length === 0) {
-                tbody.html('<tr><td colspan="9" class="text-center text-muted">No records found.</td></tr>');
+                tbody.html('<tr><td colspan="13" class="text-center text-muted">No records found.</td></tr>');
                 updatePagination(result);
                 return;
             }
@@ -252,6 +256,10 @@ include $pathPrefix . '/includes/head.php';
                                 ${row.adv_id}: ${truncate(row.advert_name || 'N/A', 15)}
                             </a>
                         </td>
+                        <td>${row.source || '-'}</td>
+                        <td>${row.google_aid || '-'}</td>
+                        <td>${row.android_id || '-'}</td>
+                        <td>${row.iosidfa || '-'}</td>
                         <td>${row.ot_country || '-'}</td>
                         <td>${row.device_name || '-'}</td>
                         <td>${row.ot_os || '-'}</td>
