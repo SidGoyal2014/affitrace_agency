@@ -122,8 +122,8 @@ class TrackingService
                             $ot->revenue = $payoutRule[0]['revenue_pricing'];
                             $ot->payout = $payoutRule[0]['payout_pricing'];
                             $ot->currency = $payoutRule[0]['currency'];
-                            $ot->revenue_usd = $payoutRule[0]['revenue_usd'];
-                            $ot->payout_usd = $payoutRule[0]['payout_usd'];
+                            $ot->revenue_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($payoutRule[0]['revenue_pricing'], $payoutRule[0]['currency']);
+                            $ot->payout_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($payoutRule[0]['payout_pricing'], $payoutRule[0]['currency']);
                         } else {
                             // Fallback or 0 if no rule found? Original code assumed it exists.
                             $ot->revenue = 0;
@@ -204,8 +204,8 @@ class TrackingService
 
         $ot->currency = $offer->currency;
 
-        $ot->revenue_usd = $offer->revenue_usd;
-        $ot->payout_usd = $offer->payout_usd;
+        $ot->revenue_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($offer->ad_pricing, $offer->currency);
+        $ot->payout_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($offer->aff_pricing, $offer->currency);
 
         $ot->ip = $client_ip;
 

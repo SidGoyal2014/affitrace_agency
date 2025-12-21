@@ -74,9 +74,9 @@ class AdminOfferService
         $offer->ad_model = $request->ad_model;
         $offer->aff_model = $request->aff_model;
         $offer->ad_pricing = $request->ad_pricing;
-        $offer->revenue_usd = $request->ad_pricing * $this->getNewCurrencyValue($request->currency, "USD");
+        $offer->revenue_usd = $this->getNewCurrencyValue($request->ad_pricing, $request->currency);
         $offer->aff_pricing = $request->aff_pricing;
-        $offer->payout_usd = $request->aff_pricing * $this->getNewCurrencyValue($request->currency, "USD");
+        $offer->payout_usd = $this->getNewCurrencyValue($request->aff_pricing, $request->currency);
         $offer->campaign_start_date = $request->campaign_start_date;
         $offer->campaign_end_date = $request->campaign_end_date;
         $offer->daily_start_time = $request->daily_start_time;
@@ -171,10 +171,10 @@ class AdminOfferService
         $offer->currency = $request->currency;
         $offer->ad_model = $request->ad_model;
         $offer->ad_pricing = $request->ad_pricing;
-        $offer->revenue_usd = $request->ad_pricing * $this->getNewCurrencyValue($request->currency, "USD");
+        $offer->revenue_usd = $this->getNewCurrencyValue($request->ad_pricing, $request->currency);
         $offer->aff_model = $request->aff_model;
         $offer->aff_pricing = $request->aff_pricing;
-        $offer->payout_usd = $request->aff_pricing * $this->getNewCurrencyValue($request->currency, "USD");
+        $offer->payout_usd = $this->getNewCurrencyValue($request->aff_pricing, $request->currency);
         $offer->campaign_start_date = $request->campaign_start_date;
         $offer->campaign_end_date = $request->campaign_end_date;
         $offer->daily_start_time = $request->daily_start_time;
@@ -272,10 +272,10 @@ class AdminOfferService
                 $arr[$k] = implode(',', $v);
             } elseif ($k == 'revenue_pricing') {
                 $arr['revenue_pricing'] = $v;
-                $arr['revenue_usd'] = $v * $this->getNewCurrencyValue($currency, "USD");
+                $arr['revenue_usd'] = $this->getNewCurrencyValue($v, $currency);
             } elseif ($k == 'payout_pricing') {
                 $arr['payout_pricing'] = $v;
-                $arr['payout_usd'] = $v * $this->getNewCurrencyValue($currency, "USD");
+                $arr['payout_usd'] = $this->getNewCurrencyValue($v, $currency);
             } else {
                 $arr[$k] = $v;
             }

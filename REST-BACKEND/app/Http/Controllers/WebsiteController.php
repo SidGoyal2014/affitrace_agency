@@ -30,7 +30,7 @@ class WebsiteController extends Controller
 	public function verify()
 	{
 		$this->websiteService->getVerifyViewData();
-		return view('verify_response');
+		return view()->file(base_path('UI/verify_response.php'));
 
 	}//about
 
