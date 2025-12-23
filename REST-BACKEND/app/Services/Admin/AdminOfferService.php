@@ -327,7 +327,7 @@ class AdminOfferService
     {
         OfferAffiliate::where("offer_id", $oid)
             ->where("affiliate_id", $aid)
-            ->update(['request_status' => 'Pending', 'tracking_url' => Null]);
+            ->update(['request_status' => 'Unassigned', 'tracking_url' => Null]);
         return ['status' => 1, 'msg' => 'Offer unassigned successfully', 'code' => 200];
     }
 

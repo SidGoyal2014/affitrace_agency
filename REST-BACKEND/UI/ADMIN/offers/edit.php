@@ -497,7 +497,7 @@ include $pathPrefix . '/includes/head.php';
                 let status = '<span class="badge badge-secondary">Not Assigned</span>';
                 let actions = `<button onclick="assignOffer(${offer.id}, ${aff.id})" class="btn btn-sm btn-primary">Assign</button>`;
 
-                if (oa) {
+                if (oa && oa.request_status !== 'Unassigned') {
                     status = `<span class="badge badge-${oa.request_status === 'Accepted' ? 'success' : 'warning'}">${oa.request_status}</span>`;
                     actions = `
                         <button onclick="showTrackingUrl('${oa.tracking_url}')" class="btn btn-sm btn-info mr-1">URL</button>
