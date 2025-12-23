@@ -30,14 +30,13 @@ trait CommonFunctions
 			->where('affiliate_id', $aid)
 			->get()->toArray();
 
-		if ($data[0]['request_status'] == "Accepted") {
+		// \Log::info("Offer Affiliate : ", $data);
+
+		if (isset($data[0]) && $data[0]['request_status'] == "Accepted") {
 			return true;
-
 		} else {
-			return $data[0]['request_status'];
-
+			return false;
 		}
-
 
 	}//isOfferAcceptedForAffiliate
 
