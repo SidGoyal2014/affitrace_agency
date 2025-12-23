@@ -150,6 +150,16 @@ include $pathPrefix . '/includes/head.php';
             // Format YYYY-MM-DD
             const formatDate = (d) => d.toISOString().split('T')[0];
 
+            // Parse URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const offerIdParam = urlParams.get('offer_id');
+            const affiliateIdParam = urlParams.get('affiliate_id');
+            const advertiserIdParam = urlParams.get('advertiser_id');
+
+            if (offerIdParam) $('#offer_id').val(offerIdParam);
+            if (affiliateIdParam) $('#affiliate_id').val(affiliateIdParam);
+            if (advertiserIdParam) $('#advertiser_id').val(advertiserIdParam);
+
             // Only set if parameters not present (logic could be added to read URL params)
             if (!$('#from').val()) $('#from').val(formatDate(firstDay));
             if (!$('#to').val()) $('#to').val(formatDate(lastDay));

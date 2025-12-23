@@ -32,20 +32,32 @@ trait MultiTenantResolver
         // e.g. "agency-cool.affitrace.com"
         $host = $_SERVER['HTTP_HOST'] ?? '';
 
-        // Filter out main domains and localhost dev environments
+        // Strip port if present (e.g. 82.29.160.75:8000 -> 82.29.160.75)
+        if (strpos($host, ':') !== false) {
+            $host = explode(':', $host)[0];
+        }
+
+        // Filter out main domains, localhost, and IP addresses
         if (
             $host &&
             $host !== 'api.affitrace.com' &&
             $host !== 'app.affitrace.com' &&
             $host !== 'localhost' &&
-            !str_contains($host, '127.0.0.1')
+            !str_contains($host, '127.0.0.1') &&
+            !filter_var($host, FILTER_VALIDATE_IP) // <--- FIX: Ignore IPs
         ) {
             $parts = explode('.', $host);
             // Expecting at least [subdomain, domain, com]
             if (count($parts) >= 2) {
                 // Taking the first part as agency username
                 $agency_username = $parts[0];
-                return $agency_username;
+
+                // SAFETY: If the "username" is just a number (like "82"), it's an IP octet. Ignore it.
+                if (is_numeric($agency_username)) {
+                    // Break out to allow fallback
+                } else {
+                    return $agency_username;
+                }
             }
         }
 
