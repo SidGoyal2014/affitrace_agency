@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\Admin\AdminOfferService;
+use App\Models\Offer;
 
 class OfferController extends Controller
 {
@@ -68,6 +69,12 @@ class OfferController extends Controller
 	public function update_targetting(Request $request)
 	{
 		$result = $this->offerService->updateTargeting($request);
+		return response()->json($result, $result['code'] ?? 200);
+	}
+
+	public function update_mmp_details(Request $request)
+	{
+		$result = $this->offerService->saveMmpDetails($request);
 		return response()->json($result, $result['code'] ?? 200);
 	}
 

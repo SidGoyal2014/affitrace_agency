@@ -41,6 +41,11 @@ include $pathPrefix . '/includes/head.php';
                         <i class="fas fa-bullseye mr-2"></i>Events/Goals
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-toggle="tab" href="#tabMMP">
+                        <i class="fas fa-share-alt mr-2"></i>MMP Config
+                    </a>
+                </li>
             </ul>
 
             <div class="tab-content">
@@ -377,6 +382,33 @@ include $pathPrefix . '/includes/head.php';
                         </div>
                     </div>
                 </div>
+                <!-- MMP Tab -->
+                <div class="tab-pane fade" id="tabMMP">
+                    <div class="card-modern">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold">MMP Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="mmp-alert"></div>
+                            <form id="frmMMP">
+                                <div class="form-group">
+                                    <label>MMP Platform</label>
+                                    <select name="mmp_id" id="mmp_id" class="form-control">
+                                        <option value="">Select Platform</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Attribution URL</label>
+                                    <textarea name="attribution_url" class="form-control" rows="3"
+                                        placeholder="Paste the attribution link from the MMP..."></textarea>
+                                    <small class="text-muted">This URL will be used as the destination (Attribution Link)
+                                        for this offer.</small>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save MMP Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -465,6 +497,9 @@ include $pathPrefix . '/includes/head.php';
 
                 // Tokens
                 loadTokens(response.offerTokens || []);
+
+                // MMP
+                loadMMP(response.mmpPlatforms || [], response.offerMmp);
 
             } catch (error) {
                 console.error("Load Error:", error);
@@ -608,6 +643,36 @@ include $pathPrefix . '/includes/head.php';
             }
         });
 
+        $('#frmMMP').on('submit', async function (e) {
+            e.preventDefault();
+            try {
+                const res = await API.fetchWithAuth('admin/offer/update-mmp-details', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        offer_id: offerId,
+                        mmp_id: $('#mmp_id').val(),
+                        attribution_url: $('textarea[name="attribution_url"]').val()
+                    })
+                });
+                $('#mmp-alert').html(`<div class="alert alert-${res.status === 1 ? 'success' : 'danger'}">${res.msg || res.error || 'Error'}</div>`);
+            } catch (err) {
+                $('#mmp-alert').html(`<div class="alert alert-danger">${err.message}</div>`);
+            }
+        });
+
+        function loadMMP(platforms, details) {
+            const sel = $('#mmp_id').empty().append('<option value="">Select Platform</option>');
+            platforms.forEach(p => {
+                sel.append(`<option value="${p.id}">${p.title}</option>`);
+            });
+
+            if (details) {
+                sel.val(details.mmp_id);
+                $('textarea[name="attribution_url"]').val(details.attribution_url);
+            }
+        }
+
         // Actions
         async function assignOffer(oid, aid) {
             try {
@@ -662,9 +727,9 @@ include $pathPrefix . '/includes/head.php';
         function copyToClipboard(text) {
             // Navigator clipboard api needs a secure context (https)
             if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text).then(function() {
+                navigator.clipboard.writeText(text).then(function () {
                     alert('Copied to clipboard!');
-                }, function(err) {
+                }, function (err) {
                     alert('Could not copy text: ', err);
                 });
             } else {
