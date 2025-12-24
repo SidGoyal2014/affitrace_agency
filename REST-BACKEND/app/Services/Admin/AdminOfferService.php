@@ -2,6 +2,9 @@
 
 namespace App\Services\Admin;
 
+use App\Models\ActionLogs;
+use App\Models\OfferMmpDetail;
+use App\Models\MmPlatform;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
@@ -119,6 +122,10 @@ class AdminOfferService
             if ($logged_in_user_type == 'admin') {
                 $tracking_url = \App\Utils\UrlHelper::getBaseUrl() . "/offer/gourl/" . $offer->id;
 
+                // MMP Data
+                $mmpPlatforms = MmPlatform::where('is_active', 'Y')->get();
+                $offerMmp = OfferMmpDetail::where('offer_id', $id)->first();
+
                 return [
                     'module_name' => 'Edit Offer',
                     'action_url' => 'admin/offer/update_offer',
@@ -135,6 +142,8 @@ class AdminOfferService
                     'eventsForAffiliates' => PayoutRule::select('affiliate_id', 'event_id')->where('offer_id', $id)->get()->toArray(),
                     'tracking_url' => $tracking_url,
                     'arrCategories' => Category::all(),
+                    'mmpPlatforms' => $mmpPlatforms,
+                    'offerMmp' => $offerMmp,
                     'logged_in_user_type' => $logged_in_user_type
                 ];
             }
@@ -376,5 +385,38 @@ class AdminOfferService
             ]);
 
         return ['status' => 1, 'msg' => 'Event updated successfully', 'code' => 200];
+    }
+
+    public function saveMmpDetails($request)
+    {
+        $rules = [
+            'offer_id' => 'required|integer',
+            'mmp_id' => 'required|integer',
+            'attribution_url' => 'required|string',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return ['status' => 0, 'error' => $validator->errors()->first()];
+        }
+
+        try {
+            // Update or Create MMP Detail
+            OfferMmpDetail::updateOrCreate(
+                ['offer_id' => $request->offer_id],
+                [
+                    'mmp_id' => $request->mmp_id,
+                    'attribution_url' => $request->attribution_url
+                ]
+            );
+
+            // Sync to main Offers table for TrackingService compatibility
+            Offer::where('id', $request->offer_id)->update(['attribution_link' => $request->attribution_url]);
+
+            return ['status' => 1, 'msg' => 'MMP Details saved successfully', 'code' => 200];
+
+        } catch (\Exception $e) {
+            return ['status' => 0, 'error' => 'Failed: ' . $e->getMessage(), 'code' => 500];
+        }
     }
 }
