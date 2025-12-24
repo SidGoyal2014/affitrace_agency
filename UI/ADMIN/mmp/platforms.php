@@ -55,9 +55,12 @@ include $pathPrefix . '/includes/head.php';
 
             try {
                 const response = await API.fetchWithAuth('admin/mmp/platforms');
-                let platforms = response.data || [];
+                console.log(response.platforms);
+                let platforms = response.platforms || [];
                 const tbody = $('#tableBody');
                 tbody.empty();
+
+                console.log(platforms);
 
                 if (platforms.length > 0) {
                     platforms.forEach(p => {
@@ -65,9 +68,9 @@ include $pathPrefix . '/includes/head.php';
                             <tr>
                                 <td>${p.id}</td>
                                 <td><strong>${p.name}</strong></td>
-                                <td><span class="badge badge-${p.active ? 'success' : 'secondary'}">${p.active ? 'Active' : 'Inactive'}</span></td>
+                                <td><span class="badge badge-${p.active === true ? 'success' : 'secondary'}">${p.active === true ? 'Active' : 'Inactive'}</span></td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary">Configure</button>
+                                    <button onclick="showConfig(${p.id}, '${p.name}')" class="btn btn-sm btn-outline-primary">Configure</button>
                                 </td>
                             </tr>
                         `);
@@ -80,6 +83,10 @@ include $pathPrefix . '/includes/head.php';
                 $('#tableBody').html('<tr><td colspan="4" class="text-center py-4 text-danger">Failed to load</td></tr>');
             }
         });
+
+        function showConfig(id, name) {
+            alert(`To integrate with ${name}, please configure the Postback URL in your ${name} dashboard.\n\nPostback URL Format:\nhttps://{domain}.com/api/postback?aff_click_id={click_id}&event_id={event_id}`);
+        }
     </script>
 </body>
 

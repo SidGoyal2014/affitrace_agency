@@ -45,7 +45,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('affiliates/update', [App\Http\Controllers\Admin\AdminController::class, 'update_affiliate']);
 
         // MMP
-        Route::get('mmp/list', [App\Http\Controllers\Admin\MMPlatformsController::class, 'list_platforms']);
+        Route::get('mmp/platforms', [App\Http\Controllers\Admin\MMPlatformsController::class, 'list_platforms']);
         Route::get('mmp/setup/{id}', [App\Http\Controllers\Admin\MMPlatformsController::class, 'setup_platform']);
 
         // Offers
