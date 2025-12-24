@@ -58,7 +58,8 @@ class AdminOfferService
             'offer_url' => 'required|string',
             'ad_model' => 'required|string',
             'currency' => 'required|string',
-            'aff_model' => 'required|string'
+            'aff_model' => 'required|string',
+            'conversion_tracking_method' => 'in:s2s,image_pixel,iframe_pixel,script_pixel'
         ]);
 
         if ($validator->fails()) {
@@ -89,6 +90,7 @@ class AdminOfferService
         $offer->offer_desc = $request->offer_desc;
         $offer->private_note = $request->private_note;
         $offer->offer_terms = $request->offer_terms;
+        $offer->conversion_tracking_method = $request->conversion_tracking_method ?? 's2s';
 
         $offer->save();
 
@@ -160,7 +162,8 @@ class AdminOfferService
             'offer_url' => 'required|string',
             'ad_model' => 'required|string',
             'currency' => 'required|string',
-            'aff_model' => 'required|string'
+            'aff_model' => 'required|string',
+            'conversion_tracking_method' => 'in:s2s,image_pixel,iframe_pixel,script_pixel'
         ]);
 
         if ($validator->fails()) {
@@ -193,6 +196,7 @@ class AdminOfferService
         $offer->offer_desc = $request->offer_desc;
         $offer->private_note = $request->private_note;
         $offer->offer_terms = $request->offer_terms;
+        $offer->conversion_tracking_method = $request->conversion_tracking_method ?? 's2s';
 
         $offer->save();
 

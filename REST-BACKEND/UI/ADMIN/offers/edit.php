@@ -2,6 +2,8 @@
 $pathPrefix = '..';
 $activePage = 'offers';
 $pageTitle = 'Edit Offer';
+
+// Bootstrap Laravel removed to prevent 500 error
 include $pathPrefix . '/includes/head.php';
 ?>
 
@@ -141,6 +143,49 @@ include $pathPrefix . '/includes/head.php';
                                         <div class="form-group">
                                             <label>End Date</label>
                                             <input type="datetime-local" name="campaign_end_date" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="card bg-light mb-3">
+                                            <div class="card-body py-3">
+                                                <div class="row align-items-center">
+                                                    <div class="col-md-4">
+                                                        <div class="form-group mb-0">
+                                                            <label class="font-weight-bold">Conversion Tracking
+                                                                Method</label>
+                                                            <select name="conversion_tracking_method"
+                                                                class="form-control"
+                                                                onchange="updatePixelCodeDisplay()">
+                                                                <option value="s2s">Server Postback (S2S)</option>
+                                                                <option value="image_pixel">Image Pixel</option>
+                                                                <option value="iframe_pixel">Iframe Pixel</option>
+                                                                <option value="script_pixel">Javascript Pixel</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-8">
+                                                        <div class="form-group mb-0" id="pixelCodeGroup"
+                                                            style="display:none;">
+                                                            <label>Tracking Code (For Advertiser)</label>
+                                                            <div class="input-group">
+                                                                <input type="text" id="pixelCodeDisplay"
+                                                                    class="form-control" readonly>
+                                                                <div class="input-group-append">
+                                                                    <button class="btn btn-outline-secondary"
+                                                                        type="button"
+                                                                        onclick="copyPixelCode()">Copy</button>
+                                                                </div>
+                                                            </div>
+                                                            <small class="text-muted">Place on Thank You page. Replace
+                                                                <code>CLICK_ID_MACRO</code> with the advertiser's macro
+                                                                for our Click ID.</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -401,7 +446,8 @@ include $pathPrefix . '/includes/head.php';
                                     <label>Attribution URL</label>
                                     <textarea name="attribution_url" class="form-control" rows="3"
                                         placeholder="Paste the attribution link from the MMP..."></textarea>
-                                    <small class="text-muted">This URL will be used as the destination (Attribution Link)
+                                    <small class="text-muted">This URL will be used as the destination (Attribution
+                                        Link)
                                         for this offer.</small>
                                 </div>
                                 <button type="submit" class="btn btn-primary">Save MMP Settings</button>
@@ -457,6 +503,7 @@ include $pathPrefix . '/includes/head.php';
                 $('textarea[name="private_note"]').val(offer.private_note);
                 $('textarea[name="offer_terms"]').val(offer.offer_terms);
                 $('select[name="offer_status"]').val(offer.offer_status);
+                $('select[name="conversion_tracking_method"]').val(offer.conversion_tracking_method || 's2s').trigger('change');
 
                 // Dropdowns
                 populateSelect('advertiser_id', response.advertisers, 'id', 'name', offer.advertiser_id);
@@ -585,6 +632,41 @@ include $pathPrefix . '/includes/head.php';
             $('.token-checkbox').on('change', updateTrackingURL);
         }
 
+        function updatePixelCodeDisplay() {
+            const method = $('select[name="conversion_tracking_method"]').val();
+            const group = $('#pixelCodeGroup');
+            const display = $('#pixelCodeDisplay');
+
+            if (method === 's2s') {
+                group.hide();
+                return;
+            }
+
+            group.show();
+
+            // Construct Pixel URL based on API Configuration
+            const pixelUrl = `${API_BASE_URL}/pixel?tid=CLICK_ID_MACRO`;
+
+            let code = '';
+            if (method === 'image_pixel') {
+                code = `<img src="${pixelUrl}" height="1" width="1" />`;
+            } else if (method === 'iframe_pixel') {
+                code = `<iframe src="${pixelUrl}" height="1" width="1" frameborder="0"></iframe>`;
+            } else if (method === 'script_pixel') {
+                code = `<script src="${pixelUrl}"><\/script>`;
+            }
+
+            display.val(code);
+        }
+
+        function copyPixelCode() {
+            const copyText = document.getElementById("pixelCodeDisplay");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            alert("Pixel code copied to clipboard!");
+        }
+
         // Form Submissions
         $('#frmOffer').on('submit', async function (e) {
             e.preventDefault();
@@ -595,6 +677,7 @@ include $pathPrefix . '/includes/head.php';
                     body: JSON.stringify({
                         offer_id: offerId,
                         offer_name: $('input[name="offer_name"]').val(),
+                        conversion_tracking_method: $('select[name="conversion_tracking_method"]').val(),
                         advertiser_id: $('select[name="advertiser_id"]').val(),
                         category_id: $('select[name="category_id"]').val(),
                         offer_url: $('textarea[name="offer_url"]').val(),
