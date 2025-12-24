@@ -1,6 +1,9 @@
 // Detect environment or use fixed XAMPP path
-// const API_BASE_URL = 'http://localhost:8000/api'; // Laravel Serve
-const API_BASE_URL = 'http://localhost/affitrace/affitrace_REST/1/REST-BACKEND/public/api'; // XAMPP
+const API_BASE_URL = 'http://localhost:8000/api'; // Laravel Serve
+
+// const API_BASE_URL = 'http://82.29.160.75:8000/api';
+
+// const API_BASE_URL = 'http://localhost/affitrace/affitrace_REST/1/REST-BACKEND/public/api'; // XAMPP
 
 const API = {
     // --- Authentication ---
@@ -11,7 +14,8 @@ const API = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Agency-ID': eai // <--- Explicitly send Agency ID
                 },
                 body: JSON.stringify({ email, password, user_type, eai })
             });

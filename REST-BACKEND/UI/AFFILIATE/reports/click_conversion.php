@@ -44,7 +44,7 @@ include $pathPrefix . '/includes/head.php';
                                 <select class="form-control" name="conversion_status">
                                     <option value="">All</option>
                                     <option value="converted">Converted</option>
-                                    <option value="pending">Pending</option>
+                                    <option value="pending">Not-converted</option>
                                 </select>
                             </div>
                         </div>
@@ -68,6 +68,10 @@ include $pathPrefix . '/includes/head.php';
                                     <th>Offer</th>
                                     <th>Country</th>
                                     <th>Device</th>
+                                    <th>Source</th>
+                                    <th>Google AID</th>
+                                    <th>Android ID</th>
+                                    <th>IDFA</th>
                                     <th>Converted?</th>
                                 </tr>
                             </thead>
@@ -118,6 +122,10 @@ include $pathPrefix . '/includes/head.php';
                             `${row.offer_name} <small>(${row.offer_id})</small>`,
                             row.ot_country,
                             `${row.device_name || row.ot_os} - ${row.ot_browser}`,
+                            row.source || '-',
+                            row.google_aid || '-',
+                            row.android_id || '-',
+                            row.iosidfa || '-',
                             (row.is_conversion == 1) ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-secondary">No</span>'
                         ];
                     });

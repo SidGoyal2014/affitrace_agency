@@ -39,7 +39,7 @@ class ApiSetTenantConnection
                 ->first();
 
             if (!$agencyUser) {
-                return response()->json(['error' => 'Agency not found'], 404);
+                return response()->json(['error' => 'Agency not found: ' . $agencyId], 404);
             }
 
             // Find the Tenant Record

@@ -117,7 +117,7 @@ class AdminOfferService
             $logged_in_user_type = $request->user()->user_type;
 
             if ($logged_in_user_type == 'admin') {
-                $tracking_url = url("offer/gourl") . "/" . $offer->id;
+                $tracking_url = \App\Utils\UrlHelper::getBaseUrl() . "/offer/gourl/" . $offer->id;
 
                 return [
                     'module_name' => 'Edit Offer',
@@ -297,7 +297,7 @@ class AdminOfferService
 
     public function assignOffer($oid, $aid)
     {
-        $turl = url('') . "/offer/gourl/" . $oid . "/" . $aid . "/?&tid={tid}";
+        $turl = \App\Utils\UrlHelper::getBaseUrl() . "/offer/gourl/" . $oid . "/" . $aid . "/?&tid={tid}";
         $query = OfferAffiliate::where('offer_id', $oid)->where('affiliate_id', $aid);
 
         if ($query->exists()) {
@@ -327,7 +327,7 @@ class AdminOfferService
     {
         OfferAffiliate::where("offer_id", $oid)
             ->where("affiliate_id", $aid)
-            ->update(['request_status' => 'Pending', 'tracking_url' => Null]);
+            ->update(['request_status' => 'Unassigned', 'tracking_url' => Null]);
         return ['status' => 1, 'msg' => 'Offer unassigned successfully', 'code' => 200];
     }
 

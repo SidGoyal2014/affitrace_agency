@@ -94,7 +94,7 @@ include $pathPrefix . '/includes/head.php';
                                 <td>${offer.aff_pricing} ${offer.currency}</td>
                                 <td><span class="badge badge-success">${offer.offer_status}</span></td>
                                 <td>
-                                    <a href="../reports/offer-clicks/${offer.id}" class="btn btn-sm btn-outline-primary mr-1">Reports</a>
+                                    <a href="../reports/click_conversion_report.php?offer_id=${offer.id}" class="btn btn-sm btn-outline-primary mr-1">Reports</a>
                                     <a href="edit.php?id=${offer.id}" class="btn btn-sm btn-outline-secondary mr-1">Edit</a>
                                     <button onclick="deleteOffer(${offer.id})" class="btn btn-sm btn-outline-danger">Delete</button>
                                 </td>

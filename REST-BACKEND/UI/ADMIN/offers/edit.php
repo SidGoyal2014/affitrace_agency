@@ -497,7 +497,7 @@ include $pathPrefix . '/includes/head.php';
                 let status = '<span class="badge badge-secondary">Not Assigned</span>';
                 let actions = `<button onclick="assignOffer(${offer.id}, ${aff.id})" class="btn btn-sm btn-primary">Assign</button>`;
 
-                if (oa) {
+                if (oa && oa.request_status !== 'Unassigned') {
                     status = `<span class="badge badge-${oa.request_status === 'Accepted' ? 'success' : 'warning'}">${oa.request_status}</span>`;
                     actions = `
                         <button onclick="showTrackingUrl('${oa.tracking_url}')" class="btn btn-sm btn-info mr-1">URL</button>
@@ -660,8 +660,30 @@ include $pathPrefix . '/includes/head.php';
         }
 
         function copyToClipboard(text) {
-            navigator.clipboard.writeText(text);
-            alert('Copied to clipboard!');
+            // Navigator clipboard api needs a secure context (https)
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(function() {
+                    alert('Copied to clipboard!');
+                }, function(err) {
+                    alert('Could not copy text: ', err);
+                });
+            } else {
+                // Fallback for non-secure context (http)
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";  // Avoid scrolling to bottom
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    const successful = document.execCommand('copy');
+                    const msg = successful ? 'successful' : 'unsuccessful';
+                    alert('Copied to clipboard!');
+                } catch (err) {
+                    alert('Fallback: Oops, unable to copy', err);
+                }
+                document.body.removeChild(textArea);
+            }
         }
 
         function createNewOfferEvent() {
