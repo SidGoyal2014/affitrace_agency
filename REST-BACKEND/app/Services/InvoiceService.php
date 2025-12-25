@@ -9,14 +9,18 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Exception;
 use Illuminate\Support\Str;
+use Illuminate\Contracts\Filesystem\Factory as StorageFactory;
+use Illuminate\Http\File;
 
 class InvoiceService
 {
     protected $pdfGenerator;
+    protected $storage;
 
-    public function __construct(PdfGeneratorInterface $pdfGenerator)
+    public function __construct(PdfGeneratorInterface $pdfGenerator, StorageFactory $storage)
     {
         $this->pdfGenerator = $pdfGenerator;
+        $this->storage = $storage;
     }
 
     public function createDraft(int $advertiserId, array $transactionIds, int $createdBy): Invoice
@@ -104,27 +108,70 @@ class InvoiceService
             throw new Exception("Cannot send an empty invoice.");
         }
 
-        return DB::transaction(function () use ($invoice) {
-            // Generate PDF
-            $html = view('invoices.pdf', ['invoice' => $invoice])->render();
-            $fileName = 'invoices/' . $invoice->invoice_number . '.pdf';
-            $absolutePath = storage_path('app/public/' . $fileName);
+        // Generate PDF path: invoices/{agency_id}/{year}/{invoice_number}.pdf
+        // Agency ID default 1 for now implementation as per context
+        $agencyId = 1;
+        $year = now()->year;
+        $r2Path = "invoices/{$agencyId}/{$year}/{$invoice->invoice_number}.pdf";
 
-            // Ensure directory exists
-            if (!file_exists(dirname($absolutePath))) {
-                mkdir(dirname($absolutePath), 0755, true);
+        // Temp file creation
+        $tempPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'inv_' . $invoice->id . '_' . Str::random(10) . '.pdf';
+
+        try {
+            // 1. Generate PDF to local temp file
+            $html = view('invoices.pdf', ['invoice' => $invoice])->render();
+            $this->pdfGenerator->generate($html, $tempPath);
+
+            // 2. Upload to R2
+            $uploaded = $this->storage->disk('r2')->putFileAs(
+                dirname($r2Path),
+                new File($tempPath),
+                basename($r2Path)
+            );
+
+            if (!$uploaded) {
+                throw new Exception("Failed to upload PDF to storage.");
             }
 
-            $this->pdfGenerator->generate($html, $absolutePath);
+            // 3. Verify existence
+            if (!$this->storage->disk('r2')->exists($r2Path)) {
+                throw new Exception("Verification failed: PDF not found on storage after upload.");
+            }
 
-            $invoice->update([
-                'status' => Invoice::STATUS_SENT,
-                'sent_at' => now(),
-                'pdf_path' => $fileName,
-            ]);
+            // 4. Commit State
+            return DB::transaction(function () use ($invoice, $r2Path) {
+                $invoice->update([
+                    'status' => Invoice::STATUS_SENT,
+                    'sent_at' => now(),
+                    'pdf_path' => $r2Path, // Relative storage path
+                ]);
+                return $invoice;
+            });
 
-            return $invoice;
-        });
+        } catch (Exception $e) {
+            // Cleanup on error is handled in finally, but throw up
+            throw $e;
+        } finally {
+            // 5. Cleanup
+            if (file_exists($tempPath)) {
+                @unlink($tempPath);
+            }
+        }
+    }
+
+    public function getInvoicePdfUrl(int $invoiceId): string
+    {
+        $invoice = Invoice::findOrFail($invoiceId);
+
+        if (!$invoice->pdf_path) {
+            throw new Exception("PDF not found for this invoice.");
+        }
+
+        // Generate temporary signed URL (valid for 15 minutes)
+        return $this->storage->disk('r2')->temporaryUrl(
+            $invoice->pdf_path,
+            now()->addMinutes(15)
+        );
     }
 
     public function markAsPaid(int $invoiceId): Invoice

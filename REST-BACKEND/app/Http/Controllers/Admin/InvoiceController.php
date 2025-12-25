@@ -126,4 +126,14 @@ class InvoiceController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
+
+    public function download($id)
+    {
+        try {
+            $url = $this->invoiceService->getInvoicePdfUrl($id);
+            return redirect()->away($url);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 404);
+        }
+    }
 }

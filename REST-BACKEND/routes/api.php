@@ -117,6 +117,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::resource('invoices', \App\Http\Controllers\Admin\InvoiceController::class);
         Route::get('invoices/{advertiser}/billable-transactions', [\App\Http\Controllers\Admin\InvoiceController::class, 'getBillableTransactions']);
         Route::post('invoices/{id}/send', [\App\Http\Controllers\Admin\InvoiceController::class, 'send']);
+        Route::get('invoices/{id}/download', [\App\Http\Controllers\Admin\InvoiceController::class, 'download'])->name('invoices.download');
         Route::post('invoices/{id}/pay', [\App\Http\Controllers\Admin\InvoiceController::class, 'pay']);
     });
 
