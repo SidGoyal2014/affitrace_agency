@@ -645,7 +645,7 @@ include $pathPrefix . '/includes/head.php';
             group.show();
 
             // Construct Pixel URL based on API Configuration
-            const pixelUrl = `${API_BASE_URL}/pixel?tid=CLICK_ID_MACRO`;
+            const pixelUrl = `${API_BASE_URL}/pixel?aff_click_id=CLICK_ID_MACRO`;
 
             let code = '';
             if (method === 'image_pixel') {

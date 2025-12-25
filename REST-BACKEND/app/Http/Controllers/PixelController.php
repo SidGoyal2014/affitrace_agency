@@ -16,7 +16,7 @@ class PixelController extends Controller
 
     public function track(Request $request)
     {
-        $tid = $request->query('tid');
+        $tid = $request->query('tid') ?? $request->query('aff_click_id');
 
         if (!$tid) {
             return response()->json(['error' => 'Missing Transaction ID'], 400);

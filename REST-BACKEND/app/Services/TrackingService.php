@@ -181,10 +181,16 @@ class TrackingService
 
         // 1. Record Conversion (Same as Postback)
         // We use tid/aff_click_id from request
-        $request->merge(['aff_click_id' => $request->tid]);
+        $tid = $request->input('tid') ?? $request->input('aff_click_id');
+
+        if (!$tid) {
+            return $resp;
+        }
+
+        $request->merge(['aff_click_id' => $tid, 'tid' => $tid]);
 
         // Retrieve tracking to get Offer ID and Affiliate ID
-        $tracking = OfferTracking::where('tid', $request->tid)->first();
+        $tracking = OfferTracking::where('tid', $tid)->first();
         if (!$tracking) {
             return $resp;
         }
