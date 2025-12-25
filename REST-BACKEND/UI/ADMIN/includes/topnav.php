@@ -106,6 +106,8 @@ function url($path)
             </a>
             <div class="dropdown-menu">
                 <a class="dropdown-item" href="<?php echo url('mmp/platforms.php'); ?>">MMP Platforms</a>
+                <a class="dropdown-item" href="<?php echo url('integrations/data-integrations.php'); ?>">Data
+                    Integrations</a>
                 <a class="dropdown-item" href="<?php echo url('payments/plans.php'); ?>">Payment Plans</a>
                 <a class="dropdown-item" href="<?php echo url('payments/subscriptions.php'); ?>">Subscriptions</a>
                 <a class="dropdown-item" href="<?php echo url('payments/transactions.php'); ?>">Transactions</a>
