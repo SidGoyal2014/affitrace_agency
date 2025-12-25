@@ -106,6 +106,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::get('reports/offers-assigned/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'get_offers_assigned_to_affiliate']);
         Route::post('reports/click-conversion-report', [App\Http\Controllers\Admin\ReportController::class, 'click_conversion_report']);
+
+        // Integrations
+        Route::get('integrations/config', [App\Http\Controllers\Admin\IntegrationController::class, 'get_config']);
+        Route::post('integrations/save', [App\Http\Controllers\Admin\IntegrationController::class, 'save_config']);
+        Route::post('integrations/sync', [App\Http\Controllers\Admin\IntegrationController::class, 'sync']);
+        Route::post('integrations/upload-csv', [App\Http\Controllers\Admin\IntegrationController::class, 'upload_csv']);
+
+        // Invoice Routes
+        Route::resource('invoices', \App\Http\Controllers\Admin\InvoiceController::class);
+        Route::get('invoices/{advertiser}/billable-transactions', [\App\Http\Controllers\Admin\InvoiceController::class, 'getBillableTransactions']);
+        Route::post('invoices/{id}/send', [\App\Http\Controllers\Admin\InvoiceController::class, 'send']);
+        Route::post('invoices/{id}/pay', [\App\Http\Controllers\Admin\InvoiceController::class, 'pay']);
     });
 
     // Affiliate Routes
