@@ -6,6 +6,8 @@ const API_BASE_URL = 'http://localhost:8000/api'; // Laravel Serve
 // const API_BASE_URL = 'http://localhost/affitrace/affitrace_REST/1/REST-BACKEND/public/api'; // XAMPP
 
 const API = {
+    BASE_URL: API_BASE_URL,
+
     // --- Authentication ---
 
     login: async (email, password, user_type, eai) => {

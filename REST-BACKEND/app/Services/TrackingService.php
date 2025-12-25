@@ -175,6 +175,61 @@ class TrackingService
         return $resp;
     }
 
+    public function processPixelConversion(Request $request)
+    {
+        $resp = ['success' => 'N'];
+
+        // 1. Record Conversion (Same as Postback)
+        // We use tid/aff_click_id from request
+        $tid = $request->input('tid') ?? $request->input('aff_click_id');
+
+        if (!$tid) {
+            return $resp;
+        }
+
+        $request->merge(['aff_click_id' => $tid, 'tid' => $tid]);
+
+        // Retrieve tracking to get Offer ID and Affiliate ID
+        $tracking = OfferTracking::where('tid', $tid)->first();
+        if (!$tracking) {
+            return $resp;
+        }
+
+        // Logic to record conversion
+        $updateResp = $this->update_offer_tracking_without_event($request);
+
+        if (isset($updateResp['success']) && $updateResp['success'] == 'Y') {
+            $resp['success'] = 'Y';
+
+            // 2. Fetch Affiliate Pixel
+            // Check for specific offer pixel first, then global affiliate pixel
+            $pixel = DB::table('affiliate_pixels')
+                ->where('affiliate_id', $tracking->aff_id)
+                ->where('status', 'active')
+                ->where(function ($q) use ($tracking) {
+                    $q->where('offer_id', $tracking->offer_id)
+                        ->orWhereNull('offer_id');
+                })
+                ->orderBy('offer_id', 'desc') // Specific offer (non-null) first
+                ->first();
+
+            if ($pixel) {
+                $resp['pixel_type'] = $pixel->type;
+                $resp['pixel_code'] = $this->replacePixelMacros($pixel->pixel_code, $tracking);
+            }
+        }
+
+        return $resp;
+    }
+
+    private function replacePixelMacros($code, $tracking)
+    {
+        $code = str_replace('{payout}', $tracking->payout, $code);
+        $code = str_replace('{tid}', $tracking->tid, $code);
+        // Add more macros as needed
+        return $code;
+    }
+
     public function updateOfferStatus($oid, $status)
     {
         $offer = Offer::find($oid);

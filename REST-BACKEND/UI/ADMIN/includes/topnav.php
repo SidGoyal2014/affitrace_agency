@@ -89,9 +89,9 @@ function url($path)
             </a>
             <div class="dropdown-menu">
                 <a class="dropdown-item" href="<?php echo url('reports/click_conversion_report.php'); ?>">Click &
-                    Conversion (Beta)</a>
-                <a class="dropdown-item" href="<?php echo url('reports/all_offers.php'); ?>">Clicks</a>
-                <a class="dropdown-item" href="<?php echo url('reports/conversions.php'); ?>">Conversions</a>
+                    Conversion</a>
+                <!-- <a class="dropdown-item" href="<?php echo url('reports/all_offers.php'); ?>">Clicks</a>
+                <a class="dropdown-item" href="<?php echo url('reports/conversions.php'); ?>">Conversions</a> -->
                 <a class="dropdown-item" href="<?php echo url('reports/payouts.php'); ?>">Payouts</a>
                 <a class="dropdown-item" href="<?php echo url('reports/logs.php'); ?>">Logs</a>
             </div>
