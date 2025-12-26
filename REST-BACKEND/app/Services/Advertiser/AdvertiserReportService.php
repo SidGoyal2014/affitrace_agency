@@ -31,9 +31,11 @@ class AdvertiserReportService
 
     public function getInvoices($advertiser_id)
     {
-        // Placeholder - invoices table may not exist yet
-        // Return empty array for now
-        $invoices = [];
+        $invoices = DB::table('invoices')
+            ->where('advertiser_id', $advertiser_id)
+            ->whereNull('deleted_at')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return [
             'module_name' => 'Invoices',
