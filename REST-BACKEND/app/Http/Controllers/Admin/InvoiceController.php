@@ -3,12 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Advertiser;
 use App\Models\Invoice;
-use App\Models\Transaction;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class InvoiceController extends Controller
@@ -20,54 +17,52 @@ class InvoiceController extends Controller
         $this->invoiceService = $invoiceService;
     }
 
+    /**
+     * List invoices (DataTables compatible)
+     */
     public function index(Request $request)
     {
         if ($request->ajax()) {
             $data = Invoice::with('advertiser')->select('invoices.*');
             return DataTables::of($data)
+                ->addColumn('advertiser.company', function ($row) {
+                    return $row->advertiser ? $row->advertiser->company : 'N/A';
+                })
                 ->editColumn('status', function ($row) {
-                    return '<span class="badge badge-' . ($row->status == 'PAID' ? 'success' : ($row->status == 'SENT' ? 'info' : 'secondary')) . '">' . $row->status . '</span>';
+                    $color = match ($row->status) {
+                        'PAID' => 'success',
+                        'SENT' => 'warning',
+                        default => 'secondary',
+                    };
+                    return '<span class="badge badge-' . $color . '">' . $row->status . '</span>';
                 })
                 ->addColumn('action', function ($row) {
-                    $btn = '<a href="' . route('admin.invoices.show', $row->id) . '" class="btn btn-sm btn-primary">View</a>';
-                    return $btn;
+                    return '<a href="detail.php?id=' . $row->id . '" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></a>';
                 })
                 ->rawColumns(['status', 'action'])
                 ->make(true);
         }
-        return view('admin.invoices.index');
+
+        return response()->json(['message' => 'Use AJAX request']);
     }
 
-    public function create()
-    {
-        $advertisers = Advertiser::all();
-        return view('admin.invoices.create', compact('advertisers'));
-    }
-
-    public function getBillableTransactions(Request $request, $advertiserId)
-    {
-        $transactions = Transaction::where('advertiser_id', $advertiserId)
-            ->where('billing', 'Y')
-            ->whereNull('invoice_id')
-            ->select('id', 'billing_charge', 'billing_reason', 'created_at')
-            ->get();
-
-        return response()->json($transactions);
-    }
-
+    /**
+     * Store new invoice (manual input)
+     */
     public function store(Request $request)
     {
         $request->validate([
-            'advertiser_id' => 'required|exists:advertisers,id',
-            'transactions' => 'required|array|min:1',
-            'transactions.*' => 'exists:transactions,id'
+            'advertiser_id' => 'required|exists:users,id',
+            'title' => 'nullable|string|max:255',
+            'total_amount' => 'required|numeric|min:0.01',
+            'invoice_date' => 'nullable|date',
+            'due_date' => 'nullable|date',
         ]);
 
         try {
             $invoice = $this->invoiceService->createDraft(
-                $request->advertiser_id,
-                $request->transactions,
-                auth()->id() ?? 1 // Fallback for dev/test if no auth
+                $request->only(['advertiser_id', 'title', 'total_amount', 'invoice_date', 'due_date']),
+                auth()->id() ?? 1
             );
             return response()->json(['success' => true, 'invoice_id' => $invoice->id]);
         } catch (\Exception $e) {
@@ -75,28 +70,41 @@ class InvoiceController extends Controller
         }
     }
 
+    /**
+     * Show single invoice (JSON)
+     */
     public function show($id)
     {
-        $invoice = Invoice::with(['advertiser', 'transactions'])->findOrFail($id);
-        return view('admin.invoices.show', compact('invoice'));
+        $invoice = Invoice::with('advertiser')->findOrFail($id);
+        return response()->json($invoice);
     }
 
+    /**
+     * Update draft invoice
+     */
     public function update(Request $request, $id)
     {
         $request->validate([
-            'transaction_ids' => 'required|array|min:1',
+            'title' => 'nullable|string|max:255',
+            'total_amount' => 'nullable|numeric|min:0.01',
             'invoice_date' => 'nullable|date',
             'due_date' => 'nullable|date',
         ]);
 
         try {
-            $this->invoiceService->updateDraft($id, $request->transaction_ids, $request->only('invoice_date', 'due_date'));
-            return response()->json(['success' => true]);
+            $invoice = $this->invoiceService->updateDraft(
+                $id,
+                $request->only(['title', 'total_amount', 'invoice_date', 'due_date'])
+            );
+            return response()->json(['success' => true, 'invoice' => $invoice]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
 
+    /**
+     * Send invoice (generate PDF, change status)
+     */
     public function send($id)
     {
         try {
@@ -107,6 +115,9 @@ class InvoiceController extends Controller
         }
     }
 
+    /**
+     * Mark invoice as paid
+     */
     public function pay($id)
     {
         try {
@@ -117,6 +128,9 @@ class InvoiceController extends Controller
         }
     }
 
+    /**
+     * Delete draft invoice
+     */
     public function destroy($id)
     {
         try {
@@ -127,6 +141,9 @@ class InvoiceController extends Controller
         }
     }
 
+    /**
+     * Download PDF (redirect to signed URL)
+     */
     public function download($id)
     {
         try {
@@ -134,6 +151,19 @@ class InvoiceController extends Controller
             return redirect()->away($url);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 404);
+        }
+    }
+
+    /**
+     * Dashboard statistics
+     */
+    public function stats()
+    {
+        try {
+            $stats = $this->invoiceService->getDashboardStats();
+            return response()->json($stats);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }

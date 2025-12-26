@@ -13,6 +13,7 @@ class Invoice extends Model
     protected $fillable = [
         'invoice_number',
         'advertiser_id',
+        'title',
         'status',
         'invoice_date',
         'due_date',
@@ -40,21 +41,12 @@ class Invoice extends Model
     const STATUS_PAID = 'PAID';
     const STATUS_DELETED = 'DELETED';
 
+    /**
+     * Get the advertiser (user with user_type = 'advertiser')
+     */
     public function advertiser()
     {
-        return $this->belongsTo(Advertiser::class);
-    }
-
-    public function transactions()
-    {
-        return $this->hasMany(Transaction::class);
-    }
-
-    public function scopeItemsAvailableForInvoice($query, $advertiserId)
-    {
-        return $query->where('advertiser_id', $advertiserId)
-            ->where('billing', 'Y')
-            ->whereNull('invoice_id');
+        return $this->belongsTo(User::class, 'advertiser_id');
     }
 
     public function getIsDraftAttribute()
