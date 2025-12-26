@@ -18,13 +18,48 @@ class InvoiceController extends Controller
     }
 
     /**
-     * List invoices (DataTables compatible)
+     * List invoices (DataTables compatible with filters)
      */
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Invoice::with('advertiser')->select('invoices.*');
-            return DataTables::of($data)
+            $query = Invoice::with('advertiser')->select('invoices.*');
+
+            // Filter by advertiser_id
+            if ($request->filled('advertiser_id')) {
+                $query->where('advertiser_id', $request->advertiser_id);
+            }
+
+            // Filter by status
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            // Filter by amount range
+            if ($request->filled('amount_min')) {
+                $query->where('total_amount', '>=', $request->amount_min);
+            }
+            if ($request->filled('amount_max')) {
+                $query->where('total_amount', '<=', $request->amount_max);
+            }
+
+            // Filter by invoice date range
+            if ($request->filled('date_from')) {
+                $query->whereDate('invoice_date', '>=', $request->date_from);
+            }
+            if ($request->filled('date_to')) {
+                $query->whereDate('invoice_date', '<=', $request->date_to);
+            }
+
+            // Filter by due date range
+            if ($request->filled('due_date_from')) {
+                $query->whereDate('due_date', '>=', $request->due_date_from);
+            }
+            if ($request->filled('due_date_to')) {
+                $query->whereDate('due_date', '<=', $request->due_date_to);
+            }
+
+            return DataTables::of($query)
                 ->addColumn('advertiser.company', function ($row) {
                     return $row->advertiser ? $row->advertiser->company : 'N/A';
                 })
@@ -142,13 +177,13 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Download PDF (redirect to signed URL)
+     * Download PDF - returns signed URL as JSON
      */
     public function download($id)
     {
         try {
             $url = $this->invoiceService->getInvoicePdfUrl($id);
-            return redirect()->away($url);
+            return response()->json(['success' => true, 'url' => $url]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 404);
         }

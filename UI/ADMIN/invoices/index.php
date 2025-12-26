@@ -78,6 +78,76 @@ include $pathPrefix . '/includes/head.php';
                 </div>
             </div>
 
+
+            <!-- Filters Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-toggle="collapse"
+                        data-target="#filtersCollapse">
+                        <i class="fas fa-filter"></i> Toggle
+                    </button>
+                </div>
+                <div class="collapse show" id="filtersCollapse">
+                    <div class="card-body">
+                        <form id="filterForm">
+                            <div class="row">
+                                <!-- Advertiser -->
+                                <div class="col-md-3 mb-3">
+                                    <label for="filter_advertiser">Advertiser</label>
+                                    <select class="form-control" id="filter_advertiser">
+                                        <option value="">All Advertisers</option>
+                                    </select>
+                                </div>
+
+                                <!-- Status -->
+                                <div class="col-md-2 mb-3">
+                                    <label for="filter_status">Status</label>
+                                    <select class="form-control" id="filter_status">
+                                        <option value="">All</option>
+                                        <option value="DRAFT">Draft</option>
+                                        <option value="SENT">Sent</option>
+                                        <option value="PAID">Paid</option>
+                                    </select>
+                                </div>
+
+                                <!-- Amount Range -->
+                                <div class="col-md-2 mb-3">
+                                    <label for="filter_amount_min">Min Amount</label>
+                                    <input type="number" step="0.01" class="form-control" id="filter_amount_min"
+                                        placeholder="0.00">
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label for="filter_amount_max">Max Amount</label>
+                                    <input type="number" step="0.01" class="form-control" id="filter_amount_max"
+                                        placeholder="999999">
+                                </div>
+
+                                <!-- Due Date Range -->
+                                <div class="col-md-2 mb-3">
+                                    <label for="filter_due_from">Due From</label>
+                                    <input type="date" class="form-control" id="filter_due_from">
+                                </div>
+                                <div class="col-md-1 mb-3">
+                                    <label for="filter_due_to">Due To</label>
+                                    <input type="date" class="form-control" id="filter_due_to">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-search"></i> Apply Filters
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="clearFilters">
+                                        <i class="fas fa-times"></i> Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             <!-- Invoices Table -->
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
@@ -119,12 +189,21 @@ include $pathPrefix . '/includes/head.php';
                 return;
             }
 
-            // Load Stats
-            // Since we don't have a dedicated stats endpoint yet, we might rely on the main dashboard one or assume we need to fix the backend.
-            // For now, attempting to fetch from a new 'admin/invoices/stats' endpoint we should probably create, 
-            // OR reuse logic. But simplest is to fetch index via API which might return stats if we modify controller.
-            // Let's implement fetchStats function.
+            // Load Stats & Advertisers
             fetchStats();
+            loadAdvertisers();
+
+            // Get filter parameters
+            function getFilterParams() {
+                return {
+                    advertiser_id: $('#filter_advertiser').val() || '',
+                    status: $('#filter_status').val() || '',
+                    amount_min: $('#filter_amount_min').val() || '',
+                    amount_max: $('#filter_amount_max').val() || '',
+                    due_date_from: $('#filter_due_from').val() || '',
+                    due_date_to: $('#filter_due_to').val() || ''
+                };
+            }
 
             // Initialize DataTable
             const table = $('#dataTable').DataTable({
@@ -137,7 +216,11 @@ include $pathPrefix . '/includes/head.php';
                         'Authorization': 'Bearer ' + localStorage.getItem('access_token'),
                         'X-Agency-ID': localStorage.getItem('agency_id'),
                         'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest' // Force AJAX for DataTables 
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    data: function(d) {
+                        // Merge filter params with DataTables params
+                        return $.extend({}, d, getFilterParams());
                     },
                     error: function (xhr, error, code) {
                         if (xhr.status === 401) {
@@ -192,6 +275,36 @@ include $pathPrefix . '/includes/head.php';
                 ],
                 order: [[0, 'desc']]
             });
+
+            // Filter form submit
+            $('#filterForm').on('submit', function(e) {
+                e.preventDefault();
+                table.ajax.reload();
+            });
+
+            // Clear filters
+            $('#clearFilters').on('click', function() {
+                $('#filterForm')[0].reset();
+                table.ajax.reload();
+            });
+
+            // Load advertisers for filter dropdown
+            async function loadAdvertisers() {
+                try {
+                    const data = await API.fetchWithAuth('admin/advertisers/list');
+                    const select = $('#filter_advertiser');
+                    
+                    const list = data.data ? data.data : data;
+                    if (Array.isArray(list)) {
+                        list.forEach(adv => {
+                            const userId = adv.uid || adv.id;
+                            select.append(`<option value="${userId}">${adv.company || 'N/A'} (${adv.name || 'ID: ' + userId})</option>`);
+                        });
+                    }
+                } catch (err) {
+                    console.error("Load Advertisers Error:", err);
+                }
+            }
         });
 
         async function fetchStats() {
@@ -248,37 +361,14 @@ include $pathPrefix . '/includes/head.php';
             // Then I can create a blob URL and click it.
 
             try {
-                // Fetch with Auth. response will normally be the file content because fetch follows 302.
-                // However, R2 might return 200 OK with PDF body.
-                const response = await fetch(`${API_BASE_URL}/admin/invoices/${id}/download`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-                        'X-Agency-ID': localStorage.getItem('agency_id'),
-                        'Accept': 'application/json' // Actually we want binary/blob?
-                    }
-                });
+                // Get the signed URL from the API
+                const response = await API.fetchWithAuth(`admin/invoices/${id}/download`);
 
-                if (response.ok) {
-                    // Try to detect if it was a JSON error or the actual file
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        const json = await response.json();
-                        throw new Error(json.message || "Download failed");
-                    }
-
-                    // It is likely the PDF blob now (after redirect)
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `invoice_${id}.pdf`; // Fallback name
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    window.URL.revokeObjectURL(url);
+                if (response.success && response.url) {
+                    // Open the signed URL directly in a new tab - avoids CORS issues
+                    window.open(response.url, '_blank');
                 } else {
-                    const json = await response.json();
-                    alert("Download Failed: " + (json.message || "Unknown Error"));
+                    throw new Error(response.message || "Failed to get download URL");
                 }
             } catch (err) {
                 alert("Download Error: " + err.message);

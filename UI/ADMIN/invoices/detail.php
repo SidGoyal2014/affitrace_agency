@@ -202,33 +202,13 @@ include $pathPrefix . '/includes/head.php';
             // Download Handler
             window.downloadPdf = async function () {
                 try {
-                    const response = await fetch(`${API_BASE_URL}/admin/invoices/${invoiceId}/download`, {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-                            'X-Agency-ID': localStorage.getItem('agency_id'),
-                            'Accept': 'application/json'
-                        }
-                    });
+                    const response = await API.fetchWithAuth(`admin/invoices/${invoiceId}/download`);
 
-                    if (response.ok) {
-                        const contentType = response.headers.get('content-type');
-                        if (contentType && contentType.includes('application/json')) {
-                            const json = await response.json();
-                            throw new Error(json.message || "Download failed");
-                        }
-
-                        const blob = await response.blob();
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `Invoice_${invoiceId}.pdf`;
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                        window.URL.revokeObjectURL(url);
+                    if (response.success && response.url) {
+                        // Open the signed URL directly in a new tab - avoids CORS issues
+                        window.open(response.url, '_blank');
                     } else {
-                        const json = await response.json();
-                        alert("Download Failed: " + (json.message || "Unknown error"));
+                        throw new Error(response.message || "Failed to get download URL");
                     }
                 } catch (err) {
                     alert("Download Error: " + err.message);
