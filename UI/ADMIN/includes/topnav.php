@@ -80,6 +80,19 @@ function url($path)
             </div>
         </li>
 
+        <!-- Invoices Dropdown -->
+        <li class="nav-item <?php echo isActiveNav('invoices', $activePage); ?>">
+            <a class="nav-link" href="#" data-toggle="dropdown">
+                <i class="fas fa-file-invoice-dollar"></i>
+                Invoices
+                <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
+            </a>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" href="<?php echo url('invoices/index.php'); ?>">All Invoices</a>
+                <a class="dropdown-item" href="<?php echo url('invoices/create.php'); ?>">Create Invoice</a>
+            </div>
+        </li>
+
         <!-- Reports Dropdown -->
         <li class="nav-item <?php echo isActiveNav('reports', $activePage); ?>">
             <a class="nav-link" href="#" data-toggle="dropdown">
@@ -106,6 +119,8 @@ function url($path)
             </a>
             <div class="dropdown-menu">
                 <a class="dropdown-item" href="<?php echo url('mmp/platforms.php'); ?>">MMP Platforms</a>
+                <a class="dropdown-item" href="<?php echo url('integrations/data-integrations.php'); ?>">Data
+                    Integrations</a>
                 <a class="dropdown-item" href="<?php echo url('payments/plans.php'); ?>">Payment Plans</a>
                 <a class="dropdown-item" href="<?php echo url('payments/subscriptions.php'); ?>">Subscriptions</a>
                 <a class="dropdown-item" href="<?php echo url('payments/transactions.php'); ?>">Transactions</a>
