@@ -10,8 +10,9 @@ class Kernel extends ConsoleKernel
 
     protected $commands = [
         \App\Console\Commands\AffiliatePushData::class,
+        \App\Console\Commands\CleanupReportExports::class,
     ];
-    
+
     /**
      * Define the application's command schedule.
      */
@@ -19,6 +20,9 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('affiliate:push-data')->hourly();
+
+        // Cleanup expired report exports every 5 minutes
+        $schedule->command('reports:cleanup')->everyFiveMinutes();
     }
 
     /**
@@ -26,7 +30,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }
