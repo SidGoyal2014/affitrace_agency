@@ -119,6 +119,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('invoices/{id}/send', [\App\Http\Controllers\Admin\InvoiceController::class, 'send']);
         Route::get('invoices/{id}/download', [\App\Http\Controllers\Admin\InvoiceController::class, 'download'])->name('invoices.download');
         Route::post('invoices/{id}/pay', [\App\Http\Controllers\Admin\InvoiceController::class, 'pay']);
+
+        // Report Export Routes (Async)
+        Route::get('reports/exports', [\App\Http\Controllers\Admin\ReportExportController::class, 'index']);
+        Route::post('reports/export', [\App\Http\Controllers\Admin\ReportExportController::class, 'export']);
+        Route::get('reports/export/{id}/status', [\App\Http\Controllers\Admin\ReportExportController::class, 'status']);
+        Route::get('reports/export/{id}/download', [\App\Http\Controllers\Admin\ReportExportController::class, 'download']);
     });
 
     // Affiliate Routes
