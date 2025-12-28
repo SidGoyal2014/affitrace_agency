@@ -27,17 +27,17 @@ class AdminOfferService
     {
         $logged_in_user_type = $user->user_type;
 
-        if ($logged_in_user_type == 'admin') {
+        if ($logged_in_user_type == \App\Enums\UserType::Admin->value) {
             return [
                 'module_name' => 'Create Offer',
                 'action_url' => 'admin/offer/save',
-                'advertisers' => User::where('user_type', 'advertiser')->get(),
+                'advertisers' => User::where('user_type', \App\Enums\UserType::Advertiser->value)->get(),
                 'admodels' => AdModel::all(),
                 'offerTokens' => OfferToken::all(),
                 'arrCur' => $this->getCurrency(),
                 'arrCountry' => $this->getCountry(),
                 'arrDevices' => Device::all(),
-                'arrAffiliates' => User::where('user_type', 'affiliate')->get(),
+                'arrAffiliates' => User::where('user_type', \App\Enums\UserType::Affiliate->value)->get(),
                 'arrEvents' => [],
                 'arrOA' => [],
                 'tracking_url' => '',
@@ -121,7 +121,7 @@ class AdminOfferService
         if (!is_null($offer)) {
             $logged_in_user_type = $request->user()->user_type;
 
-            if ($logged_in_user_type == 'admin') {
+            if ($logged_in_user_type == \App\Enums\UserType::Admin->value) {
                 $tracking_url = \App\Utils\UrlHelper::getBaseUrl() . "/offer/gourl/" . $offer->id;
 
                 // MMP Data
@@ -133,12 +133,12 @@ class AdminOfferService
                     'action_url' => 'admin/offer/update_offer',
                     'offer' => $offer,
                     'offerTokens' => OfferToken::all(),
-                    'advertisers' => User::where('user_type', 'advertiser')->get(),
+                    'advertisers' => User::where('user_type', \App\Enums\UserType::Advertiser->value)->get(),
                     'admodels' => AdModel::all(),
                     'arrCur' => $this->getCurrency(),
                     'arrCountry' => $this->getCountry(),
                     'arrDevices' => Device::all(),
-                    'arrAffiliates' => User::where('user_type', 'affiliate')->get(),
+                    'arrAffiliates' => User::where('user_type', \App\Enums\UserType::Affiliate->value)->get(),
                     'arrEvents' => OfferEvent::where('offer_id', '=', $id)->get()->toArray(),
                     'arrOA' => OfferAffiliate::select('*')->where('offer_id', '=', $id)->get()->toArray(),
                     'eventsForAffiliates' => PayoutRule::select('affiliate_id', 'event_id')->where('offer_id', $id)->get()->toArray(),
@@ -250,17 +250,17 @@ class AdminOfferService
         } else {
             $query->where('deleted_at', null);
 
-            if ($status == 'approve') {
-                $query->where('offer_status', 'approve')
+            if ($status == \App\Enums\OfferStatus::Approved->value) {
+                $query->where('offer_status', \App\Enums\OfferStatus::Approved->value)
                     ->where(function ($q) {
                         $q->where('campaign_end_date', '>=', NOW())
                             ->orWhere('campaign_end_date', null);
                     });
-            } elseif ($status == 'pending') {
-                $query->where('offer_status', 'pending');
-            } elseif ($status == 'ended') {
+            } elseif ($status == \App\Enums\OfferStatus::Pending->value) {
+                $query->where('offer_status', \App\Enums\OfferStatus::Pending->value);
+            } elseif ($status == \App\Enums\OfferStatus::Ended->value) {
                 $query->where(function ($q) {
-                    $q->where('offer_status', 'ended')
+                    $q->where('offer_status', \App\Enums\OfferStatus::Ended->value)
                         ->orWhere('campaign_end_date', '<', NOW());
                 });
             }

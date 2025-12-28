@@ -13,7 +13,7 @@ class AdminUserService
                 array(
                     'email' => $request->email,
                     'password' => $request->password,
-                    'user_type' => 'admin'
+                    'user_type' => \App\Enums\UserType::Admin->value
                 )
             )
         ) {

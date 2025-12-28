@@ -160,7 +160,7 @@ class AdminDashboardService
 
     private function get_total_no_of_affiliates()
     {
-        return User::where('user_type', 'affiliate')->count();
+        return User::where('user_type', \App\Enums\UserType::Affiliate->value)->count();
     }
 
     private function get_average_revenue_per_offer()

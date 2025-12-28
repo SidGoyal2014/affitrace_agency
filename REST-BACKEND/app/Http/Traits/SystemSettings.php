@@ -16,16 +16,18 @@ use App\Models\OfferTracking;
 use App\Models\Setting;
 
 
-trait SystemSettings{
+trait SystemSettings
+{
 
-	public function get_settings($column_name=""){
+	public function get_settings($column_name = "")
+	{
 
 		$data = Setting::find(1);
 
-		if($column_name != ""){
+		if ($column_name != "") {
 			return $data->$column_name;
 
-		}else{
+		} else {
 			return $data;
 
 		}
@@ -33,22 +35,25 @@ trait SystemSettings{
 	}//get_setting
 
 
-	public function get_total_offers(){
+	public function get_total_offers()
+	{
 
 		return Offer::count();
 
 
 	}//get_total_offers
 
-	public function get_total_affiliates(){
+	public function get_total_affiliates()
+	{
 
-		return User::where('user_type', 'affiliate')->get()->count();
+		return User::where('user_type', \App\Enums\UserType::Affiliate->value)->get()->count();
 
 
 	}//get_total_offers
 
 
-	public function get_total_clicks(){
+	public function get_total_clicks()
+	{
 
 		//DB::enableQueryLog();
 
@@ -62,10 +67,11 @@ trait SystemSettings{
 	}//get_total_clicks
 
 
-	public function get_total_conversions(){
+	public function get_total_conversions()
+	{
 
 		$currentMonth = Carbon::now()->month;
-		
+
 		return OfferTracking::where('aff_click_id', '!=', '')->whereMonth('created_at', $currentMonth)->get()->count();
 
 

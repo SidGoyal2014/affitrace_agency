@@ -17,11 +17,11 @@ class AffiliateMiddleware
     {
         //return $next($request);
 
-        if (strtolower(Auth::user()->user_type) != 'affiliate') {
+        if (strtolower(Auth::user()->user_type) != \App\Enums\UserType::Affiliate->value) {
             \Illuminate\Support\Facades\Log::info('AffiliateMiddleware: Access Denied', [
                 'user_id' => Auth::id(),
                 'user_type' => Auth::user()->user_type,
-                'expected' => 'affiliate',
+                'expected' => \App\Enums\UserType::Affiliate->value,
                 'raw_user' => Auth::user()->toArray()
             ]);
 

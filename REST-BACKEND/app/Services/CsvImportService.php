@@ -37,10 +37,10 @@ class CsvImportService
 
                 try {
                     switch ($type) {
-                        case 'advertiser':
+                        case \App\Enums\UserType::Advertiser->value:
                             $this->importAdvertiser($data);
                             break;
-                        case 'affiliate':
+                        case \App\Enums\UserType::Affiliate->value:
                             $this->importAffiliate($data);
                             break;
                         case 'clicks':
@@ -76,12 +76,12 @@ class CsvImportService
 
     protected function importAdvertiser($data)
     {
-        $this->importUser($data, 'advertiser');
+        $this->importUser($data, \App\Enums\UserType::Advertiser->value);
     }
 
     protected function importAffiliate($data)
     {
-        $this->importUser($data, 'affiliate');
+        $this->importUser($data, \App\Enums\UserType::Affiliate->value);
     }
 
     protected function importUser($data, $role)
@@ -100,7 +100,7 @@ class CsvImportService
             $user->email = $email;
             $user->password = bcrypt('Password@123');
             $user->user_type = $role;
-            $user->status = 'Active'; // Default status
+            $user->status = \App\Enums\UserStatus::Active->value; // Default status
         }
 
         // Basic Info
@@ -119,9 +119,9 @@ class CsvImportService
         // Status Mapping
         $statusInput = strtolower($this->getVal($data, ['status', 'state']) ?? '');
         if (in_array($statusInput, ['active', 'approved', 'enabled'])) {
-            $user->status = 'Active';
+            $user->status = \App\Enums\UserStatus::Active->value;
         } elseif (in_array($statusInput, ['inactive', 'blocked', 'banned', 'pending'])) {
-            $user->status = ($statusInput == 'pending') ? 'Pending' : 'Blocked';
+            $user->status = ($statusInput == 'pending') ? \App\Enums\UserStatus::Pending->value : \App\Enums\UserStatus::Blocked->value;
         }
 
         if (!empty($data['external_id'])) {

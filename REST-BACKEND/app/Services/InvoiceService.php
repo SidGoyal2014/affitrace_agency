@@ -33,7 +33,7 @@ class InvoiceService
             'total_amount' => $data['total_amount'],
             'subtotal_amount' => $data['total_amount'],
             'tax_amount' => 0,
-            'status' => Invoice::STATUS_DRAFT,
+            'status' => \App\Enums\InvoiceStatus::Draft->value,
             'invoice_date' => $data['invoice_date'] ?? now(),
             'due_date' => $data['due_date'] ?? null,
             'created_by' => $createdBy,
@@ -108,7 +108,7 @@ class InvoiceService
             // 4. Commit State
             return DB::transaction(function () use ($invoice, $r2Path) {
                 $invoice->update([
-                    'status' => Invoice::STATUS_SENT,
+                    'status' => \App\Enums\InvoiceStatus::Sent->value,
                     'sent_at' => now(),
                     'pdf_path' => $r2Path,
                 ]);
@@ -181,7 +181,7 @@ class InvoiceService
         }
 
         $invoice->update([
-            'status' => Invoice::STATUS_PAID,
+            'status' => \App\Enums\InvoiceStatus::Paid->value,
             'paid_at' => now(),
         ]);
 
@@ -200,7 +200,7 @@ class InvoiceService
         }
 
         DB::transaction(function () use ($invoice) {
-            $invoice->update(['status' => Invoice::STATUS_DELETED]);
+            $invoice->update(['status' => \App\Enums\InvoiceStatus::Deleted->value]);
             $invoice->delete();
         });
     }
@@ -211,9 +211,9 @@ class InvoiceService
     public function getDashboardStats(): array
     {
         return [
-            'received_amount' => Invoice::where('status', Invoice::STATUS_PAID)->sum('total_amount'),
-            'pending_amount' => Invoice::where('status', Invoice::STATUS_SENT)->sum('total_amount'),
-            'draft_count' => Invoice::where('status', Invoice::STATUS_DRAFT)->count(),
+            'received_amount' => Invoice::where('status', \App\Enums\InvoiceStatus::Paid->value)->sum('total_amount'),
+            'pending_amount' => Invoice::where('status', \App\Enums\InvoiceStatus::Sent->value)->sum('total_amount'),
+            'draft_count' => Invoice::where('status', \App\Enums\InvoiceStatus::Draft->value)->count(),
         ];
     }
 }

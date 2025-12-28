@@ -22,7 +22,7 @@ class AdminService
         $data = DB::table('users')
             ->select('*', 'users.id as uid')
             ->leftJoin('advertiser_user_details', 'users.id', '=', 'advertiser_user_details.user_id')
-            ->where('user_type', 'advertiser')
+            ->where('user_type', \App\Enums\UserType::Advertiser->value)
             ->get();
 
         return [
@@ -36,7 +36,7 @@ class AdminService
         $data = DB::table('users')
             ->select('*', 'users.id as uid')
             ->leftJoin('affiliate_user_details', 'users.id', '=', 'affiliate_user_details.user_id')
-            ->where('user_type', 'affiliate')
+            ->where('user_type', \App\Enums\UserType::Affiliate->value)
             ->get();
 
         return [
