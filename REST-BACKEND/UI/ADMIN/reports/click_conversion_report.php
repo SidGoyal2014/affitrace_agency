@@ -69,9 +69,15 @@ include $pathPrefix . '/includes/head.php';
                                 <input type="text" class="form-control" id="advertiser_id" name="advertiser_id"
                                     placeholder="Advertiser ID">
                             </div>
-                            <div class="form-group col-md-3 d-flex align-items-end">
+                            <div class="form-group col-md-2 d-flex align-items-end">
                                 <button type="submit" class="btn btn-primary btn-block">
                                     <i class="fas fa-search mr-2"></i> Apply Filters
+                                </button>
+                            </div>
+                            <div class="form-group col-md-1 d-flex align-items-end">
+                                <button type="button" class="btn btn-success btn-block" onclick="exportReport()"
+                                    title="Export to CSV">
+                                    <i class="fas fa-file-export"></i>
                                 </button>
                             </div>
                         </div>
@@ -324,6 +330,51 @@ include $pathPrefix . '/includes/head.php';
                     <a class="page-link" href="#" onclick="loadReport(${meta.current_page + 1}); return false;">Next</a>
                 </li>
             `);
+        }
+
+        async function exportReport() {
+            const btn = event.target.closest('button');
+            const originalHtml = btn.innerHTML;
+
+            try {
+                // Show loading state
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                // Get current filter values
+                const formData = new FormData(document.getElementById('filterForm'));
+                const filters = {
+                    date_from: formData.get('from'),
+                    date_to: formData.get('to'),
+                    status: formData.get('conversion_status'),
+                    offer_id: formData.get('offer_id'),
+                    affiliate_id: formData.get('affiliate_id')
+                };
+
+                // Call export API
+                const response = await API.fetchWithAuth('admin/reports/export', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        report_type: 'all_trackings',
+                        format: 'csv',
+                        filters: filters
+                    })
+                });
+
+                if (response.success) {
+                    alert('Export queued successfully!\n\nGo to Reports > My Exports to download your file when ready.\n\nExport ID: ' + response.data.export_id);
+                } else {
+                    alert('Export failed: ' + (response.message || 'Unknown error'));
+                }
+
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('Failed to start export. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
         }
     </script>
 </body>
