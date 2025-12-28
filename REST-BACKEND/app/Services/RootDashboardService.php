@@ -105,7 +105,7 @@ class RootDashboardService
 
     public function getTotalAffiliates()
     {
-        return User::where('user_type', 'affiliate')->count();
+        return User::where('user_type', \App\Enums\UserType::Affiliate->value)->count();
     }
 
     public function getAverageRevenuePerOffer()

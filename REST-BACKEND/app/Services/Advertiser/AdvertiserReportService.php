@@ -11,8 +11,8 @@ class AdvertiserReportService
         // Get summary stats
         $sql = "SELECT 
                     DATE(ot.created_at) as date,
-                    COUNT(CASE WHEN ot.event = 'click' THEN 1 END) as clicks,
-                    COUNT(CASE WHEN ot.event != 'click' THEN 1 END) as conversions,
+                    COUNT(CASE WHEN ot.event = '" . \App\Enums\TrackingEventType::Click->value . "' THEN 1 END) as clicks,
+                    COUNT(CASE WHEN ot.event != '" . \App\Enums\TrackingEventType::Click->value . "' THEN 1 END) as conversions,
                     SUM(COALESCE(ot.revenue_usd, 0)) as cost
                 FROM offer_trackings ot
                 INNER JOIN offers o ON ot.offer_id = o.id

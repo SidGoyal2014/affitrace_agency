@@ -35,7 +35,7 @@ class ApiSetTenantConnection
             $agencyUser = DB::connection('mysql_main')
                 ->table('users')
                 ->where('username', $agencyId) // 'eai' matches 'username'
-                ->where('user_type', 'admin') // Assuming agency owner is admin
+                ->where('user_type', \App\Enums\UserType::Admin->value) // Assuming agency owner is admin
                 ->first();
 
             if (!$agencyUser) {

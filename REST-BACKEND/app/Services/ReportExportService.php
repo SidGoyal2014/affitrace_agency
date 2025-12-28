@@ -16,8 +16,8 @@ class ReportExportService
     public function buildQuery(string $reportType, array $filters): Builder
     {
         $query = match ($reportType) {
-            'clicks' => OfferTracking::query()->where('event', 'click'),
-            'conversions' => OfferTracking::query()->where('event', 'conversion'),
+            'clicks' => OfferTracking::query()->where('event', \App\Enums\TrackingEventType::Click->value),
+            'conversions' => OfferTracking::query()->where('event', \App\Enums\TrackingEventType::Conversion->value),
             'all_trackings' => OfferTracking::query(),
             default => OfferTracking::query(),
         };
@@ -221,7 +221,7 @@ class ReportExportService
 
         // Get all expired exports
         $expiredExports = ReportExport::where('expires_at', '<', now())
-            ->orWhere('status', ReportExport::STATUS_EXPIRED)
+            ->orWhere('status', \App\Enums\ReportExportStatus::Expired->value)
             ->get();
 
         foreach ($expiredExports as $export) {

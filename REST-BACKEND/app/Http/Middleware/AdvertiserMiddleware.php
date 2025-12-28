@@ -17,7 +17,7 @@ class AdvertiserMiddleware
     {
         //return $next($request);
 
-        if (strtolower(Auth::user()->user_type) != 'advertiser') {
+        if (strtolower(Auth::user()->user_type) != \App\Enums\UserType::Advertiser->value) {
 
             // Revoke the token if it's not transient
             $accessToken = $request->user()->currentAccessToken();

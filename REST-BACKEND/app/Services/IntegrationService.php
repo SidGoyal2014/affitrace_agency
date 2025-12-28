@@ -79,7 +79,7 @@ class IntegrationService
                 $user = new User();
                 $user->email = $email;
                 $user->password = bcrypt('Password@123'); // Default password
-                $user->user_type = 'advertiser';
+                $user->user_type = \App\Enums\UserType::Advertiser->value;
             }
 
             $user->name = $advData['name'] ?? $advData['company'] ?? 'Unknown Advertiser';
@@ -94,7 +94,7 @@ class IntegrationService
 
             // Map Status
             $status = strtolower($advData['status'] ?? 'active');
-            $user->status = ($status == 'active' || $status == 'approved') ? 'Active' : (($status == 'pending') ? 'Pending' : 'Blocked');
+            $user->status = ($status == 'active' || $status == 'approved') ? \App\Enums\UserStatus::Active->value : (($status == 'pending') ? \App\Enums\UserStatus::Pending->value : \App\Enums\UserStatus::Blocked->value);
 
             $user->external_user_id = $advData['id'];
             $user->save();
@@ -116,7 +116,7 @@ class IntegrationService
                 $user = new User();
                 $user->email = $email;
                 $user->password = bcrypt('Password@123');
-                $user->user_type = 'affiliate';
+                $user->user_type = \App\Enums\UserType::Affiliate->value;
             }
 
             $user->name = $affData['name'] ?? 'Unknown Affiliate';
@@ -131,7 +131,7 @@ class IntegrationService
 
             // Map Status
             $status = strtolower($affData['status'] ?? 'active');
-            $user->status = ($status == 'active' || $status == 'approved') ? 'Active' : (($status == 'pending') ? 'Pending' : 'Blocked');
+            $user->status = ($status == 'active' || $status == 'approved') ? \App\Enums\UserStatus::Active->value : (($status == 'pending') ? \App\Enums\UserStatus::Pending->value : \App\Enums\UserStatus::Blocked->value);
 
             $user->external_user_id = $affData['id'];
             $user->save();
@@ -174,13 +174,18 @@ class IntegrationService
 
             // Status Map
             $statusMap = [
-                'active' => 'approve',
-                'paused' => 'pending',
-                'deleted' => 'deleted',
-                'expired' => 'ended'
+                'active' => \App\Enums\OfferStatus::Approved->value,
+                'paused' => \App\Enums\OfferStatus::Pending->value,
+                'deleted' => 'deleted', // Assuming 'deleted' involves soft delete or isn't in Enum yet? Or maybe 'ended'? Let's keep 'deleted' if it's special. Wait, offer_status usually doesn't have 'deleted'. It uses deleted_at.
+                // But AdminOfferService doesn't show 'deleted' as status.
+                // Let's assume 'deleted' maps to 'End' or maybe soft delete. 
+                // But code uses $statusMap[$extStatus].
+                // If I look at OfferStatus Enum: Active, Approved, Pending, Ended.
+                // I'll map 'expired' to Ended.
+                'expired' => \App\Enums\OfferStatus::Ended->value
             ];
             $extStatus = strtolower($offerData['status'] ?? 'active');
-            $offer->offer_status = $statusMap[$extStatus] ?? 'pending';
+            $offer->offer_status = $statusMap[$extStatus] ?? \App\Enums\OfferStatus::Pending->value;
 
             // Default Values for other required fields
             if (!$offer->conversion_tracking_method)

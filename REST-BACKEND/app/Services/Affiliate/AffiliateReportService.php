@@ -370,9 +370,9 @@ class AffiliateReportService
             $data = $data->where('offers.category_id', $request->category);
         }
         if ($request->has('conversion_status') && $request->conversion_status != "") {
-            if ($request->conversion_status == 'converted') {
+            if ($request->conversion_status == \App\Enums\ConversionStatus::Converted->value) {
                 $data = $data->where('offer_trackings.aff_click_id', '!=', '');
-            } elseif ($request->conversion_status == 'pending') {
+            } elseif ($request->conversion_status == \App\Enums\ConversionStatus::Pending->value) {
                 $data = $data->where('offer_trackings.aff_click_id', '=', '');
             }
         }
