@@ -8,18 +8,45 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\Advertiser\AdvertiserReportService;
 use App\Services\InvoiceService;
 use App\Models\Invoice;
+use App\DTOs\ReportFilterDTO;
 
 class AdvertiserReportController extends Controller
 {
+    /**
+     * Get summary report with optional filters
+     */
     public function summary(Request $request, AdvertiserReportService $service)
     {
         try {
-            return response()->json($service->getSummaryReport(Auth::id()));
+            // Create filter DTO from request
+            $filters = ReportFilterDTO::fromRequest($request);
+
+            // Get report with advertiser scoping
+            return response()->json($service->getSummaryReportForAdvertiser(Auth::id(), $filters));
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
+    /**
+     * Get detailed click and conversion report with filters
+     */
+    public function clickConversionReport(Request $request, AdvertiserReportService $service)
+    {
+        try {
+            // Create filter DTO from request
+            $filters = ReportFilterDTO::fromRequest($request);
+
+            // Get report with advertiser scoping
+            return response()->json($service->getClickConversionReportForAdvertiser(Auth::id(), $filters));
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get invoices for advertiser
+     */
     public function invoices(Request $request, AdvertiserReportService $service)
     {
         try {
@@ -29,6 +56,9 @@ class AdvertiserReportController extends Controller
         }
     }
 
+    /**
+     * Download invoice PDF
+     */
     public function downloadInvoice($id, InvoiceService $invoiceService)
     {
         try {
