@@ -28,9 +28,11 @@ class AdvertiserOfferService
                     offers.advertiser_id = " . $advertiser_id;
 
         $offers = DB::select($sql);
+        $baseUrl = \App\Utils\UrlHelper::getBaseUrl();
 
         return [
             'module_name' => 'My Offers',
+            'base_url' => $baseUrl,
             'offers' => $offers
         ];
     }
@@ -54,9 +56,11 @@ class AdvertiserOfferService
                     AND offers.offer_status = 'Approved'";
 
         $offers = DB::select($sql);
+        $baseUrl = \App\Utils\UrlHelper::getBaseUrl();
 
         return [
             'module_name' => 'Approved Offers',
+            'base_url' => $baseUrl,
             'offers' => $offers
         ];
     }
