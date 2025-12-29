@@ -5,17 +5,24 @@ namespace App\Services\Affiliate;
 use App\Models\OfferTracking;
 use App\Models\AffiliatePostbackColumn;
 use App\Services\Affiliate\AffiliateDashboardService;
-use App\Http\Traits\CommonFunctions;
+use App\Services\Reports\BaseReportService;
+use App\DTOs\ReportFilterDTO;
 use App\Http\Traits\CommonOfferFunctions;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
-class AffiliateReportService
+class AffiliateReportService extends BaseReportService
 {
-    use CommonFunctions, CommonOfferFunctions;
+    use CommonOfferFunctions;
 
+    /**
+     * Get summary data for affiliate
+     * 
+     * @param int $aid Affiliate ID
+     * @return array
+     */
     public function getSummaryData($aid)
     {
         $sql_1 = "
@@ -82,6 +89,25 @@ class AffiliateReportService
         ];
     }
 
+    /**
+     * Get click and conversion report for affiliate (wrapper method)
+     * 
+     * @param Request $request
+     * @param int $aid Affiliate ID
+     * @return array
+     */
+    public function getClickConversionReportForAffiliate($request, $aid): array
+    {
+        // Create filter DTO from request
+        $filters = ReportFilterDTO::fromRequest($request);
+
+        // Use base class implementation with affiliate scoping
+        return parent::getClickConversionReport($filters, $aid, 'affiliate');
+    }
+
+    /**
+     * Get offer clicks (legacy method for DataTables)
+     */
     public function getOfferClicks($offer_id, $aid, $get_conversions = "")
     {
         $data = DB::table('offer_trackings')
@@ -120,6 +146,9 @@ class AffiliateReportService
             ->make(true);
     }
 
+    /**
+     * Search offer clicks (legacy method - can be refactored to use BaseReportService)
+     */
     public function searchOfferClicks($request, $aid)
     {
         $data = DB::table('offer_trackings')
@@ -183,6 +212,9 @@ class AffiliateReportService
         ];
     }
 
+    /**
+     * Get offer payouts
+     */
     public function getOfferPayouts($oid, $aid)
     {
         $data = $this->getPayoutsForOffer($oid, $aid);
@@ -203,6 +235,9 @@ class AffiliateReportService
         ];
     }
 
+    /**
+     * Search offer payouts
+     */
     public function searchOfferPayouts($request, $aid)
     {
         $oid = $request->oid;
@@ -243,25 +278,22 @@ class AffiliateReportService
         ];
     }
 
+    /**
+     * Get affiliate payouts
+     */
     public function getAffiliatePayouts($aid)
     {
         return [
             'module_name' => "Affiliate Payouts",
-            'data' => $this->getPayoutsForAffiliate($aid) // Assuming Trait method name fix or alias needed? Trait has `getAffiliatePayouts` which clashes.
-            // Wait, trait CommonOfferFunctions has `getAffiliatePayouts`.
-            // Inside this class `$this->getAffiliatePayouts` refers to THIS method.
-            // We need to use trait method.
+            'data' => $this->getPayoutsForAffiliate($aid)
         ];
     }
 
-    // Fix for Trait name collision
+    /**
+     * Get payouts for affiliate (helper method)
+     */
     public function getPayoutsForAffiliate($aid)
     {
-        // Copying trait logic or using alias would be better, but let's copy for safety/simplicity as traits can be tricky with name collisions
-        // Actually, CommonOfferFunctions::getAffiliatePayouts is what we need.
-        // Let's rename the Trait method alias or just duplicate logic to avoid recursion loop if I call $this->getAffiliatePayouts
-        // I'll assume I can just use the trait's logic here directly
-
         $sql = "SELECT 
 					OT.id as otid,
 					O.offer_name, 
@@ -287,7 +319,9 @@ class AffiliateReportService
         return DB::select($sql);
     }
 
-
+    /**
+     * Search affiliate payouts
+     */
     public function searchAffiliatePayouts($request, $aid)
     {
         $str = "";
@@ -314,73 +348,6 @@ class AffiliateReportService
         return [
             'module_name' => "Affiliate Payouts",
             'data' => $data,
-            'filters' => $request->all()
-        ];
-    }
-
-    public function getClickConversionReport($request, $aid)
-    {
-        $data = DB::table('offer_trackings')
-            ->select(
-                'offer_trackings.*',
-                'offer_trackings.id as otid',
-                'offer_trackings.created_at as link_clicked_at',
-                'offer_trackings.country as ot_country',
-                'offer_trackings.os as ot_os',
-                'offer_trackings.browser as ot_browser',
-                'affis.id as aff_id',
-                'affis.name as aff_name',
-                'offers.id as offer_id',
-                'offers.offer_name',
-                'devices.device_name',
-                DB::raw("CASE WHEN offer_trackings.aff_click_id != '' THEN 1 ELSE 0 END as is_conversion")
-            )
-            ->leftJoin('offers', 'offer_trackings.offer_id', '=', 'offers.id')
-            ->leftJoin('categories', 'offers.category_id', '=', 'categories.id')
-            ->leftJoin('devices', 'offer_trackings.device_id', '=', 'devices.id')
-            ->leftJoin('users as affis', 'offer_trackings.aff_id', '=', 'affis.id')
-            ->where('offer_trackings.aff_id', $aid);
-
-        if ($request->has('from') && $request->has('to') && $request->from != "" && $request->to != "") {
-            if ($request->from != $request->to) {
-                $data = $data->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
-            } else {
-                $data = $data->whereDate('offer_trackings.created_at', $request->from);
-            }
-        }
-        if ($request->has('offer_id') && $request->offer_id != "") {
-            $data = $data->where('offers.id', $request->offer_id);
-        }
-
-        $arrC = $this->getCountry();
-        if ($request->has('country') && $request->country != "") {
-            $country = isset($arrC[$request->country]) ? $arrC[$request->country] : $request->country;
-            $data = $data->where('offer_trackings.country', $country);
-        }
-        if ($request->has('os') && $request->os != "") {
-            $data = $data->where('offer_trackings.os', 'LIKE', "%{$request->os}%");
-        }
-        if ($request->has('browser') && $request->browser != "") {
-            $data = $data->where('offer_trackings.browser', $request->browser);
-        }
-        if ($request->has('device') && $request->device != "") {
-            $data = $data->where('offer_trackings.device_id', $request->device);
-        }
-        if ($request->has('category') && $request->category != "") {
-            $data = $data->where('offers.category_id', $request->category);
-        }
-        if ($request->has('conversion_status') && $request->conversion_status != "") {
-            if ($request->conversion_status == \App\Enums\ConversionStatus::Converted->value) {
-                $data = $data->where('offer_trackings.aff_click_id', '!=', '');
-            } elseif ($request->conversion_status == \App\Enums\ConversionStatus::Pending->value) {
-                $data = $data->where('offer_trackings.aff_click_id', '=', '');
-            }
-        }
-
-        $perPage = $request->get('limit', 50);
-        return [
-            'module_name' => "Click & Conversion Report",
-            'data' => $data->orderBy('offer_trackings.id', 'desc')->paginate($perPage),
             'filters' => $request->all()
         ];
     }

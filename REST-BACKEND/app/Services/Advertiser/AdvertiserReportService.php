@@ -3,32 +3,48 @@
 namespace App\Services\Advertiser;
 
 use Illuminate\Support\Facades\DB;
+use App\Services\Reports\BaseReportService;
+use App\DTOs\ReportFilterDTO;
 
-class AdvertiserReportService
+class AdvertiserReportService extends BaseReportService
 {
-    public function getSummaryReport($advertiser_id)
+    /**
+     * Get summary report for advertiser (wrapper method for backward compatibility)
+     * 
+     * @param int $advertiser_id
+     * @param ReportFilterDTO|null $filters
+     * @return array
+     */
+    public function getSummaryReportForAdvertiser($advertiser_id, ?ReportFilterDTO $filters = null): array
     {
-        // Get summary stats
-        $sql = "SELECT 
-                    DATE(ot.created_at) as date,
-                    COUNT(CASE WHEN ot.event = '" . \App\Enums\TrackingEventType::Click->value . "' THEN 1 END) as clicks,
-                    COUNT(CASE WHEN ot.event != '" . \App\Enums\TrackingEventType::Click->value . "' THEN 1 END) as conversions,
-                    SUM(COALESCE(ot.revenue_usd, 0)) as cost
-                FROM offer_trackings ot
-                INNER JOIN offers o ON ot.offer_id = o.id
-                WHERE o.advertiser_id = " . $advertiser_id . "
-                GROUP BY DATE(ot.created_at)
-                ORDER BY DATE(ot.created_at) DESC
-                LIMIT 30";
+        // If no filters provided, use empty filters for backward compatibility
+        if (!$filters) {
+            $filters = new ReportFilterDTO();
+        }
 
-        $stats = DB::select($sql);
-
-        return [
-            'module_name' => 'Summary Report',
-            'stats' => $stats
-        ];
+        // Use base class implementation with advertiser scoping
+        return parent::getSummaryReport($filters, $advertiser_id, 'advertiser');
     }
 
+    /**
+     * Get detailed click and conversion report for advertiser (wrapper method)
+     * 
+     * @param int $advertiser_id
+     * @param ReportFilterDTO $filters
+     * @return array
+     */
+    public function getClickConversionReportForAdvertiser($advertiser_id, ReportFilterDTO $filters): array
+    {
+        // Use base class implementation with advertiser scoping
+        return parent::getClickConversionReport($filters, $advertiser_id, 'advertiser');
+    }
+
+    /**
+     * Get invoices for advertiser
+     * 
+     * @param int $advertiser_id
+     * @return array
+     */
     public function getInvoices($advertiser_id)
     {
         $invoices = DB::table('invoices')
@@ -43,3 +59,4 @@ class AdvertiserReportService
         ];
     }
 }
+

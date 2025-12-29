@@ -33,6 +33,7 @@ include $pathPrefix . '/includes/head.php';
                                     <th>Name</th>
                                     <th>Budget</th>
                                     <th>Status</th>
+                                    <th>Tracking / Integration</th>
                                 </tr>
                             </thead>
                             <tbody id="approvedTableBody">
@@ -58,15 +59,38 @@ include $pathPrefix . '/includes/head.php';
         $(document).ready(async function () {
             try {
                 const data = await API.fetchWithAuth('advertiser/offers/approved');
+                const baseUrl = data.base_url || 'https://agency.affitrace.com';
 
                 let html = '';
                 if (data.offers && data.offers.length > 0) {
                     data.offers.forEach(offer => {
+                        let trackingCode = '';
+                        const method = offer.conversion_tracking_method || 's2s';
+
+                        if (method === 's2s') {
+                            trackingCode = `${baseUrl}/sd?aff_click_id={click_id}&amount={amount}`;
+                        } else if (method === 'image_pixel') {
+                            trackingCode = `<img src="${baseUrl}/pixel?tid={click_id}" width="1" height="1" />`;
+                        } else if (method === 'iframe_pixel') {
+                            trackingCode = `<iframe src="${baseUrl}/pixel?tid={click_id}" width="1" height="1" frameborder="0"></iframe>`;
+                        } else if (method === 'script_pixel') {
+                            trackingCode = `<script src="${baseUrl}/pixel?tid={click_id}"><\/script>`;
+                        }
+
                         html += `<tr>
                             <td>${offer.id || offer.oid}</td>
                             <td>${offer.offer_name}</td>
                             <td>$${Number(offer.offer_budget || 0).toLocaleString()}</td>
                             <td><span class="badge badge-success">${offer.offer_status || 'Approved'}</span></td>
+                            <td>
+                                <div class="input-group">
+                                    <input type="text" class="form-control form-control-sm" value="${trackingCode}" readonly id="track_${offer.id}">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-primary btn-sm" onclick="copyToClipboard('track_${offer.id}')">Copy</button>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Method: ${method.toUpperCase()}</small>
+                            </td>
                         </tr>`;
                     });
                 }
@@ -74,9 +98,17 @@ include $pathPrefix . '/includes/head.php';
                 $('#dataTable').DataTable();
             } catch (error) {
                 console.error('Approved offers load failed:', error);
-                $('#approvedTableBody').html('<tr><td colspan="4" class="text-center text-danger">Failed to load offers: ' + error.message + '</td></tr>');
+                $('#approvedTableBody').html('<tr><td colspan="5" class="text-center text-danger">Failed to load offers: ' + error.message + '</td></tr>');
             }
         });
+
+        function copyToClipboard(id) {
+            const copyText = document.getElementById(id);
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            alert("Copied to clipboard!");
+        }
     </script>
 </body>
 
