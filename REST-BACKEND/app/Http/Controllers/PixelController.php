@@ -5,6 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\TrackingService;
 
+/**
+ * @group Tracking (Pixel)
+ *
+ * Pixel-based conversion tracking endpoints.
+ * These endpoints do not require authentication.
+ */
 class PixelController extends Controller
 {
     protected $trackingService;
@@ -14,6 +20,17 @@ class PixelController extends Controller
         $this->trackingService = $trackingService;
     }
 
+    /**
+     * Fire Conversion Pixel
+     *
+     * Record a conversion via pixel tracking. Returns a 1x1 transparent GIF.
+     *
+     * @unauthenticated
+     * @queryParam tid string The transaction/click ID. Example: abc123xyz
+     * @queryParam aff_click_id string Alternative parameter for transaction ID. Example: abc123xyz
+     * @response 200 1x1 transparent GIF image
+     * @response 400 {"error": "Missing Transaction ID"}
+     */
     public function track(Request $request)
     {
         $tid = $request->query('tid') ?? $request->query('aff_click_id');
