@@ -106,6 +106,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::get('reports/offers-assigned/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'get_offers_assigned_to_affiliate']);
         Route::post('reports/click-conversion-report', [App\Http\Controllers\Admin\ReportController::class, 'click_conversion_report']);
+        Route::post('reports/clicks', [App\Http\Controllers\Admin\ReportController::class, 'clicks_report']);
+        Route::post('reports/conversions', [App\Http\Controllers\Admin\ReportController::class, 'conversions_report']);
 
         // Integrations
         Route::get('integrations/config', [App\Http\Controllers\Admin\IntegrationController::class, 'get_config']);

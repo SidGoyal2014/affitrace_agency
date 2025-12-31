@@ -74,13 +74,15 @@ class AdminReportService extends BaseReportService
      */
     public function allOffers()
     {
+        // Clicks from offer_trackings, conversions from conversions table
         $data = DB::table('offers')
-            ->join('offer_trackings as ot', 'ot.offer_id', '=', 'offers.id')
+            ->leftJoin('offer_trackings as ot', 'ot.offer_id', '=', 'offers.id')
+            ->leftJoin('conversions as conv', 'conv.offer_id', '=', 'offers.id')
             ->select(
                 'offers.id',
                 'offers.offer_name',
-                DB::raw("SUM(CASE WHEN ot.tid != '' THEN 1 ELSE 0 END) as total_clicks"),
-                DB::raw("SUM(CASE WHEN ot.aff_click_id != '' THEN 1 ELSE 0 END) as total_conversions")
+                DB::raw("COUNT(DISTINCT ot.tid) as total_clicks"),
+                DB::raw("COUNT(DISTINCT conv.id) as total_conversions")
             )
             ->groupBy('offers.id', 'offers.offer_name')
             ->orderByRaw('total_clicks DESC')
@@ -214,11 +216,11 @@ class AdminReportService extends BaseReportService
     }
 
     /**
-     * Get all payouts
+     * Get all payouts (from conversions table)
      */
     public function allPayouts()
     {
-        $data = DB::select('select OT.aff_id, U.name as affiliate_name, O.id as offer_id, O.offer_name, count(*) as total_conversions, OT.sub1, OT.revenue as revenue, OT.payout as payout, OT.currency as ot_currency, SUM(OT.revenue) as total_revenue, SUM(OT.payout) as total_payout, OE.event_name from offers O LEFT JOIN offer_trackings OT ON O.id = OT.offer_id LEFT JOIN users U ON OT.aff_id = U.id LEFT JOIN payout_rules PR ON OT.event_id = PR.event_id LEFT JOIN offer_events OE ON PR.event_id = OE.id where OT.aff_click_id = OT.tid group by OT.offer_id, OT.aff_id, OT.event_id, OT.sub1, OT.revenue, OT.payout, OT.currency');
+        $data = DB::select('SELECT C.affiliate_id as aff_id, U.name as affiliate_name, O.id as offer_id, O.offer_name, count(*) as total_conversions, C.aff_sub1 as sub1, C.revenue as revenue, C.payout as payout, C.currency as ot_currency, SUM(C.revenue) as total_revenue, SUM(C.payout) as total_payout, OE.event_name FROM offers O LEFT JOIN conversions C ON O.id = C.offer_id LEFT JOIN users U ON C.affiliate_id = U.id LEFT JOIN payout_rules PR ON C.event_id = PR.event_id LEFT JOIN offer_events OE ON PR.event_id = OE.id GROUP BY C.offer_id, C.affiliate_id, C.event_id, C.aff_sub1, C.revenue, C.payout, C.currency');
 
         return [
             'module_name' => "Payouts Report",
@@ -227,16 +229,16 @@ class AdminReportService extends BaseReportService
     }
 
     /**
-     * Search all payouts
+     * Search all payouts (from conversions table)
      */
     public function searchAllPayouts($request)
     {
         $str = "";
         if ($request->from != "" && $request->to != "") {
-            $str = " AND OT.updated_at BETWEEN '" . $request->from . "' AND '" . $request->to . "'";
+            $str = " AND C.updated_at BETWEEN '" . $request->from . "' AND '" . $request->to . "'";
         }
 
-        $data = DB::select("select OT.aff_id, U.name as affiliate_name, O.id as offer_id, O.offer_name, count(*) as total_conversions, OT.sub1, OT.revenue as revenue, OT.payout as payout, OT.currency as ot_currency, SUM(OT.revenue) as total_revenue, SUM(OT.payout) as total_payout, OE.event_name from offers O LEFT JOIN offer_trackings OT ON O.id = OT.offer_id LEFT JOIN users U ON OT.aff_id = U.id LEFT JOIN payout_rules PR ON OT.event_id = PR.event_id LEFT JOIN offer_events OE ON PR.event_id = OE.id where OT.aff_click_id = OT.tid " . $str . " group by OT.offer_id, OT.aff_id, OT.event_id");
+        $data = DB::select("SELECT C.affiliate_id as aff_id, U.name as affiliate_name, O.id as offer_id, O.offer_name, count(*) as total_conversions, C.aff_sub1 as sub1, C.revenue as revenue, C.payout as payout, C.currency as ot_currency, SUM(C.revenue) as total_revenue, SUM(C.payout) as total_payout, OE.event_name FROM offers O LEFT JOIN conversions C ON O.id = C.offer_id LEFT JOIN users U ON C.affiliate_id = U.id LEFT JOIN payout_rules PR ON C.event_id = PR.event_id LEFT JOIN offer_events OE ON PR.event_id = OE.id WHERE 1=1 " . $str . " GROUP BY C.offer_id, C.affiliate_id, C.event_id");
 
         return [
             'module_name' => "All Payouts",
@@ -374,6 +376,106 @@ class AdminReportService extends BaseReportService
             'module_name' => "Affiliate Payouts",
             'affiliate_name' => $af_name,
             'data' => (count($data) > 0) ? $data : array(),
+            'filters' => $request->all()
+        ];
+    }
+
+    /**
+     * Get clicks report (from offer_trackings only)
+     */
+    public function getClicksReport($request): array
+    {
+        $query = DB::table('offer_trackings')
+            ->select(
+                'offer_trackings.*',
+                'offer_trackings.id as otid',
+                'offer_trackings.created_at as link_clicked_at',
+                'offer_trackings.country as ot_country',
+                'offer_trackings.os as ot_os',
+                'offer_trackings.browser as ot_browser',
+                'affis.id as aff_id',
+                'affis.name as aff_name',
+                'adverts.id as adv_id',
+                'adverts.name as advert_name',
+                'offers.id as offer_id',
+                'offers.offer_name',
+                'devices.device_name'
+            )
+            ->leftJoin('offers', 'offer_trackings.offer_id', '=', 'offers.id')
+            ->leftJoin('devices', 'offer_trackings.device_id', '=', 'devices.id')
+            ->leftJoin('users as affis', 'offer_trackings.aff_id', '=', 'affis.id')
+            ->leftJoin('users as adverts', 'offer_trackings.adv_id', '=', 'adverts.id');
+
+        // Apply filters
+        if ($request->from && $request->to) {
+            $query->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
+        }
+        if ($request->offer_id) {
+            $query->where('offers.id', $request->offer_id);
+        }
+        if ($request->affiliate_id) {
+            $query->where('offer_trackings.aff_id', $request->affiliate_id);
+        }
+        if ($request->advertiser_id) {
+            $query->where('offers.advertiser_id', $request->advertiser_id);
+        }
+
+        $limit = $request->limit ?? 50;
+        $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);
+
+        return [
+            'module_name' => 'Clicks Report',
+            'data' => $results,
+            'filters' => $request->all()
+        ];
+    }
+
+    /**
+     * Get conversions report (from conversions table)
+     */
+    public function getConversionsReport($request): array
+    {
+        $query = DB::table('conversions')
+            ->select(
+                'conversions.*',
+                'conversions.id as conv_id',
+                'conversions.created_at as conversion_time',
+                'conversions.country',
+                'conversions.device',
+                'conversions.event',
+                'conversions.revenue',
+                'conversions.payout',
+                'affis.id as affiliate_id',
+                'affis.name as affiliate_name',
+                'adverts.id as advertiser_id',
+                'adverts.name as advertiser_name',
+                'offers.id as offer_id',
+                'offers.offer_name'
+            )
+            ->leftJoin('offers', 'conversions.offer_id', '=', 'offers.id')
+            ->leftJoin('users as affis', 'conversions.affiliate_id', '=', 'affis.id')
+            ->leftJoin('users as adverts', 'conversions.advertiser_id', '=', 'adverts.id');
+
+        // Apply filters
+        if ($request->from && $request->to) {
+            $query->whereBetween('conversions.created_at', [$request->from, $request->to]);
+        }
+        if ($request->offer_id) {
+            $query->where('conversions.offer_id', $request->offer_id);
+        }
+        if ($request->affiliate_id) {
+            $query->where('conversions.affiliate_id', $request->affiliate_id);
+        }
+        if ($request->advertiser_id) {
+            $query->where('conversions.advertiser_id', $request->advertiser_id);
+        }
+
+        $limit = $request->limit ?? 50;
+        $results = $query->orderBy('conversions.id', 'desc')->paginate($limit);
+
+        return [
+            'module_name' => 'Conversions Report',
+            'data' => $results,
             'filters' => $request->all()
         ];
     }

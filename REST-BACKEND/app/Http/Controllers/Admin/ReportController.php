@@ -80,4 +80,14 @@ class ReportController extends Controller
 	{
 		return response()->json($this->reportService->getOffersAssignedToAffiliate($aid));
 	}
+
+	public function clicks_report(Request $request)
+	{
+		return response()->json($this->reportService->getClicksReport($request));
+	}
+
+	public function conversions_report(Request $request)
+	{
+		return response()->json($this->reportService->getConversionsReport($request));
+	}
 }
