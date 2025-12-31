@@ -5,6 +5,7 @@ namespace App\Services\Affiliate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\OfferTracking;
+use App\Models\Conversion;
 use App\Models\OfferAffiliate;
 
 class AffiliateDashboardService
@@ -20,18 +21,15 @@ class AffiliateDashboardService
         $sql = "SELECT 
                     MONTH(o.created_at) AS month,
                     c.category_name,
-                    SUM(ot.payout_usd) AS revenue
+                    SUM(conv.payout_usd) AS revenue
                 FROM 
-                    offer_trackings ot
+                    conversions conv
                 JOIN 
-                    offers o ON ot.offer_id = o.id
+                    offers o ON conv.offer_id = o.id
                 JOIN 
                     categories c ON o.category_id = c.id
                 WHERE
-                    ot.aff_id = " . Auth::id() . "
-                    AND ot.aff_click_id IS NOT NULL
-                    AND ot.tid IS NOT NULL
-                    AND ot.aff_click_id = ot.tid
+                    conv.affiliate_id = " . Auth::id() . "
                 GROUP BY 
                     MONTH(o.created_at), c.category_name
                 ORDER BY 
@@ -48,7 +46,7 @@ class AffiliateDashboardService
     {
         $arrSTR = array();
 
-        $sql = "SELECT sum(payout_usd) as revenue, month(created_at) as month FROM offer_trackings where aff_id = " . Auth::id() . " AND aff_click_id IS NOT NULL AND tid IS NOT NULL AND aff_click_id = tid group by month(created_at); ";
+        $sql = "SELECT sum(payout_usd) as revenue, month(created_at) as month FROM conversions where affiliate_id = " . Auth::id() . " group by month(created_at)";
 
         $arr = DB::select($sql);
 
@@ -126,7 +124,7 @@ class AffiliateDashboardService
     {
         // Always return data
         $strLimit = " LIMIT 0,5";
-        $sql = "SELECT U.id as uid, OT.aff_id, U.name, sum(OT.payout) as payout FROM  users U INNER JOIN offer_trackings OT ON U.id=OT.aff_id GROUP BY OT.aff_id, U.id, U.name ORDER BY payout DESC" . $strLimit;
+        $sql = "SELECT U.id as uid, C.affiliate_id as aff_id, U.name, sum(C.payout) as payout FROM users U INNER JOIN conversions C ON U.id=C.affiliate_id GROUP BY C.affiliate_id, U.id, U.name ORDER BY payout DESC" . $strLimit;
         return DB::select($sql);
     }
 
@@ -136,7 +134,7 @@ class AffiliateDashboardService
     public function top_offers($dod = "Y")
     {
         // Always return data
-        $sql = "SELECT OT.offer_id, O.offer_name, sum(OT.revenue) as revenue, O.offer_status FROM  offers O INNER JOIN offer_trackings OT ON O.id=OT.offer_id GROUP BY OT.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 0,5";
+        $sql = "SELECT C.offer_id, O.offer_name, sum(C.revenue) as revenue, O.offer_status FROM offers O INNER JOIN conversions C ON O.id=C.offer_id GROUP BY C.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 0,5";
         return DB::select($sql);
     }
 
@@ -153,31 +151,21 @@ class AffiliateDashboardService
 
     public function get_total_conversions()
     {
-        // Conversions are where aff_click_id matches tid (click_id)
-        return OfferTracking::where('aff_id', Auth::id())
-            ->whereNotNull('aff_click_id')
-            ->whereNotNull('tid')
-            ->whereColumn('aff_click_id', 'tid')
-            ->count();
+        // Conversions now from dedicated conversions table
+        return Conversion::where('affiliate_id', Auth::id())->count();
     }
 
     public function get_total_earnings()
     {
-        // Earnings should only be calculated for valid conversions
-        $total = OfferTracking::where('aff_id', Auth::id())
-            ->whereNotNull('aff_click_id')
-            ->whereNotNull('tid')
-            ->whereColumn('aff_click_id', 'tid')
+        // Earnings from conversions table
+        $total = Conversion::where('affiliate_id', Auth::id())
             ->sum('payout_usd');
         return number_format((float) $total, 2, '.', '');
     }
 
     public function get_today_earnings()
     {
-        $total = OfferTracking::where('aff_id', Auth::id())
-            ->whereNotNull('aff_click_id')
-            ->whereNotNull('tid')
-            ->whereColumn('aff_click_id', 'tid')
+        $total = Conversion::where('affiliate_id', Auth::id())
             ->whereDate('created_at', date('Y-m-d'))
             ->sum('payout_usd');
         return number_format((float) $total, 2, '.', '');
@@ -185,10 +173,7 @@ class AffiliateDashboardService
 
     public function get_month_earnings()
     {
-        $total = OfferTracking::where('aff_id', Auth::id())
-            ->whereNotNull('aff_click_id')
-            ->whereNotNull('tid')
-            ->whereColumn('aff_click_id', 'tid')
+        $total = Conversion::where('affiliate_id', Auth::id())
             ->whereYear('created_at', date('Y'))
             ->whereMonth('created_at', date('m'))
             ->sum('payout_usd');
