@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Offer;
 use App\Models\OfferTracking;
 use App\Models\OfferEvent;
@@ -26,7 +27,11 @@ class TrackingService
         }
 
         $payoutRule = '';
-        $offers = DB::select('call procedure_get_offers(?)', array($oid));
+
+        // Cache offer data for 5 minutes to reduce DB load
+        $offers = Cache::remember("offer:{$oid}", 300, function () use ($oid) {
+            return DB::select('call procedure_get_offers(?)', array($oid));
+        });
 
         if (empty($offers)) {
             // Handle case where offer doesn't exist

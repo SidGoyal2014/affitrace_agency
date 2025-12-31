@@ -376,19 +376,79 @@ class IpLocationUtils
         return $output;
     }
 
+    /**
+     * Get IP geolocation data using MaxMind GeoLite2 with fallback to external API.
+     * 
+     * Strategy:
+     * 1. Try MaxMind local database (fast, ~1ms)
+     * 2. If MaxMind fails, fallback to findip.net API (slow, ~100-500ms)
+     * 
+     * @param string $ip
+     * @return array|null
+     */
     private static function getIpBasedData($ip)
     {
-        Log::info("IP: " . $ip);
+        Log::info("IP Geolocation lookup for: " . $ip);
 
-        $token = '428a5df9a35b4c53b942f0c9bfca9469';
-        $url = "https://api.findip.net/{$ip}/?token={$token}";
+        // Try MaxMind GeoLite2 first (local database - very fast)
+        try {
+            $geoip = geoip($ip);
 
-        // Providing a stream context with a timeout to prevent hanging would be good practice, 
-        // but sticking to original logic strictly for now to minimize risk.
-        $response = file_get_contents($url);
-        $data = json_decode($response, true);
+            if ($geoip && !$geoip->default) {
+                Log::info("MaxMind GeoIP hit for: " . $ip);
 
-        return $data;
+                // Convert torann/geoip format to our expected format
+                return [
+                    'city' => ['names' => ['en' => $geoip->city]],
+                    'subdivisions' => [['names' => ['en' => $geoip->state_name]]],
+                    'country' => [
+                        'names' => ['en' => $geoip->country],
+                        'iso_code' => $geoip->iso_code
+                    ],
+                    'continent' => [
+                        'names' => ['en' => $geoip->continent],
+                        'code' => $geoip->continent
+                    ],
+                    'traits' => ['isp' => null] // MaxMind GeoLite2 doesn't include ISP
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::warning("MaxMind GeoIP failed for {$ip}: " . $e->getMessage());
+        }
+
+        // Fallback to external API (findip.net)
+        Log::info("Falling back to findip.net API for: " . $ip);
+        return self::getIpBasedDataFromApi($ip);
+    }
+
+    /**
+     * Get IP data from external findip.net API (original method, kept as fallback)
+     * 
+     * @param string $ip
+     * @return array|null
+     */
+    private static function getIpBasedDataFromApi($ip)
+    {
+        try {
+            $token = '428a5df9a35b4c53b942f0c9bfca9469';
+            $url = "https://api.findip.net/{$ip}/?token={$token}";
+
+            // Add timeout to prevent hanging
+            $context = stream_context_create([
+                'http' => [
+                    'timeout' => 5 // 5 second timeout
+                ]
+            ]);
+
+            $response = file_get_contents($url, false, $context);
+            $data = json_decode($response, true);
+
+            Log::info("findip.net API response for {$ip}");
+            return $data;
+        } catch (\Exception $e) {
+            Log::error("findip.net API failed for {$ip}: " . $e->getMessage());
+            return null;
+        }
     }
 
 }

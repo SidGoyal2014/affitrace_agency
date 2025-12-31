@@ -18,6 +18,12 @@ use App\Http\Traits\SystemSettings;
 use App\Http\Traits\MultiTenantResolver;
 //use App\Jobs\SaveClickDetailsJob;
 
+/**
+ * @group Tracking (Server-to-Server)
+ *
+ * Public endpoints for tracking clicks and conversions.
+ * These endpoints do not require authentication.
+ */
 class TrackingController extends Controller
 {
 	// Traits are now used in TrackingService, not needed here unless used directly by controller methods that weren't moved.
@@ -34,6 +40,15 @@ class TrackingController extends Controller
 		$this->trackingService = $trackingService;
 	}
 
+	/**
+	 * Process Click (Redirect)
+	 *
+	 * Process an affiliate click and redirect to the offer URL.
+	 *
+	 * @unauthenticated
+	 * @urlParam oid integer required The offer ID. Example: 1
+	 * @urlParam aid integer required The affiliate ID. Example: 5
+	 */
 	public function gourl($oid, $aid, Request $request)
 	{
 		//gourl = get offer url
@@ -61,6 +76,17 @@ class TrackingController extends Controller
 	}//update_offer_status
 
 
+	/**
+	 * Process Postback (S2S Conversion)
+	 *
+	 * Server-to-server postback endpoint for recording conversions.
+	 *
+	 * @unauthenticated
+	 * @queryParam tid string The transaction/click ID. Example: abc123
+	 * @queryParam amount number Optional payout amount override. Example: 10.50
+	 * @response 200 {"success": "Y", "message": "Conversion recorded"}
+	 * @response 400 {"success": "N", "message": "Invalid transaction ID"}
+	 */
 	function sd(Request $request)
 	{
 		/**
