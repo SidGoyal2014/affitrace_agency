@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Offer;
 use App\Models\OfferTracking;
+use App\Models\Conversion;
 use App\Models\OfferEvent;
 use App\Models\PayoutRule;
 use App\Http\Traits\CommonFunctions;
@@ -115,50 +116,58 @@ class TrackingService
 
                     if (in_array($request->event_id, $arr_valid_offer_events)) {
 
-                        $ot = new OfferTracking();
-                        $ot->offer_id = $getCIBR[0]['offer_id'];
-                        $ot->aff_id = $getCIBR[0]['aff_id'];
-                        $ot->offer_name = $getCIBR[0]['offer_name'];
-                        $ot->country = $getCIBR[0]['country'];
-                        $ot->adv_id = $getCIBR[0]['adv_id'];
+                        // Save conversion to new conversions table
+                        $conv = new Conversion();
+                        $conv->tid = $request->aff_click_id;
+                        $conv->aff_click_id = $request->aff_click_id;
+                        $conv->offer_id = $getCIBR[0]['offer_id'];
+                        $conv->affiliate_id = $getCIBR[0]['aff_id'];
+                        $conv->offer_name = $getCIBR[0]['offer_name'];
+                        $conv->country = $getCIBR[0]['country'];
+                        $conv->advertiser_id = $getCIBR[0]['adv_id'];
 
                         // Check if payoutRule exists
                         if (count($payoutRule) > 0) {
-                            $ot->revenue = $payoutRule[0]['revenue_pricing'];
-                            $ot->payout = $payoutRule[0]['payout_pricing'];
-                            $ot->currency = $payoutRule[0]['currency'];
-                            $ot->revenue_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($payoutRule[0]['revenue_pricing'], $payoutRule[0]['currency']);
-                            $ot->payout_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($payoutRule[0]['payout_pricing'], $payoutRule[0]['currency']);
+                            $conv->revenue = $payoutRule[0]['revenue_pricing'];
+                            $conv->payout = $payoutRule[0]['payout_pricing'];
+                            $conv->advertiser_price = $payoutRule[0]['revenue_pricing'];
+                            $conv->affiliate_price = $payoutRule[0]['payout_pricing'];
+                            $conv->currency = $payoutRule[0]['currency'];
+                            $conv->revenue_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($payoutRule[0]['revenue_pricing'], $payoutRule[0]['currency']);
+                            $conv->payout_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($payoutRule[0]['payout_pricing'], $payoutRule[0]['currency']);
                         } else {
-                            // Fallback or 0 if no rule found? Original code assumed it exists.
-                            $ot->revenue = 0;
-                            $ot->payout = 0;
-                            $ot->currency = 'USD';
-                            $ot->revenue_usd = 0;
-                            $ot->payout_usd = 0;
+                            $conv->revenue = 0;
+                            $conv->payout = 0;
+                            $conv->currency = 'USD';
+                            $conv->revenue_usd = 0;
+                            $conv->payout_usd = 0;
                         }
 
-                        $ot->aff_click_id = $request->aff_click_id;
-                        $ot->tid = $request->aff_click_id;
-                        $ot->event_id = $request->event_id;
-                        $ot->event = $request->event;
-                        $ot->device_id = $this->get_visitor_device($device_type, 'Y');
+                        $conv->event_id = $request->event_id;
+                        $conv->event = $request->event;
+                        $conv->device_id = $this->get_visitor_device($device_type, 'Y');
+                        $conv->device = $device_type;
 
-                        $ot->raw_useragent = $_SERVER['HTTP_USER_AGENT'];
-                        $ot->useragent = $_SERVER['HTTP_USER_AGENT'];
+                        $conv->useragent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+                        $conv->browser = $arrBrowserData['browser_name'];
+                        $conv->os = $arrBrowserData['os_name'];
+                        $conv->os_ver = $arrBrowserData['os_version'];
 
-                        $ot->browser = $arrBrowserData['browser_name'];
-                        $ot->os = $arrBrowserData['os_name'];
-                        $ot->os_ver = $arrBrowserData['os_version'];
+                        $conv->source = $request->source ?? null;
+                        $conv->google_aid = $request->google_aid ?? null;
+                        $conv->ios_idfa = $request->iosidfa ?? null;
+                        $conv->android_id = $request->android_id ?? null;
 
-                        $ot->source = $request->source ?? NULL;
-                        $ot->google_aid = $request->google_aid ?? NULL;
-                        $ot->iosidfa = $request->iosidfa ?? NULL;
-                        $ot->android_id = $request->android_id ?? NULL;
+                        $conv->aff_sub1 = $request->sub1 ?? null;
+                        $conv->aff_sub2 = $request->sub2 ?? null;
 
-                        $ot->timestamp = now(); // Helper now() instead of NOW() macro if not defined
+                        $conv->date = now()->toDateString();
+                        $conv->time = now()->toTimeString();
+                        $conv->hour = now()->format('H');
+                        $conv->conversion_time = now();
+                        $conv->conversion = 1;
 
-                        $ot->save();
+                        $conv->save();
 
                         $resp['success'] = 'Y';
                     } else {
