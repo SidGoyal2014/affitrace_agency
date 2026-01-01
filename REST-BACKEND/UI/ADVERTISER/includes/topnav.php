@@ -62,8 +62,8 @@ function url($path)
             </a>
             <div class="dropdown-menu">
                 <a class="dropdown-item" href="<?php echo url('reports/summary.php'); ?>">Summary</a>
-                <a class="dropdown-item" href="<?php echo url('reports/clicks-conversions.php'); ?>">Clicks &
-                    Conversions</a>
+                <a class="dropdown-item" href="<?php echo url('reports/clicks.php'); ?>">Clicks</a>
+                <a class="dropdown-item" href="<?php echo url('reports/conversions.php'); ?>">Conversions</a>
             </div>
         </li>
 

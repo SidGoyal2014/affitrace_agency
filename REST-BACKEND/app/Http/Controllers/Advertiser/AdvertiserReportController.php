@@ -74,5 +74,21 @@ class AdvertiserReportController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 404);
         }
     }
+
+    /**
+     * Get clicks report (from offer_trackings)
+     */
+    public function clicks_report(Request $request, AdvertiserReportService $service)
+    {
+        return response()->json($service->getClicksReport($request, Auth::id()));
+    }
+
+    /**
+     * Get conversions report (from conversions table)
+     */
+    public function conversions_report(Request $request, AdvertiserReportService $service)
+    {
+        return response()->json($service->getConversionsReport($request, Auth::id()));
+    }
 }
 
