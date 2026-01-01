@@ -57,5 +57,15 @@ class AffiliateReportController extends Controller
 			], 500);
 		}
 	}
+
+	public function clicks_report(Request $request, AffiliateReportService $service)
+	{
+		return response()->json($service->getClicksReport($request, Auth::id()));
+	}
+
+	public function conversions_report(Request $request, AffiliateReportService $service)
+	{
+		return response()->json($service->getConversionsReport($request, Auth::id()));
+	}
 }
 

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Offer;
 use App\Models\OfferTracking;
+use App\Models\Conversion;
 use App\Models\User;
 
 class RootDashboardService
@@ -13,13 +14,13 @@ class RootDashboardService
     public function getTopAffiliates($dod = "Y")
     {
         $strLimit = " LIMIT 0,5";
-        $sql = "SELECT U.id as uid, OT.aff_id, U.name, sum(OT.payout) as payout FROM users U INNER JOIN offer_trackings OT ON U.id=OT.aff_id GROUP BY OT.aff_id, U.id, U.name ORDER BY revenue DESC" . $strLimit;
+        $sql = "SELECT U.id as uid, C.affiliate_id as aff_id, U.name, sum(C.payout) as payout FROM users U INNER JOIN conversions C ON U.id=C.affiliate_id GROUP BY C.affiliate_id, U.id, U.name ORDER BY payout DESC" . $strLimit;
         return DB::select($sql);
     }
 
     public function getTopOffers($dod = "Y")
     {
-        $sql = "SELECT OT.offer_id, O.offer_name, sum(OT.revenue) as revenue, O.offer_status FROM offers O INNER JOIN offer_trackings OT ON O.id=OT.offer_id GROUP BY OT.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 0,5";
+        $sql = "SELECT C.offer_id, O.offer_name, sum(C.revenue) as revenue, O.offer_status FROM offers O INNER JOIN conversions C ON O.id=C.offer_id GROUP BY C.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 0,5";
         return DB::select($sql);
     }
 
@@ -27,21 +28,21 @@ class RootDashboardService
     {
         $strWhereClause = "";
         if ($affiliate_id > 0) {
-            $strWhereClause = " AND ot.aff_id = " . $affiliate_id;
+            $strWhereClause = " AND conv.affiliate_id = " . $affiliate_id;
         }
 
         $sql = "SELECT 
             MONTH(o.created_at) AS month,
             c.category_name,
-            SUM(ot.revenue_usd) AS revenue
+            SUM(conv.revenue_usd) AS revenue
         FROM 
-            offer_trackings ot
+            conversions conv
         JOIN 
-            offers o ON ot.offer_id = o.id
+            offers o ON conv.offer_id = o.id
         JOIN 
             categories c ON o.category_id = c.id
         WHERE
-            aff_click_id != ''
+            1=1
             " . $strWhereClause . "
         GROUP BY 
             MONTH(o.created_at), c.category_name
@@ -56,11 +57,11 @@ class RootDashboardService
     {
         $strWhereClause = "";
         if ($affiliate_id > 0) {
-            $strWhereClause = " AND ot.aff_id = " . $affiliate_id;
+            $strWhereClause = " AND affiliate_id = " . $affiliate_id;
         }
 
         $arrSTR = array();
-        $sql = "SELECT sum(revenue_usd) as revenue, month(created_at) as month FROM offer_trackings where aff_click_id != ''  " . $strWhereClause . " group by month(created_at)";
+        $sql = "SELECT sum(revenue_usd) as revenue, month(created_at) as month FROM conversions where 1=1 " . $strWhereClause . " group by month(created_at)";
 
         $arr = DB::select($sql);
 
@@ -89,18 +90,16 @@ class RootDashboardService
 
     public function getTotalRevenue()
     {
-        $total_rev = OfferTracking::select(DB::raw('SUM(revenue_usd) as total'))
-            ->where('aff_click_id', '!=', '')
+        $total_rev = Conversion::select(DB::raw('SUM(revenue_usd) as total'))
             ->get()->toArray();
-        return $total_rev[0]['total'];
+        return $total_rev[0]['total'] ?? 0;
     }
 
     public function getTotalPayouts()
     {
-        $to_payout = OfferTracking::select(DB::raw('SUM(payout_usd) as total'))
-            ->where('aff_click_id', '!=', '')
+        $to_payout = Conversion::select(DB::raw('SUM(payout_usd) as total'))
             ->get()->toArray();
-        return $to_payout[0]['total'];
+        return $to_payout[0]['total'] ?? 0;
     }
 
     public function getTotalAffiliates()

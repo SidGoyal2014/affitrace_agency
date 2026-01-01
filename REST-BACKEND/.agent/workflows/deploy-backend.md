@@ -49,6 +49,7 @@ nano /var/www/affitrace/backend/.env
 APP_ENV=production
 APP_DEBUG=false
 QUEUE_CONNECTION=database
+MAXMIND_LICENSE_KEY=your_license_key_here
 ```
 
 ---
@@ -61,6 +62,16 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
+
+---
+
+## Step 5b: Update GeoIP Database
+
+```bash
+php artisan geoip:update
+```
+
+> **Note:** Run this on first deployment and schedule weekly via cron or Supervisor.
 
 ---
 
@@ -143,6 +154,7 @@ cd /var/www/affitrace/backend
 git pull origin main
 composer install --optimize-autoloader --no-dev
 php artisan migrate --force
+php artisan geoip:update
 php artisan config:cache
 php artisan route:cache
 sudo supervisorctl restart affitrace-worker:*

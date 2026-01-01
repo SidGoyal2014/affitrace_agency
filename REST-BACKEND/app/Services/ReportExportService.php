@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ReportExport;
 use App\Models\OfferTracking;
+use App\Models\Conversion;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -15,14 +16,42 @@ class ReportExportService
      */
     public function buildQuery(string $reportType, array $filters): Builder
     {
+        // Clicks from offer_trackings, conversions from dedicated conversions table
+        if ($reportType === 'conversions') {
+            $query = Conversion::query();
+
+            // Apply filters with conversions table column names
+            if (!empty($filters['offer_id'])) {
+                $query->where('offer_id', $filters['offer_id']);
+            }
+
+            if (!empty($filters['affiliate_id'])) {
+                $query->where('affiliate_id', $filters['affiliate_id']);
+            }
+
+            if (!empty($filters['date_from'])) {
+                $query->whereDate('created_at', '>=', $filters['date_from']);
+            }
+
+            if (!empty($filters['date_to'])) {
+                $query->whereDate('created_at', '<=', $filters['date_to']);
+            }
+
+            if (!empty($filters['status'])) {
+                $query->where('status', $filters['status']);
+            }
+
+            return $query;
+        }
+
+        // Clicks and other reports from offer_trackings
         $query = match ($reportType) {
-            'clicks' => OfferTracking::query()->where('event', \App\Enums\TrackingEventType::Click->value),
-            'conversions' => OfferTracking::query()->where('event', \App\Enums\TrackingEventType::Conversion->value),
+            'clicks' => OfferTracking::query(),
             'all_trackings' => OfferTracking::query(),
             default => OfferTracking::query(),
         };
 
-        // Apply common filters
+        // Apply common filters for offer_trackings
         if (!empty($filters['offer_id'])) {
             $query->where('offer_id', $filters['offer_id']);
         }
@@ -144,10 +173,9 @@ class ReportExportService
      */
     protected function getDefaultColumns(string $reportType): array
     {
-        // Use actual column names from offer_trackings table
         return match ($reportType) {
             'clicks' => ['id', 'offer_id', 'aff_id', 'offer_name', 'ip', 'country', 'os', 'created_at'],
-            'conversions' => ['id', 'offer_id', 'aff_id', 'offer_name', 'country', 'created_at'],
+            'conversions' => ['id', 'offer_id', 'affiliate_id', 'offer_name', 'country', 'revenue', 'payout', 'created_at'],
             default => ['id', 'offer_id', 'aff_id', 'offer_name', 'tid', 'country', 'created_at'],
         };
     }

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Offer;
 use App\Models\OfferTracking;
+use App\Models\Conversion;
 use Exception;
 
 class CsvImportService
@@ -215,27 +216,43 @@ class CsvImportService
         if (!$tid)
             throw new Exception("Transaction ID required");
 
-        $tracking = OfferTracking::where('tid', $tid)->first();
-        if (!$tracking)
+        // Find the original click
+        $click = OfferTracking::where('tid', $tid)->first();
+        if (!$click)
             throw new Exception("Click not found for TID: $tid");
 
-        $tracking->aff_pricing = $this->getVal($data, ['payout', 'affiliate_payout']) ?? 0;
-        $tracking->ad_pricing = $this->getVal($data, ['revenue', 'income']) ?? 0;
-        $tracking->event = $this->getVal($data, ['event', 'event_name']) ?? 'default'; // 'default' or actual event
+        // Create conversion record in conversions table
+        $conv = new Conversion();
+        $conv->tid = $tid;
+        $conv->aff_click_id = $tid;
+        $conv->offer_id = $click->offer_id;
+        $conv->affiliate_id = $click->aff_id;
+        $conv->offer_name = $click->offer_name;
+        $conv->country = $click->country;
+        $conv->advertiser_id = $click->adv_id;
 
-        // Status updates? Assuming valid conversion import means approved/converted
-        // Actual status field depends on your schema (status? or just presence of pricing?)
-        // Let's assume we don't have a status column on typical click tables, but maybe 'is_conversion'?
-        // Checking TrackingService, it updates pricing.
+        // Set pricing from CSV data or click defaults
+        $conv->payout = $this->getVal($data, ['payout', 'affiliate_payout']) ?? $click->payout ?? 0;
+        $conv->revenue = $this->getVal($data, ['revenue', 'income']) ?? $click->revenue ?? 0;
+        $conv->currency = $this->getVal($data, ['currency']) ?? $click->currency ?? 'USD';
 
+        $conv->event = $this->getVal($data, ['event', 'event_name']) ?? 'default';
+        $conv->device = $click->device_id ?? null;
+        $conv->os = $click->os;
+        $conv->browser = $click->browser;
+
+        $conv->aff_sub1 = $click->sub1 ?? null;
+        $conv->aff_sub2 = $click->sub2 ?? null;
+
+        // Use provided timestamp or now
         $ts = $this->getVal($data, ['timestamp', 'conversion_time', 'date']);
-        if ($ts) {
-            $tracking->updated_at = date('Y-m-d H:i:s', strtotime($ts));
-        } else {
-            $tracking->updated_at = now();
-        }
+        $conv->conversion_time = $ts ? date('Y-m-d H:i:s', strtotime($ts)) : now();
+        $conv->date = $ts ? date('Y-m-d', strtotime($ts)) : now()->toDateString();
+        $conv->time = $ts ? date('H:i:s', strtotime($ts)) : now()->toTimeString();
+        $conv->hour = $ts ? date('H', strtotime($ts)) : now()->format('H');
+        $conv->conversion = 1;
 
-        $tracking->save();
+        $conv->save();
     }
 
     private function getVal($data, $keys)

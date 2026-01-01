@@ -351,4 +351,79 @@ class AffiliateReportService extends BaseReportService
             'filters' => $request->all()
         ];
     }
+
+    /**
+     * Get clicks report for affiliate (from offer_trackings)
+     */
+    public function getClicksReport($request, $aid): array
+    {
+        $query = DB::table('offer_trackings')
+            ->select(
+                'offer_trackings.*',
+                'offer_trackings.id as otid',
+                'offer_trackings.created_at as link_clicked_at',
+                'offer_trackings.country as ot_country',
+                'offer_trackings.os as ot_os',
+                'offer_trackings.browser as ot_browser',
+                'offers.id as offer_id',
+                'offers.offer_name',
+                'devices.device_name'
+            )
+            ->leftJoin('offers', 'offer_trackings.offer_id', '=', 'offers.id')
+            ->leftJoin('devices', 'offer_trackings.device_id', '=', 'devices.id')
+            ->where('offer_trackings.aff_id', $aid);
+
+        if ($request->from && $request->to) {
+            $query->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
+        }
+        if ($request->offer_id) {
+            $query->where('offers.id', $request->offer_id);
+        }
+
+        $limit = $request->limit ?? 50;
+        $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);
+
+        return [
+            'module_name' => 'Clicks Report',
+            'data' => $results,
+            'filters' => $request->all()
+        ];
+    }
+
+    /**
+     * Get conversions report for affiliate (from conversions table)
+     */
+    public function getConversionsReport($request, $aid): array
+    {
+        $query = DB::table('conversions')
+            ->select(
+                'conversions.*',
+                'conversions.id as conv_id',
+                'conversions.created_at as conversion_time',
+                'conversions.country',
+                'conversions.device',
+                'conversions.event',
+                'conversions.payout',
+                'offers.id as offer_id',
+                'offers.offer_name'
+            )
+            ->leftJoin('offers', 'conversions.offer_id', '=', 'offers.id')
+            ->where('conversions.affiliate_id', $aid);
+
+        if ($request->from && $request->to) {
+            $query->whereBetween('conversions.created_at', [$request->from, $request->to]);
+        }
+        if ($request->offer_id) {
+            $query->where('conversions.offer_id', $request->offer_id);
+        }
+
+        $limit = $request->limit ?? 50;
+        $results = $query->orderBy('conversions.id', 'desc')->paginate($limit);
+
+        return [
+            'module_name' => 'Conversions Report',
+            'data' => $results,
+            'filters' => $request->all()
+        ];
+    }
 }

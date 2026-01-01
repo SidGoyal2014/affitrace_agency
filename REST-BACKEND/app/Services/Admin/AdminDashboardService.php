@@ -5,6 +5,7 @@ namespace App\Services\Admin;
 use Illuminate\Support\Facades\DB;
 use App\Models\Offer;
 use App\Models\OfferTracking;
+use App\Models\Conversion;
 use App\Models\User;
 use App\Models\OfferAffiliate;
 use App\Http\Traits\SystemSettings;
@@ -66,7 +67,7 @@ class AdminDashboardService
     public function top_affiliates($dod = "Y")
     {
         $strLimit = ($dod == "Y") ? " LIMIT 0,5" : "";
-        $sql = "SELECT U.id as uid, OT.aff_id, U.name, sum(OT.payout) as payout FROM  users U INNER JOIN offer_trackings OT ON U.id=OT.aff_id GROUP BY OT.aff_id, U.id, U.name ORDER BY payout DESC" . $strLimit;
+        $sql = "SELECT U.id as uid, C.affiliate_id as aff_id, U.name, sum(C.payout) as payout FROM users U INNER JOIN conversions C ON U.id=C.affiliate_id GROUP BY C.affiliate_id, U.id, U.name ORDER BY payout DESC" . $strLimit;
 
         $data = DB::select($sql);
 
@@ -78,7 +79,7 @@ class AdminDashboardService
 
     public function top_offers($dod = "Y")
     {
-        $sql = "SELECT OT.offer_id, O.offer_name, sum(OT.revenue) as revenue, O.offer_status FROM  offers O INNER JOIN offer_trackings OT ON O.id=OT.offer_id GROUP BY OT.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 0,5";
+        $sql = "SELECT C.offer_id, O.offer_name, sum(C.revenue) as revenue, O.offer_status FROM offers O INNER JOIN conversions C ON O.id=C.offer_id GROUP BY C.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 0,5";
 
         $data = DB::select($sql);
 
@@ -101,11 +102,11 @@ class AdminDashboardService
         $sql = "SELECT 
             MONTH(o.created_at) AS month,
             c.category_name,
-            SUM(ot.revenue_usd) AS revenue
+            SUM(conv.revenue_usd) AS revenue
         FROM 
-            offer_trackings ot
+            conversions conv
         JOIN 
-            offers o ON ot.offer_id = o.id
+            offers o ON conv.offer_id = o.id
         JOIN 
             categories c ON o.category_id = c.id
         GROUP BY 
@@ -120,7 +121,7 @@ class AdminDashboardService
     private function get_monthly_revenue()
     {
         $arrSTR = array();
-        $sql = "SELECT sum(revenue_usd) as revenue, month(created_at) as month FROM offer_trackings where aff_click_id != '' group by month(created_at)";
+        $sql = "SELECT sum(revenue_usd) as revenue, month(created_at) as month FROM conversions group by month(created_at)";
         $arr = DB::select($sql);
 
         foreach ($arr as $obj) {
@@ -144,18 +145,16 @@ class AdminDashboardService
 
     private function get_total_revenue()
     {
-        $total_rev = OfferTracking::select(DB::raw('SUM(revenue_usd) as total'))
-            ->where('aff_click_id', '!=', '')
+        $total_rev = Conversion::select(DB::raw('SUM(revenue_usd) as total'))
             ->get()->toArray();
-        return $total_rev[0]['total'];
+        return $total_rev[0]['total'] ?? 0;
     }
 
     private function get_total_payouts()
     {
-        $to_payout = OfferTracking::select(DB::raw('SUM(payout_usd) as total'))
-            ->where('aff_click_id', '!=', '')
+        $to_payout = Conversion::select(DB::raw('SUM(payout_usd) as total'))
             ->get()->toArray();
-        return $to_payout[0]['total'];
+        return $to_payout[0]['total'] ?? 0;
     }
 
     private function get_total_no_of_affiliates()
