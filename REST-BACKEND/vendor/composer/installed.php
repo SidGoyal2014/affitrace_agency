@@ -175,6 +175,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'erusev/parsedown' => array(
+            'pretty_version' => '1.7.4',
+            'version' => '1.7.4.0',
+            'reference' => 'cb17b6477dfff935958ba01325f2e8a2bfa6dab3',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../erusev/parsedown',
+            'aliases' => array(),
+            'dev_requirement' => true,
+        ),
         'fakerphp/faker' => array(
             'pretty_version' => 'v1.23.0',
             'version' => '1.23.0.0',
@@ -463,6 +472,15 @@
                 0 => 'v10.50.0',
             ),
         ),
+        'knuckleswtf/scribe' => array(
+            'pretty_version' => '4.31.0',
+            'version' => '4.31.0.0',
+            'reference' => '528134062eebf4c2908e16544b8fb78d140036b4',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../knuckleswtf/scribe',
+            'aliases' => array(),
+            'dev_requirement' => true,
+        ),
         'kodova/hamcrest-php' => array(
             'dev_requirement' => true,
             'replaced' => array(
@@ -621,6 +639,21 @@
             'install_path' => __DIR__ . '/../monolog/monolog',
             'aliases' => array(),
             'dev_requirement' => false,
+        ),
+        'mpociot/laravel-apidoc-generator' => array(
+            'dev_requirement' => true,
+            'replaced' => array(
+                0 => '*',
+            ),
+        ),
+        'mpociot/reflection-docblock' => array(
+            'pretty_version' => '1.0.1',
+            'version' => '1.0.1.0',
+            'reference' => 'c8b2e2b1f5cebbb06e2b5ccbf2958f2198867587',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../mpociot/reflection-docblock',
+            'aliases' => array(),
+            'dev_requirement' => true,
         ),
         'mtdowling/cron-expression' => array(
             'dev_requirement' => false,
@@ -1106,6 +1139,33 @@
             'aliases' => array(),
             'dev_requirement' => true,
         ),
+        'shalvah/clara' => array(
+            'pretty_version' => '3.3.0',
+            'version' => '3.3.0.0',
+            'reference' => '6b30f389d71bfdd3f6e09f9b9537205ac7e118de',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../shalvah/clara',
+            'aliases' => array(),
+            'dev_requirement' => true,
+        ),
+        'shalvah/upgrader' => array(
+            'pretty_version' => '0.3.1',
+            'version' => '0.3.1.0',
+            'reference' => 'c7f1cca8be5cd0114cd816d8bfff9c80565f7390',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../shalvah/upgrader',
+            'aliases' => array(),
+            'dev_requirement' => true,
+        ),
+        'spatie/data-transfer-object' => array(
+            'pretty_version' => '3.9.1',
+            'version' => '3.9.1.0',
+            'reference' => '1df0906c4e9e3aebd6c0506fd82c8b7d5548c1c8',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../spatie/data-transfer-object',
+            'aliases' => array(),
+            'dev_requirement' => true,
+        ),
         'symfony/console' => array(
             'pretty_version' => 'v6.4.27',
             'version' => '6.4.27.0',
@@ -1369,6 +1429,15 @@
             'install_path' => __DIR__ . '/../symfony/var-dumper',
             'aliases' => array(),
             'dev_requirement' => false,
+        ),
+        'symfony/var-exporter' => array(
+            'pretty_version' => 'v7.4.0',
+            'version' => '7.4.0.0',
+            'reference' => '03a60f169c79a28513a78c967316fbc8bf17816f',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../symfony/var-exporter',
+            'aliases' => array(),
+            'dev_requirement' => true,
         ),
         'symfony/yaml' => array(
             'pretty_version' => 'v7.4.0',
