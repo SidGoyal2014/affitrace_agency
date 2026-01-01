@@ -98,143 +98,177 @@ class TrackingService
 
     public function processPostback(Request $request)
     {
-        $resp = array();
+        $resp = ['success' => 'N'];
 
-        if (isset($request->aff_click_id)) {
+        if (!isset($request->aff_click_id) || empty($request->aff_click_id)) {
+            $resp['message'] = 'Missing aff_click_id';
+            return $resp;
+        }
 
-            $resp = $this->update_offer_tracking_without_event($request);
+        // Find the original click
+        $click = OfferTracking::where('tid', $request->aff_click_id)->first();
 
-            if (isset($request->event_id) && $request->event_id > 0 && $resp['success'] == 'Y') {
+        if (!$click) {
+            $resp['message'] = 'Click not found for: ' . $request->aff_click_id;
+            return $resp;
+        }
 
-                $getCIBR = OfferTracking::where('tid', $request->aff_click_id)->get()->toArray();
+        // Create conversion record in conversions table
+        $arrBrowserData = $this->getBrowswerData();
+        $device_type = ucfirst($arrBrowserData['device_type']);
 
-                if (count($getCIBR) > 0) {
-                    $payoutRule = $this->get_payout_rule($getCIBR[0]['offer_id'], $request->event_id);
-                    $arr_valid_offer_events = $this->get_valid_offer_events($getCIBR[0]['offer_id']);
-                    $arrBrowserData = $this->getBrowswerData();
-                    $device_type = ucfirst($arrBrowserData['device_type']);
+        // Check for payout rules if event_id provided
+        $payoutRule = [];
+        if (isset($request->event_id) && $request->event_id > 0) {
+            $arr_valid_offer_events = $this->get_valid_offer_events($click->offer_id);
 
-                    if (in_array($request->event_id, $arr_valid_offer_events)) {
-
-                        // Save conversion to new conversions table
-                        $conv = new Conversion();
-                        $conv->tid = $request->aff_click_id;
-                        $conv->aff_click_id = $request->aff_click_id;
-                        $conv->offer_id = $getCIBR[0]['offer_id'];
-                        $conv->affiliate_id = $getCIBR[0]['aff_id'];
-                        $conv->offer_name = $getCIBR[0]['offer_name'];
-                        $conv->country = $getCIBR[0]['country'];
-                        $conv->advertiser_id = $getCIBR[0]['adv_id'];
-
-                        // Check if payoutRule exists
-                        if (count($payoutRule) > 0) {
-                            $conv->revenue = $payoutRule[0]['revenue_pricing'];
-                            $conv->payout = $payoutRule[0]['payout_pricing'];
-                            $conv->advertiser_price = $payoutRule[0]['revenue_pricing'];
-                            $conv->affiliate_price = $payoutRule[0]['payout_pricing'];
-                            $conv->currency = $payoutRule[0]['currency'];
-                            $conv->revenue_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($payoutRule[0]['revenue_pricing'], $payoutRule[0]['currency']);
-                            $conv->payout_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($payoutRule[0]['payout_pricing'], $payoutRule[0]['currency']);
-                        } else {
-                            $conv->revenue = 0;
-                            $conv->payout = 0;
-                            $conv->currency = 'USD';
-                            $conv->revenue_usd = 0;
-                            $conv->payout_usd = 0;
-                        }
-
-                        $conv->event_id = $request->event_id;
-                        $conv->event = $request->event;
-                        $conv->device_id = $this->get_visitor_device($device_type, 'Y');
-                        $conv->device = $device_type;
-
-                        $conv->useragent = $_SERVER['HTTP_USER_AGENT'] ?? null;
-                        $conv->browser = $arrBrowserData['browser_name'];
-                        $conv->os = $arrBrowserData['os_name'];
-                        $conv->os_ver = $arrBrowserData['os_version'];
-
-                        $conv->source = $request->source ?? null;
-                        $conv->google_aid = $request->google_aid ?? null;
-                        $conv->ios_idfa = $request->iosidfa ?? null;
-                        $conv->android_id = $request->android_id ?? null;
-
-                        $conv->aff_sub1 = $request->sub1 ?? null;
-                        $conv->aff_sub2 = $request->sub2 ?? null;
-
-                        $conv->date = now()->toDateString();
-                        $conv->time = now()->toTimeString();
-                        $conv->hour = now()->format('H');
-                        $conv->conversion_time = now();
-                        $conv->conversion = 1;
-
-                        $conv->save();
-
-                        $resp['success'] = 'Y';
-                    } else {
-                        $resp['success'] = 'N';
-                        $resp['message'] = 'This event is not allowed for this offer';
-                    }
-                } else {
-                    $resp['success'] = 'N';
-                    $resp['message'] = 'Click Details not found';
-                }
-
+            if (!in_array($request->event_id, $arr_valid_offer_events)) {
+                $resp['message'] = 'This event is not allowed for this offer';
+                return $resp;
             }
 
-        } else {
-            $resp['success'] = 'N';
-            $resp['message'] = 'Your request is illegal';
+            $payoutRule = $this->get_payout_rule($click->offer_id, $request->event_id);
         }
+
+        // Create conversion record
+        $conv = new Conversion();
+        $conv->tid = $request->aff_click_id;
+        $conv->aff_click_id = $request->aff_click_id;
+        $conv->offer_id = $click->offer_id;
+        $conv->affiliate_id = $click->aff_id;
+        $conv->offer_name = $click->offer_name;
+        $conv->country = $click->country;
+        $conv->advertiser_id = $click->adv_id;
+
+        // Set pricing from payout rule or click
+        if (count($payoutRule) > 0) {
+            $conv->revenue = $payoutRule[0]['revenue_pricing'];
+            $conv->payout = $payoutRule[0]['payout_pricing'];
+            $conv->advertiser_price = $payoutRule[0]['revenue_pricing'];
+            $conv->affiliate_price = $payoutRule[0]['payout_pricing'];
+            $conv->currency = $payoutRule[0]['currency'];
+            $conv->revenue_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($payoutRule[0]['revenue_pricing'], $payoutRule[0]['currency']);
+            $conv->payout_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($payoutRule[0]['payout_pricing'], $payoutRule[0]['currency']);
+        } else {
+            // Use click pricing as fallback
+            $conv->revenue = $click->revenue ?? 0;
+            $conv->payout = $click->payout ?? 0;
+            $conv->currency = $click->currency ?? 'USD';
+            $conv->revenue_usd = $click->revenue_usd ?? 0;
+            $conv->payout_usd = $click->payout_usd ?? 0;
+        }
+
+        $conv->event_id = $request->event_id ?? null;
+        $conv->event = $request->event ?? 'default';
+        $conv->device_id = $this->get_visitor_device($device_type, 'Y');
+        $conv->device = $device_type;
+
+        $conv->useragent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        $conv->browser = $arrBrowserData['browser_name'];
+        $conv->os = $arrBrowserData['os_name'];
+        $conv->os_ver = $arrBrowserData['os_version'];
+
+        $conv->source = $request->source ?? null;
+        $conv->google_aid = $request->google_aid ?? null;
+        $conv->ios_idfa = $request->iosidfa ?? null;
+        $conv->android_id = $request->android_id ?? null;
+
+        $conv->aff_sub1 = $request->sub1 ?? $click->sub1 ?? null;
+        $conv->aff_sub2 = $request->sub2 ?? $click->sub2 ?? null;
+
+        $conv->date = now()->toDateString();
+        $conv->time = now()->toTimeString();
+        $conv->hour = now()->format('H');
+        $conv->conversion_time = now();
+        $conv->conversion = 1;
+
+        $conv->save();
+
+        $resp['success'] = 'Y';
+        $resp['conversion_id'] = $conv->id;
 
         return $resp;
     }
+
 
     public function processPixelConversion(Request $request)
     {
         $resp = ['success' => 'N'];
 
-        // 1. Record Conversion (Same as Postback)
-        // We use tid/aff_click_id from request
+        // Get tid from request
         $tid = $request->input('tid') ?? $request->input('aff_click_id');
 
         if (!$tid) {
             return $resp;
         }
 
-        $request->merge(['aff_click_id' => $tid, 'tid' => $tid]);
-
-        // Retrieve tracking to get Offer ID and Affiliate ID
-        $tracking = OfferTracking::where('tid', $tid)->first();
-        if (!$tracking) {
+        // Retrieve the original click
+        $click = OfferTracking::where('tid', $tid)->first();
+        if (!$click) {
             return $resp;
         }
 
-        // Logic to record conversion
-        $updateResp = $this->update_offer_tracking_without_event($request);
+        // Create conversion record in conversions table
+        $arrBrowserData = $this->getBrowswerData();
+        $device_type = ucfirst($arrBrowserData['device_type']);
 
-        if (isset($updateResp['success']) && $updateResp['success'] == 'Y') {
-            $resp['success'] = 'Y';
+        $conv = new Conversion();
+        $conv->tid = $tid;
+        $conv->aff_click_id = $tid;
+        $conv->offer_id = $click->offer_id;
+        $conv->affiliate_id = $click->aff_id;
+        $conv->offer_name = $click->offer_name;
+        $conv->country = $click->country;
+        $conv->advertiser_id = $click->adv_id;
 
-            // 2. Fetch Affiliate Pixel
-            // Check for specific offer pixel first, then global affiliate pixel
-            $pixel = DB::table('affiliate_pixels')
-                ->where('affiliate_id', $tracking->aff_id)
-                ->where('status', 'active')
-                ->where(function ($q) use ($tracking) {
-                    $q->where('offer_id', $tracking->offer_id)
-                        ->orWhereNull('offer_id');
-                })
-                ->orderBy('offer_id', 'desc') // Specific offer (non-null) first
-                ->first();
+        // Use click pricing (no event-based payout for pixel)
+        $conv->revenue = $click->revenue ?? 0;
+        $conv->payout = $click->payout ?? 0;
+        $conv->currency = $click->currency ?? 'USD';
+        $conv->revenue_usd = $click->revenue_usd ?? 0;
+        $conv->payout_usd = $click->payout_usd ?? 0;
 
-            if ($pixel) {
-                $resp['pixel_type'] = $pixel->type;
-                $resp['pixel_code'] = $this->replacePixelMacros($pixel->pixel_code, $tracking);
-            }
+        $conv->event = $request->event ?? 'pixel';
+        $conv->device_id = $this->get_visitor_device($device_type, 'Y');
+        $conv->device = $device_type;
+
+        $conv->useragent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        $conv->browser = $arrBrowserData['browser_name'];
+        $conv->os = $arrBrowserData['os_name'];
+        $conv->os_ver = $arrBrowserData['os_version'];
+
+        $conv->aff_sub1 = $click->sub1 ?? null;
+        $conv->aff_sub2 = $click->sub2 ?? null;
+
+        $conv->date = now()->toDateString();
+        $conv->time = now()->toTimeString();
+        $conv->hour = now()->format('H');
+        $conv->conversion_time = now();
+        $conv->conversion = 1;
+
+        $conv->save();
+
+        $resp['success'] = 'Y';
+
+        // Fetch affiliate pixel to fire back
+        $pixel = DB::table('affiliate_pixels')
+            ->where('affiliate_id', $click->aff_id)
+            ->where('status', 'active')
+            ->where(function ($q) use ($click) {
+                $q->where('offer_id', $click->offer_id)
+                    ->orWhereNull('offer_id');
+            })
+            ->orderBy('offer_id', 'desc')
+            ->first();
+
+        if ($pixel) {
+            $resp['pixel_type'] = $pixel->type;
+            $resp['pixel_code'] = $this->replacePixelMacros($pixel->pixel_code, $click);
         }
 
         return $resp;
     }
+
 
     private function replacePixelMacros($code, $tracking)
     {
