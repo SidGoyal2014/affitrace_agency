@@ -67,21 +67,22 @@ class GenerateReportExport implements ShouldQueue
             return;
         }
 
-        // Get connection settings from mysql connection (works with cached config)
-        $mysqlConfig = config('database.connections.mysql');
+        // Get connection settings from pgsql connection (works with cached config)
+        $pgsqlConfig = config('database.connections.pgsql');
 
         // Reconfigure tenant connection with the stored database name
         Config::set('database.connections.tenant_db_con_runtime', [
-            'driver' => 'mysql',
-            'host' => $mysqlConfig['host'] ?? '127.0.0.1',
-            'port' => $mysqlConfig['port'] ?? 3306,
+            'driver' => 'pgsql',
+            'host' => $pgsqlConfig['host'] ?? '127.0.0.1',
+            'port' => $pgsqlConfig['port'] ?? 5432,
             'database' => $this->tenantDatabase,
-            'username' => $mysqlConfig['username'] ?? 'root',
-            'password' => $mysqlConfig['password'] ?? '',
-            'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
+            'username' => $pgsqlConfig['username'] ?? 'root',
+            'password' => $pgsqlConfig['password'] ?? '',
+            'charset' => 'utf8',
             'prefix' => '',
-            'strict' => true,
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => 'disable',
         ]);
 
         DB::purge('tenant_db_con_runtime');

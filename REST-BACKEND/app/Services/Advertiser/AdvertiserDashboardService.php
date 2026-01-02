@@ -120,11 +120,11 @@ class AdvertiserDashboardService
         try {
             $arrSTR = array();
 
-            $sql = "SELECT sum(ot.revenue_usd) as spend, month(ot.created_at) as month 
+            $sql = "SELECT sum(ot.revenue_usd) as spend, EXTRACT(MONTH FROM ot.created_at) as month 
                     FROM offer_trackings ot 
                     INNER JOIN offers o ON ot.offer_id = o.id 
                     WHERE o.advertiser_id = " . $advertiser_id . " 
-                    GROUP BY month(ot.created_at)";
+                    GROUP BY EXTRACT(MONTH FROM ot.created_at)";
 
             $arr = DB::select($sql);
 

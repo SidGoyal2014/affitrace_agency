@@ -13,14 +13,14 @@ class RootDashboardService
 {
     public function getTopAffiliates($dod = "Y")
     {
-        $strLimit = " LIMIT 0,5";
+        $strLimit = " LIMIT 5 OFFSET 0";
         $sql = "SELECT U.id as uid, C.affiliate_id as aff_id, U.name, sum(C.payout) as payout FROM users U INNER JOIN conversions C ON U.id=C.affiliate_id GROUP BY C.affiliate_id, U.id, U.name ORDER BY payout DESC" . $strLimit;
         return DB::select($sql);
     }
 
     public function getTopOffers($dod = "Y")
     {
-        $sql = "SELECT C.offer_id, O.offer_name, sum(C.revenue) as revenue, O.offer_status FROM offers O INNER JOIN conversions C ON O.id=C.offer_id GROUP BY C.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 0,5";
+        $sql = "SELECT C.offer_id, O.offer_name, sum(C.revenue) as revenue, O.offer_status FROM offers O INNER JOIN conversions C ON O.id=C.offer_id GROUP BY C.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 5 OFFSET 0";
         return DB::select($sql);
     }
 
@@ -32,7 +32,7 @@ class RootDashboardService
         }
 
         $sql = "SELECT 
-            MONTH(o.created_at) AS month,
+            EXTRACT(MONTH FROM o.created_at) AS month,
             c.category_name,
             SUM(conv.revenue_usd) AS revenue
         FROM 
@@ -45,10 +45,10 @@ class RootDashboardService
             1=1
             " . $strWhereClause . "
         GROUP BY 
-            MONTH(o.created_at), c.category_name
+            EXTRACT(MONTH FROM o.created_at), c.category_name
         ORDER BY 
-            MONTH(o.created_at), c.category_name
-        LIMIT 0,5";
+            EXTRACT(MONTH FROM o.created_at), c.category_name
+        LIMIT 5 OFFSET 0";
 
         return DB::select($sql);
     }
@@ -61,7 +61,7 @@ class RootDashboardService
         }
 
         $arrSTR = array();
-        $sql = "SELECT sum(revenue_usd) as revenue, month(created_at) as month FROM conversions where 1=1 " . $strWhereClause . " group by month(created_at)";
+        $sql = "SELECT sum(revenue_usd) as revenue, EXTRACT(MONTH FROM created_at) as month FROM conversions where 1=1 " . $strWhereClause . " group by EXTRACT(MONTH FROM created_at)";
 
         $arr = DB::select($sql);
 

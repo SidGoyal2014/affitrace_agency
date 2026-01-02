@@ -19,7 +19,7 @@ class AffiliateDashboardService
     public function get_category_wise_revenue()
     {
         $sql = "SELECT 
-                    MONTH(o.created_at) AS month,
+                    EXTRACT(MONTH FROM o.created_at) AS month,
                     c.category_name,
                     SUM(conv.payout_usd) AS revenue
                 FROM 
@@ -31,10 +31,10 @@ class AffiliateDashboardService
                 WHERE
                     conv.affiliate_id = " . Auth::id() . "
                 GROUP BY 
-                    MONTH(o.created_at), c.category_name
+                    EXTRACT(MONTH FROM o.created_at), c.category_name
                 ORDER BY 
-                    MONTH(o.created_at), c.category_name
-                LIMIT 0,5";
+                    EXTRACT(MONTH FROM o.created_at), c.category_name
+                LIMIT 5 OFFSET 0";
 
         return DB::select($sql);
     }
@@ -46,7 +46,7 @@ class AffiliateDashboardService
     {
         $arrSTR = array();
 
-        $sql = "SELECT sum(payout_usd) as revenue, month(created_at) as month FROM conversions where affiliate_id = " . Auth::id() . " group by month(created_at)";
+        $sql = "SELECT sum(payout_usd) as revenue, EXTRACT(MONTH FROM created_at) as month FROM conversions where affiliate_id = " . Auth::id() . " group by EXTRACT(MONTH FROM created_at)";
 
         $arr = DB::select($sql);
 
@@ -72,7 +72,7 @@ class AffiliateDashboardService
     public function get_affiliate_offers()
     {
         $sql = "SELECT 
-                    GROUP_CONCAT( offer_id ) AS all_offer_ids
+                    STRING_AGG(CAST(offer_id AS TEXT), ',') AS all_offer_ids
                 FROM 
                     offer_affiliates 
                 WHERE
@@ -123,7 +123,7 @@ class AffiliateDashboardService
     public function top_affiliates($dod = "Y")
     {
         // Always return data
-        $strLimit = " LIMIT 0,5";
+        $strLimit = " LIMIT 5 OFFSET 0";
         $sql = "SELECT U.id as uid, C.affiliate_id as aff_id, U.name, sum(C.payout) as payout FROM users U INNER JOIN conversions C ON U.id=C.affiliate_id GROUP BY C.affiliate_id, U.id, U.name ORDER BY payout DESC" . $strLimit;
         return DB::select($sql);
     }
@@ -134,7 +134,7 @@ class AffiliateDashboardService
     public function top_offers($dod = "Y")
     {
         // Always return data
-        $sql = "SELECT C.offer_id, O.offer_name, sum(C.revenue) as revenue, O.offer_status FROM offers O INNER JOIN conversions C ON O.id=C.offer_id GROUP BY C.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 0,5";
+        $sql = "SELECT C.offer_id, O.offer_name, sum(C.revenue) as revenue, O.offer_status FROM offers O INNER JOIN conversions C ON O.id=C.offer_id GROUP BY C.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 5 OFFSET 0";
         return DB::select($sql);
     }
 

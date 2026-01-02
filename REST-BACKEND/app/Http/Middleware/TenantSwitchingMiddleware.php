@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Hash;
 
 class TenantSwitchingMiddleware
 {
-    public function handle(Request $request, Closure $next){
+    public function handle(Request $request, Closure $next)
+    {
 
 
         $tenantDb = $this->get_tenant_db_details_dynamically($request);
@@ -25,25 +26,26 @@ class TenantSwitchingMiddleware
                 'database_password' => $tenantDb['database_password']
             ]
         ]);
-        
+
         //\Log::debug('TenantSwitchingMiddleware - Stored tenant info in session:', session('tenant_db_details'));
-        
+
         // 3. Configure dynamic connection
         config([
             'database.connections.tenant_db_con_runtime' => [
-                'driver' => 'mysql',
+                'driver' => 'pgsql',
                 'host' => $tenantDb['database_host'],
                 'port' => $tenantDb['database_port'],
                 'database' => $tenantDb['database_name'],
                 'username' => $tenantDb['database_user'],
                 'password' => $tenantDb['database_password'],
-                'charset' => 'utf8mb4',
-                'collation' => 'utf8mb4_unicode_ci',
+                'charset' => 'utf8',
                 'prefix' => '',
-                'strict' => true,
+                'prefix_indexes' => true,
+                'search_path' => 'public',
+                'sslmode' => 'disable',
             ],
 
-            'database.default' => 'tenant_db_con_runtime',            
+            'database.default' => 'tenant_db_con_runtime',
             'auth.providers.users.connection' => 'tenant_db_con_runtime'
 
         ]);
@@ -57,12 +59,13 @@ class TenantSwitchingMiddleware
     }//handle
 
 
-    function get_tenant_db_details_dynamically($request){
+    function get_tenant_db_details_dynamically($request)
+    {
 
         $tenantDb = array();
 
         // Check user credentials from MAIN_db
-        $user = DB::connection('mysql_main')
+        $user = DB::connection('pgsql_main')
             ->table('users')
             ->where('user_type', $request->user_type)
             ->where('email', $request->email)
@@ -72,8 +75,11 @@ class TenantSwitchingMiddleware
             abort(401, 'Invalid credentials');
         }
 
+        // Optimization: Agency Name (username) IS the Tenant DB Name.
+        // We skip the tenants table lookup.
+        /*
         // Fetch tenant DB details from MAIN_db
-        $tenant = DB::connection('mysql_main')
+        $tenant = DB::connection('pgsql_main')
             ->table('tenants')
             ->where('agency_id', $user->id)
             ->first();
@@ -81,15 +87,17 @@ class TenantSwitchingMiddleware
         if (!$tenant) {
             abort(500, 'Tenant DB info not found');
         }
+        */
 
         $tenantDb['database_host'] = env('DB_HOST');
         $tenantDb['database_port'] = env('DB_PORT');
-        $tenantDb['database_name'] = $tenant->database_name;
+        // Use username directly as database name
+        $tenantDb['database_name'] = $user->username;
         $tenantDb['database_user'] = env('DB_USERNAME');
         $tenantDb['database_password'] = env('DB_PASSWORD');
 
         return $tenantDb;
-        
+
     }//get_tenant_db_details_dynamically
 
 
@@ -100,20 +108,20 @@ class TenantSwitchingMiddleware
 
 
         // 2. Call App A to get DB details
-        
+
         $response = Http::post(env('MAIN_WEBSITE').'/api/get_tenant', [
             'user_type' => $request->user_type,
             'email' => $request->email,
             'password' => $request->password
         ]);
-        
+
 
         if (!$response->ok()) {
             return response()->json(['message' => 'Tenant DB info not found'], 500);
         }
 
         $tenantDb = $response->json()['tenant'];
-            
+
         $tenantDb['database_host'] = env('DB_HOST');//'82.29.160.75';
         $tenantDb['database_port'] = env('DB_PORT');//'3306';
         $tenantDb['database_name'] = $tenantDb['database_name'];
