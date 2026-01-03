@@ -46,10 +46,12 @@ class ApiSetTenantConnection
             // Based on TenantSwitchingMiddleware logic:
 
             $dbName = $tenantData->database_name;
-            $dbHost = env('DB_HOST');
-            $dbPort = env('DB_PORT');
-            $dbUser = env('DB_USERNAME');
-            $dbPassword = env('DB_PASSWORD');
+            // IMPORTANT: Use config() instead of env() because env() returns null 
+            // when config is cached in production (php artisan config:cache)
+            $dbHost = config('database.connections.pgsql.host');
+            $dbPort = config('database.connections.pgsql.port');
+            $dbUser = config('database.connections.pgsql.username');
+            $dbPassword = config('database.connections.pgsql.password');
 
             Config::set('database.connections.tenant_db_con_runtime', [
                 'driver' => 'pgsql',

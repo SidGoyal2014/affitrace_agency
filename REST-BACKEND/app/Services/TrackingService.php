@@ -380,8 +380,8 @@ class TrackingService
         }
 
         $ot->adv_id = $offer->advertiser_id;
-        $ot->raw_useragent = $_SERVER['HTTP_USER_AGENT'];
-        $ot->useragent = $_SERVER['HTTP_USER_AGENT'];
+        $ot->raw_useragent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+        $ot->useragent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
         $ot->browser = $arrBrowserData['browser_name'];
         $ot->os = $arrBrowserData['os_name'];
         $ot->os_ver = $arrBrowserData['os_version'];
