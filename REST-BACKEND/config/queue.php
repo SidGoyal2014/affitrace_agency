@@ -36,7 +36,7 @@ return [
 
         'database' => [
             'driver' => 'database',
-            'connection' => 'mysql_main', // Use main DB for all tenants
+            'connection' => 'pgsql_main', // Use main DB for all tenants
             'table' => 'jobs',
             'queue' => 'default',
             'retry_after' => 90,
@@ -75,7 +75,7 @@ return [
         // Dedicated queue for long-running report exports
         'reports' => [
             'driver' => 'database',
-            'connection' => 'mysql_main', // Use main DB for all tenants
+            'connection' => 'pgsql_main', // Use main DB for all tenants
             'table' => 'jobs',
             'queue' => 'reports',
             'retry_after' => 900, // 15 minutes for large exports

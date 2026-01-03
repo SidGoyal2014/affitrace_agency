@@ -228,7 +228,7 @@ trait CommonFunctions
 	public function getBrowswerData()
 	{
 
-		$useragent = $_SERVER['HTTP_USER_AGENT'];
+		$useragent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
 
 		$Browser = new BrowserDetection();
 

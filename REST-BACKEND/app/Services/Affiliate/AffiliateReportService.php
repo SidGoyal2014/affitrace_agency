@@ -307,7 +307,7 @@ class AffiliateReportService extends BaseReportService
 					E.event_name
 				FROM 
 					offers O 
-						LEFT JOIN ad_models M ON O.ad_model = M.id
+						LEFT JOIN ad_models M ON CAST(NULLIF(O.ad_model, '') AS BIGINT) = M.id
 						LEFT JOIN offer_trackings OT ON O.id = OT.offer_id
 						LEFT JOIN devices D ON OT.device_id = D.id
 						LEFT JOIN offer_events E ON OT.event_id = E.id

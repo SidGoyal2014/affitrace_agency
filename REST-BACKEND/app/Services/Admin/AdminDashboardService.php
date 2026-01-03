@@ -66,7 +66,7 @@ class AdminDashboardService
 
     public function top_affiliates($dod = "Y")
     {
-        $strLimit = ($dod == "Y") ? " LIMIT 0,5" : "";
+        $strLimit = ($dod == "Y") ? " LIMIT 5 OFFSET 0" : "";
         $sql = "SELECT U.id as uid, C.affiliate_id as aff_id, U.name, sum(C.payout) as payout FROM users U INNER JOIN conversions C ON U.id=C.affiliate_id GROUP BY C.affiliate_id, U.id, U.name ORDER BY payout DESC" . $strLimit;
 
         $data = DB::select($sql);
@@ -79,7 +79,7 @@ class AdminDashboardService
 
     public function top_offers($dod = "Y")
     {
-        $sql = "SELECT C.offer_id, O.offer_name, sum(C.revenue) as revenue, O.offer_status FROM offers O INNER JOIN conversions C ON O.id=C.offer_id GROUP BY C.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 0,5";
+        $sql = "SELECT C.offer_id, O.offer_name, sum(C.revenue) as revenue, O.offer_status FROM offers O INNER JOIN conversions C ON O.id=C.offer_id GROUP BY C.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 5 OFFSET 0";
 
         $data = DB::select($sql);
 
@@ -100,7 +100,7 @@ class AdminDashboardService
     private function get_category_wise_revenue()
     {
         $sql = "SELECT 
-            MONTH(o.created_at) AS month,
+            EXTRACT(MONTH FROM o.created_at) AS month,
             c.category_name,
             SUM(conv.revenue_usd) AS revenue
         FROM 
@@ -110,10 +110,10 @@ class AdminDashboardService
         JOIN 
             categories c ON o.category_id = c.id
         GROUP BY 
-            MONTH(o.created_at), c.category_name
+            EXTRACT(MONTH FROM o.created_at), c.category_name
         ORDER BY 
-            MONTH(o.created_at), c.category_name
-        LIMIT 0,5";
+            EXTRACT(MONTH FROM o.created_at), c.category_name
+        LIMIT 5 OFFSET 0";
 
         return DB::select($sql);
     }
@@ -121,7 +121,7 @@ class AdminDashboardService
     private function get_monthly_revenue()
     {
         $arrSTR = array();
-        $sql = "SELECT sum(revenue_usd) as revenue, month(created_at) as month FROM conversions group by month(created_at)";
+        $sql = "SELECT sum(revenue_usd) as revenue, EXTRACT(MONTH FROM created_at) as month FROM conversions group by EXTRACT(MONTH FROM created_at)";
         $arr = DB::select($sql);
 
         foreach ($arr as $obj) {

@@ -148,7 +148,7 @@ class BaseReportService
     {
         $query = DB::table('offer_trackings')
             ->select(
-                DB::raw('DATE(offer_trackings.created_at) as date'),
+                DB::raw('CAST(offer_trackings.created_at AS DATE) as date'),
                 DB::raw("COUNT(CASE WHEN offer_trackings.event = '" . \App\Enums\TrackingEventType::Click->value . "' THEN 1 END) as clicks"),
                 DB::raw("COUNT(CASE WHEN offer_trackings.event != '" . \App\Enums\TrackingEventType::Click->value . "' THEN 1 END) as conversions"),
                 DB::raw('SUM(COALESCE(offer_trackings.revenue_usd, 0)) as cost')
@@ -169,7 +169,7 @@ class BaseReportService
 
         // Group by date and order
         $stats = $query
-            ->groupBy(DB::raw('DATE(offer_trackings.created_at)'))
+            ->groupBy(DB::raw('CAST(offer_trackings.created_at AS DATE)'))
             ->orderBy('date', 'desc')
             ->limit(30)
             ->get();

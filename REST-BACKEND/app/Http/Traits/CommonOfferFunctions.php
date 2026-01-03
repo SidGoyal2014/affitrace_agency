@@ -16,7 +16,7 @@ trait CommonOfferFunctions
 	{
 
 		$offers = DB::table('offers')
-			->join('ad_models', 'offers.ad_model', '=', 'ad_models.id')
+			->join('ad_models', DB::raw("CAST(NULLIF(offers.ad_model, '') AS BIGINT)"), '=', 'ad_models.id')
 			->join('offer_affiliates', 'offers.id', '=', 'offer_affiliates.offer_id')
 			->select('offers.*', 'ad_models.name')
 			->where('offer_affiliates.affiliate_id', $affilate_id)
@@ -44,7 +44,7 @@ trait CommonOfferFunctions
 				FROM 
 					conversions C 
 						LEFT JOIN offers O ON C.offer_id = O.id
-						LEFT JOIN ad_models M ON O.ad_model = M.id
+						LEFT JOIN ad_models M ON CAST(NULLIF(O.ad_model, '') AS BIGINT) = M.id
 						LEFT JOIN devices D ON C.device_id = D.id
 				WHERE 
 				 	C.affiliate_id = " . $affilate_id;
@@ -74,7 +74,7 @@ trait CommonOfferFunctions
 				FROM 
 					conversions C 
 						LEFT JOIN offers O ON C.offer_id = O.id
-						LEFT JOIN ad_models M ON O.ad_model = M.id
+						LEFT JOIN ad_models M ON CAST(NULLIF(O.ad_model, '') AS BIGINT) = M.id
 						LEFT JOIN devices D ON C.device_id = D.id
 				WHERE 
 				 	C.affiliate_id = " . $affilate_id . "
@@ -117,7 +117,7 @@ trait CommonOfferFunctions
 				FROM
 					conversions C 
 						LEFT JOIN offers O ON C.offer_id = O.id
-						LEFT JOIN ad_models M ON O.ad_model = M.id
+						LEFT JOIN ad_models M ON CAST(NULLIF(O.ad_model, '') AS BIGINT) = M.id
 						LEFT JOIN users U ON C.affiliate_id = U.id
 						LEFT JOIN devices D ON C.device_id = D.id
 				WHERE
@@ -164,7 +164,7 @@ trait CommonOfferFunctions
 				FROM
 					conversions C 
 						LEFT JOIN offers O ON C.offer_id = O.id
-						LEFT JOIN ad_models M ON O.ad_model = M.id
+						LEFT JOIN ad_models M ON CAST(NULLIF(O.ad_model, '') AS BIGINT) = M.id
 						LEFT JOIN users U ON C.affiliate_id = U.id
 						LEFT JOIN devices D ON C.device_id = D.id
 				WHERE 

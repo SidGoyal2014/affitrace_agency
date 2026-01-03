@@ -13,9 +13,10 @@ return new class extends Migration {
             Schema::create('mmplatforms', function (Blueprint $table) {
 
                 // Engine & charset
-                $table->engine = 'InnoDB';
-                $table->charset = 'utf8mb4';
-                $table->collation = 'utf8mb4_unicode_ci';
+                // Engine & charset
+                // $table->engine = 'InnoDB';
+                // $table->charset = 'utf8mb4';
+                // $table->collation = 'utf8mb4_unicode_ci';
 
                 // Columns
                 $table->bigIncrements('id'); // bigint unsigned

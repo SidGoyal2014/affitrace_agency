@@ -242,7 +242,7 @@ class AdminOfferService
     public function getOffersByStatus($status)
     {
         $query = DB::table('offers')
-            ->join('ad_models', 'offers.ad_model', '=', 'ad_models.id')
+            ->join('ad_models', DB::raw("CAST(NULLIF(offers.ad_model, '') AS BIGINT)"), '=', 'ad_models.id')
             ->select('offers.*', 'ad_models.name');
 
         if ($status == 'deleted') {
