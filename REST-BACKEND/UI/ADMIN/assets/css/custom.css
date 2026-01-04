@@ -136,3 +136,29 @@
 #border-none td{
   border:0px !important;
 }
+
+/* Select2 Bootstrap 4 Theme Fixes */
+.select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice {
+    background-color: #4e73df;
+    border-color: #4e73df;
+    color: #fff;
+    font-size: 0.85rem;
+}
+
+.select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice__remove {
+    color: #fff;
+}
+
+.select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice__remove:hover {
+    color: #fff;
+    opacity: 0.8;
+}
+
+/* Fix height issues */
+.select2-container .select2-selection--single {
+    height: calc(1.5em + .75rem + 2px) !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: calc(1.5em + .75rem + 2px) !important;
+}
