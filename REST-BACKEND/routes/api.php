@@ -10,10 +10,16 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public Authentication
-Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login'])->middleware('api.tenant');
+Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login']);
+
+// Public Tracking (Server-to-Server)
+// api.tenant is now in Kernel, so it applies to all API routes
+Route::post('offer/sed/{oid}/{eid}', [App\Http\Controllers\TrackingController::class, 'sed']);
+Route::get('offer/sd', [App\Http\Controllers\TrackingController::class, 'sd']);
+Route::get('pixel', [App\Http\Controllers\PixelController::class, 'track']);
 
 // Protected Routes
-Route::middleware(['auth:sanctum', 'api.tenant'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::post('logout', [App\Http\Controllers\Api\AuthController::class, 'logout']);
     Route::post('refresh-token', [App\Http\Controllers\Api\AuthController::class, 'refreshToken']);
@@ -40,13 +46,15 @@ Route::middleware(['auth:sanctum', 'api.tenant'])->group(function () {
         Route::post('affiliates/update', [App\Http\Controllers\Admin\AdminController::class, 'update_affiliate']);
 
         // MMP
-        Route::get('mmp/list', [App\Http\Controllers\Admin\MMPlatformsController::class, 'list_platforms']);
+        Route::get('mmp/platforms', [App\Http\Controllers\Admin\MMPlatformsController::class, 'list_platforms']);
         Route::get('mmp/setup/{id}', [App\Http\Controllers\Admin\MMPlatformsController::class, 'setup_platform']);
 
         // Offers
         Route::get('offer/index', [App\Http\Controllers\Admin\OfferController::class, 'index']);
         Route::get('offer/create', [App\Http\Controllers\Admin\OfferController::class, 'create']);
         Route::post('offer/save', [App\Http\Controllers\Admin\OfferController::class, 'save']);
+
+        Route::post('offer/update-mmp-details', [App\Http\Controllers\Admin\OfferController::class, 'update_mmp_details']);
         Route::get('offer/edit/{id}', [App\Http\Controllers\Admin\OfferController::class, 'edit']);
         Route::post('offer/update_offer', [App\Http\Controllers\Admin\OfferController::class, 'update_offer']);
         Route::delete('offer/delete/{id}', [App\Http\Controllers\Admin\OfferController::class, 'delete_offer']);
@@ -97,21 +105,45 @@ Route::middleware(['auth:sanctum', 'api.tenant'])->group(function () {
         Route::post('reports/affiliate-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_affiliate_payouts']);
 
         Route::get('reports/offers-assigned/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'get_offers_assigned_to_affiliate']);
+        Route::post('reports/click-conversion-report', [App\Http\Controllers\Admin\ReportController::class, 'click_conversion_report']);
+        Route::post('reports/clicks', [App\Http\Controllers\Admin\ReportController::class, 'clicks_report']);
+        Route::post('reports/conversions', [App\Http\Controllers\Admin\ReportController::class, 'conversions_report']);
+
+        // Integrations
+        Route::get('integrations/config', [App\Http\Controllers\Admin\IntegrationController::class, 'get_config']);
+        Route::post('integrations/save', [App\Http\Controllers\Admin\IntegrationController::class, 'save_config']);
+        Route::post('integrations/sync', [App\Http\Controllers\Admin\IntegrationController::class, 'sync']);
+        Route::post('integrations/upload-csv', [App\Http\Controllers\Admin\IntegrationController::class, 'upload_csv']);
+
+        // Invoice Routes
+        Route::get('invoices/stats', [\App\Http\Controllers\Admin\InvoiceController::class, 'stats']);
+        Route::resource('invoices', \App\Http\Controllers\Admin\InvoiceController::class);
+        Route::post('invoices/{id}/send', [\App\Http\Controllers\Admin\InvoiceController::class, 'send']);
+        Route::get('invoices/{id}/download', [\App\Http\Controllers\Admin\InvoiceController::class, 'download'])->name('invoices.download');
+        Route::post('invoices/{id}/pay', [\App\Http\Controllers\Admin\InvoiceController::class, 'pay']);
+
+        // Report Export Routes (Async)
+        Route::get('reports/exports', [\App\Http\Controllers\Admin\ReportExportController::class, 'index']);
+        Route::post('reports/export', [\App\Http\Controllers\Admin\ReportExportController::class, 'export']);
+        Route::get('reports/export/{id}/status', [\App\Http\Controllers\Admin\ReportExportController::class, 'status']);
+        Route::get('reports/export/{id}/download', [\App\Http\Controllers\Admin\ReportExportController::class, 'download']);
     });
 
     // Affiliate Routes
     Route::prefix('affiliate')->middleware(['affiliate'])->group(function () {
         Route::get('dashboard', [App\Http\Controllers\Affiliate\AffiliateDashboardController::class, 'dashboard']);
-        Route::post('offer-assign-request/{oid}', [App\Http\Controllers\Affiliate\AffiliateDashboardController::class, 'send_offer_assign_request']);
-
-        // Reports
-        Route::get('reports', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'summary']);
+        Route::get('reports/summary', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'summary']);
         Route::get('reports/offer-clicks/{offer_id}', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'offer_clicks']);
         Route::post('reports/offer-clicks/search', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'search_offer_clicks']);
+        Route::get('reports/click-conversion-report', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'click_conversion_report']);
+
         Route::get('reports/offer-payouts/{oid}', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'offer_payouts']);
         Route::post('reports/offer-payouts/search', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'search_offer_payouts']);
         Route::get('reports/payouts', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'payouts']);
         Route::post('reports/payouts/search', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'search_affiliate_payouts']);
+        Route::post('reports/clicks', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'clicks_report']);
+        Route::post('reports/conversions', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'conversions_report']);
+
 
         // Offers
         Route::get('offers/approved', [App\Http\Controllers\Affiliate\AffiliateOfferController::class, 'offers_approved']);
@@ -126,8 +158,23 @@ Route::middleware(['auth:sanctum', 'api.tenant'])->group(function () {
 
     // Advertiser Routes
     Route::prefix('advertiser')->middleware(['advertiser'])->group(function () {
+        Route::get('dashboard', [App\Http\Controllers\Advertiser\AdvertiserDashboardController::class, 'dashboard']);
+
+        // Profile
         Route::get('profile', [App\Http\Controllers\Advertiser\AdvertiserController::class, 'profile']);
         Route::post('update_profile', [App\Http\Controllers\Advertiser\AdvertiserController::class, 'update_profile']);
+
+        // Offers
+        Route::get('offers/my', [App\Http\Controllers\Advertiser\AdvertiserOfferController::class, 'my_offers']);
+        Route::get('offers/approved', [App\Http\Controllers\Advertiser\AdvertiserOfferController::class, 'approved_offers']);
+
+        // Reports
+        Route::get('reports/summary', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'summary']);
+        Route::get('reports/clicks-conversions', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'clickConversionReport']);
+        Route::post('reports/clicks', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'clicks_report']);
+        Route::post('reports/conversions', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'conversions_report']);
+        Route::get('invoices', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'invoices']);
+        Route::get('invoices/{id}/download', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'downloadInvoice']);
     });
 
     // Employee Routes
@@ -137,13 +184,12 @@ Route::middleware(['auth:sanctum', 'api.tenant'])->group(function () {
     });
 
     // Tracking (Server-to-Server)
-    Route::post('offer/sed/{oid}/{eid}', [App\Http\Controllers\TrackingController::class, 'sed']);
-    Route::get('offer/sd', [App\Http\Controllers\TrackingController::class, 'sd']);
+
 
 });
 
 // Admin Dashboard Extra
-Route::middleware(['auth:sanctum', 'api.tenant', 'admin'])->group(function () {
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('admin/reject-assign-request/{oaid}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'reject_offer_assign_requests']);
     Route::get('admin/reports/top-offers/{dod}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'top_offers']);
     Route::get('admin/reports/top-affiliates/{dod}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'top_affiliates']);

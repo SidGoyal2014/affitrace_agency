@@ -4,38 +4,21 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
-use App\Models\User;
-use DB, Auth;
+use App\Services\Admin\AdminUserService;
 
 class UserController extends Controller
 {
+	protected $userService;
 
-    function userlogin(Request $request){
+	public function __construct(AdminUserService $userService)
+	{
+		$this->userService = $userService;
+	}
 
-    	/*
-	    This function is to login into the system
-	    for using apis from remote ... this is for remote access
-
-	    Similar function in LoginController is used for website login purpose
-	    */
-
-
-		if (Auth::attempt(
-				array(
-					'email' => $request->email,
-					'password' => $request->password,
-					'user_type' => 'admin'
-				)
-		)){
-	        $token = Auth::user()->createToken('authToken')->plainTextToken;
-	        return response()->json(['token' => $token], 200);
-	    } else {
-	        return response()->json(['error' => 'Unauthorized'], 401);
-	    }
-
-
-    }//userlogin
+	public function login(Request $request)
+	{
+		return $this->userService->login($request);
+	}
 
 
 }//UserController

@@ -1,6 +1,13 @@
-const API_BASE_URL = 'http://localhost:8000/api';
+// Detect environment or use fixed XAMPP path
+const API_BASE_URL = 'http://localhost:8000/api'; // Laravel Serve
+
+// const API_BASE_URL = 'http://82.29.160.75:8000/api';
+
+// const API_BASE_URL = 'http://localhost/affitrace/affitrace_REST/1/REST-BACKEND/public/api'; // XAMPP
 
 const API = {
+    BASE_URL: API_BASE_URL,
+
     // --- Authentication ---
 
     login: async (email, password, user_type, eai) => {
@@ -9,7 +16,8 @@ const API = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Agency-ID': eai // <--- Explicitly send Agency ID
                 },
                 body: JSON.stringify({ email, password, user_type, eai })
             });
@@ -80,15 +88,18 @@ const API = {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'X-Agency-ID': localStorage.getItem('agency_id')
                     }
                 });
             } catch (e) {
                 // Ignore logout errors
             }
         }
-        this.clearToken();
-        window.location.reload();
+        API.clearToken();
+        // Navigate to global login - handle both root and subdirectory pages
+        const basePath = window.location.pathname.split('/ADMIN')[0];
+        window.location.href = basePath + '/login.php';
     },
 
     clearToken: () => {

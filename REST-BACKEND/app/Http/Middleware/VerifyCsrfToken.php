@@ -14,7 +14,8 @@ class VerifyCsrfToken extends Middleware
 
     protected $except = [
         'offer/sd',
-        'api/save_transaction'
+        'api/save_transaction',
+        'api/*'
     ];
 
 

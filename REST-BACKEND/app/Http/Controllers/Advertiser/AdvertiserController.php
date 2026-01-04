@@ -4,25 +4,22 @@ namespace App\Http\Controllers\Advertiser;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
-
-use DB, Auth;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
-
-use App\Models\User;
-use App\Models\AdvertiserUserDetail;
-
-use App\Http\Traits\CommonFunctions;
-use App\Http\Traits\CommonProfileFunctions;
+use App\Services\Advertiser\AdvertiserService;
 
 class AdvertiserController extends Controller
 {
-	function update_profile(Request $request)
+	public function profile(Request $request, AdvertiserService $service)
 	{
+		return response()->json($service->getProfileData($request->user()));
+	}
 
-		return $this->update_advertiser_profile($request);
+	public function update_profile(Request $request, AdvertiserService $service)
+	{
+		try {
+			return $service->updateProfile($request);
+		} catch (\Exception $e) {
+			return response()->json(['error' => $e->getMessage()], 500);
+		}
+	}
+}
 
-	}//update_profile
-
-}//End of class AdvertiserController

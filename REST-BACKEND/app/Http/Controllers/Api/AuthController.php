@@ -8,12 +8,40 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 
+/**
+ * @group Authentication
+ *
+ * Endpoints for user authentication, token management, and profile retrieval.
+ */
 class AuthController extends Controller
 {
     /**
-     * Login User and return Token
+     * Login
+     *
+     * Authenticate a user and obtain access and refresh tokens.
+     * This endpoint does not require authentication.
+     *
+     * @unauthenticated
+     *
+     * @bodyParam eai string required The agency/tenant identifier. Example: agency123
+     * @bodyParam email string required The user's email address. Example: admin@example.com
+     * @bodyParam password string required The user's password. Example: password123
+     * @bodyParam user_type string required The type of user (admin, affiliate, advertiser). Example: admin
+     *
+     * @response 200 {
+     *   "message": "Login successful",
+     *   "access_token": "1|abc123...",
+     *   "refresh_token": "2|def456...",
+     *   "token_type": "Bearer",
+     *   "user": {"id": 1, "name": "Admin User", "email": "admin@example.com"}
+     * }
+     * @response 401 {
+     *   "error": "Invalid credentials"
+     * }
+     * @response 422 {
+     *   "errors": {"email": ["The email field is required."]}
+     * }
      */
-
     public function login(Request $request)
     {
         // 1. Validate Input
@@ -58,8 +86,20 @@ class AuthController extends Controller
     }
 
     /**
-     * Refresh Access Token
-     * Request must be authenticated with the Refresh Token
+     * Refresh Token
+     *
+     * Exchange a valid refresh token for a new access/refresh token pair.
+     * Must be authenticated with the refresh token (not access token).
+     *
+     * @response 200 {
+     *   "message": "Token refreshed successfully",
+     *   "access_token": "3|ghi789...",
+     *   "refresh_token": "4|jkl012...",
+     *   "token_type": "Bearer"
+     * }
+     * @response 403 {
+     *   "message": "Invalid token ability. Access tokens cannot be used to refresh."
+     * }
      */
     public function refreshToken(Request $request)
     {
@@ -86,7 +126,13 @@ class AuthController extends Controller
     }
 
     /**
-     * Logout User
+     * Logout
+     *
+     * Revoke the current access token, logging the user out.
+     *
+     * @response 200 {
+     *   "message": "Logged out successfully"
+     * }
      */
     public function logout(Request $request)
     {
@@ -97,10 +143,21 @@ class AuthController extends Controller
     }
 
     /**
-     * Get User Profile
+     * Get Current User
+     *
+     * Retrieve the authenticated user's profile information.
+     *
+     * @response 200 {
+     *   "id": 1,
+     *   "name": "Admin User",
+     *   "email": "admin@example.com",
+     *   "user_type": "admin",
+     *   "created_at": "2024-01-01T00:00:00.000000Z"
+     * }
      */
     public function me(Request $request)
     {
         return response()->json($request->user());
     }
 }
+

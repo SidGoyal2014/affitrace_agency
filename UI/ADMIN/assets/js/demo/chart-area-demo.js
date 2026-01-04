@@ -1,10 +1,10 @@
-// Set new default font family and font color to mimic Bootstrap's default styling
-Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
-Chart.defaults.global.defaultFontColor = '#858796';
+// Modern Chart Styling - Affitrace
+// Updated font and colors to match design system
+
+Chart.defaults.global.defaultFontFamily = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+Chart.defaults.global.defaultFontColor = '#64748B';
 
 function number_format(number, decimals, dec_point, thousands_sep) {
-  // *     example: number_format(1234.56, 2, ',', ' ');
-  // *     return: '1 234,56'
   number = (number + '').replace(',', '').replace(' ', '');
   var n = !isFinite(+number) ? 0 : +number,
     prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
@@ -15,7 +15,6 @@ function number_format(number, decimals, dec_point, thousands_sep) {
       var k = Math.pow(10, prec);
       return '' + Math.round(n * k) / k;
     };
-  // Fix for IE parseFloat(0.55).toFixed(0) = 0;
   s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
   if (s[0].length > 3) {
     s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
@@ -27,67 +26,75 @@ function number_format(number, decimals, dec_point, thousands_sep) {
   return s.join(dec);
 }
 
-// Area Chart Example
+// Sleek Area Chart
 window.initAreaChart = function (data) {
   var ctx = document.getElementById("myAreaChart");
+
+  // Create gradient
+  var gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
+  gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
   var myLineChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
       datasets: [{
-        label: "Earnings",
-        lineTension: 0.3,
-        backgroundColor: "rgba(78, 115, 223, 0.05)",
-        borderColor: "rgba(78, 115, 223, 1)",
-        pointRadius: 3,
-        pointBackgroundColor: "rgba(78, 115, 223, 1)",
-        pointBorderColor: "rgba(78, 115, 223, 1)",
-        pointHoverRadius: 3,
-        pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
-        pointHoverBorderColor: "rgba(78, 115, 223, 1)",
-        pointHitRadius: 10,
-        pointBorderWidth: 2,
+        label: "Revenue",
+        lineTension: 0.4,
+        backgroundColor: gradient,
+        borderColor: "#6366F1",
+        borderWidth: 3,
+        pointRadius: 0,
+        pointBackgroundColor: "#6366F1",
+        pointBorderColor: "#fff",
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: "#6366F1",
+        pointHoverBorderColor: "#fff",
+        pointHoverBorderWidth: 2,
+        pointHitRadius: 20,
         data: data,
+        fill: true,
       }],
     },
     options: {
+      responsive: true,
       maintainAspectRatio: false,
       layout: {
         padding: {
           left: 10,
-          right: 25,
-          top: 25,
-          bottom: 0
+          right: 20,
+          top: 20,
+          bottom: 10
         }
       },
       scales: {
         xAxes: [{
-          time: {
-            unit: 'date'
-          },
           gridLines: {
             display: false,
             drawBorder: false
           },
           ticks: {
-            maxTicksLimit: 7
+            fontColor: '#94A3B8',
+            fontSize: 11,
+            padding: 10
           }
         }],
         yAxes: [{
           ticks: {
             maxTicksLimit: 5,
-            padding: 10,
-            // Include a dollar sign in the ticks
-            callback: function (value, index, values) {
+            padding: 15,
+            fontColor: '#94A3B8',
+            fontSize: 11,
+            callback: function (value) {
               return '$' + number_format(value);
             }
           },
           gridLines: {
-            color: "rgb(234, 236, 244)",
-            zeroLineColor: "rgb(234, 236, 244)",
+            color: "rgba(226, 232, 240, 0.5)",
+            zeroLineColor: "rgba(226, 232, 240, 0.5)",
             drawBorder: false,
-            borderDash: [2],
-            zeroLineBorderDash: [2]
+            borderDash: [4, 4]
           }
         }],
       },
@@ -95,25 +102,33 @@ window.initAreaChart = function (data) {
         display: false
       },
       tooltips: {
-        backgroundColor: "rgb(255,255,255)",
-        bodyFontColor: "#858796",
-        titleMarginBottom: 10,
-        titleFontColor: '#6e707e',
-        titleFontSize: 14,
-        borderColor: '#dddfeb',
-        borderWidth: 1,
-        xPadding: 15,
-        yPadding: 15,
+        enabled: true,
+        backgroundColor: "#0F172A",
+        titleFontColor: '#fff',
+        titleFontSize: 13,
+        titleFontStyle: '600',
+        bodyFontColor: '#CBD5E1',
+        bodyFontSize: 12,
+        borderColor: 'transparent',
+        borderWidth: 0,
+        xPadding: 14,
+        yPadding: 12,
         displayColors: false,
         intersect: false,
         mode: 'index',
-        caretPadding: 10,
+        cornerRadius: 8,
         callbacks: {
+          title: function (tooltipItems) {
+            return tooltipItems[0].xLabel + ' 2024';
+          },
           label: function (tooltipItem, chart) {
-            var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
-            return datasetLabel + ': $' + number_format(tooltipItem.yLabel);
+            return '$' + number_format(tooltipItem.yLabel, 2);
           }
         }
+      },
+      hover: {
+        mode: 'index',
+        intersect: false
       }
     }
   });

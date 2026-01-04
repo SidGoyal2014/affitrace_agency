@@ -9,17 +9,28 @@ use App\Models\Event;
 
 use DB;
 
-class WebsiteController extends Controller{
-    
+class WebsiteController extends Controller
+{
 
-	public function invalid_country(){
+	protected $websiteService;
+
+	public function __construct(\App\Services\WebsiteService $websiteService)
+	{
+		$this->websiteService = $websiteService;
+	}
+
+	public function invalid_country()
+	{
+		$this->websiteService->getInvalidCountryViewData();
 		return view('invalid_country');
 
 	}//about
 
 
-	public function verify(){
-		return view('verify_response');
+	public function verify()
+	{
+		$this->websiteService->getVerifyViewData();
+		return view()->file(base_path('UI/verify_response.php'));
 
 	}//about
 

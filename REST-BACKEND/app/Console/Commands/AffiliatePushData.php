@@ -6,16 +6,18 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class AffiliatePushData extends Command{
-    
+class AffiliatePushData extends Command
+{
+
     protected $signature = 'affiliate:push-data';
     protected $description = 'Push data to affiliate endpoints for all tenants and update statuses';
 
-    public function handle(){
+    public function handle()
+    {
 
         $this->info('Fetching tenants from App1...');
         Log::info('Fetching tenants from App1....');
-        $tenants = DB::connection('mysql_main')->table('tenants')->get();
+        $tenants = DB::connection('pgsql_main')->table('tenants')->get();
 
         if ($tenants->isEmpty()) {
             $this->warn('No tenants found.');
@@ -28,14 +30,17 @@ class AffiliatePushData extends Command{
             // Switch DB to tenant
             config([
                 'database.connections.process_tenant_con' => [
-                    'driver' => 'mysql',
+                    'driver' => 'pgsql',
                     'host' => env('MAIN_DB_HOST'),//$tenant->database_host,
-                    'port' => 3306,//$tenant->database_port,
+                    'port' => 5432,//$tenant->database_port,
                     'database' => $tenant->database_name,
                     'username' => env('MAIN_DB_USERNAME'),//$tenant->database_user,
                     'password' => env('MAIN_DB_PASSWORD'),//$tenant->database_password ?: env('MAIN_DB_PASSWORD', ''),
-                    'charset' => 'utf8mb4',
-                    'collation' => 'utf8mb4_unicode_ci',
+                    'charset' => 'utf8',
+                    'prefix' => '',
+                    'prefix_indexes' => true,
+                    'search_path' => 'public',
+                    'sslmode' => 'disable',
                 ],
             ]);
             DB::purge('process_tenant_con');
@@ -60,7 +65,8 @@ class AffiliatePushData extends Command{
     /**
      * Move your process.php logic into this method
      */
-    protected function runProcessLogic($tenant){
+    protected function runProcessLogic($tenant)
+    {
 
         $sql = "select 
                 OT.id, OT.offer_id, OT.aff_id, OT.aff_click_id, OT.sub2, APC.url 
@@ -100,7 +106,7 @@ class AffiliatePushData extends Command{
 
             $this->removeExtraLogs();
 
-            Log::info("Updated {$ids} records as transferred.");
+            Log::info("Updated " . count($results) . " records as transferred.");
 
         } else {
             $this->saveLogs("No records available for sending data to affiliate", null, null);
@@ -113,20 +119,21 @@ class AffiliatePushData extends Command{
     }//runProcessLogic
 
 
-    protected function sendCurlGetRequest($url, $offer_id, $aff_id){
+    protected function sendCurlGetRequest($url, $offer_id, $aff_id)
+    {
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-        $timeStr = "Sent At: ------".date('j M, Y H:i:s')."---------------";
+        $timeStr = "Sent At: ------" . date('j M, Y H:i:s') . "---------------";
 
         if (curl_exec($ch) === false) {
-            $str = "\n".$timeStr.'Curl error: ' . curl_error($ch). " - URL: " . $url. "\n";
+            $str = "\n" . $timeStr . 'Curl error: ' . curl_error($ch) . " - URL: " . $url . "\n";
         } else {
             $info = curl_getinfo($ch);
-            $str = "\n".$timeStr.'Took '. $info['total_time']. ' seconds to send a request to '. $url. "\n";
+            $str = "\n" . $timeStr . 'Took ' . $info['total_time'] . ' seconds to send a request to ' . $url . "\n";
         }
 
         echo $str;
@@ -140,14 +147,15 @@ class AffiliatePushData extends Command{
     /**
      * Save logs into the tenant's logs table.
      */
-    protected function saveLogs($str, $offer_id, $aff_id){
+    protected function saveLogs($str, $offer_id, $aff_id)
+    {
 
         DB::connection('process_tenant_con')->table('logs')->insert([
-            'offer_id'    => $offer_id,
-            'aff_id'      => $aff_id,
-            'module'      => 'CRON',
+            'offer_id' => $offer_id,
+            'aff_id' => $aff_id,
+            'module' => 'CRON',
             'description' => $str,
-            'created_at'  => now(),
+            'created_at' => now(),
         ]);
 
     }//saveLogs
@@ -155,9 +163,10 @@ class AffiliatePushData extends Command{
     /**
      * Remove logs older than 2 days.
      */
-    protected function removeExtraLogs(){
+    protected function removeExtraLogs()
+    {
 
-        DB::connection('process_tenant_con')->statement("DELETE FROM logs WHERE created_at < DATE_SUB(NOW(), INTERVAL 2 DAY)");
+        DB::connection('process_tenant_con')->statement("DELETE FROM logs WHERE created_at < NOW() - INTERVAL '2 DAY'");
 
         Log::info("Old logs older than 2 days removed.");
 

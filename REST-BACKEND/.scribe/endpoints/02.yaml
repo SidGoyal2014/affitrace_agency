@@ -1,0 +1,71 @@
+name: 'Tracking (Pixel)'
+description: |-
+
+  Pixel-based conversion tracking endpoints.
+  These endpoints do not require authentication.
+endpoints:
+  -
+    httpMethods:
+      - GET
+    uri: api/pixel
+    metadata:
+      groupName: 'Tracking (Pixel)'
+      groupDescription: |-
+
+        Pixel-based conversion tracking endpoints.
+        These endpoints do not require authentication.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Fire Conversion Pixel'
+      description: 'Record a conversion via pixel tracking. Returns a 1x1 transparent GIF.'
+      authenticated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      tid:
+        name: tid
+        description: 'The transaction/click ID.'
+        required: false
+        example: abc123xyz
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        custom: []
+      aff_click_id:
+        name: aff_click_id
+        description: 'Alternative parameter for transaction ID.'
+        required: false
+        example: abc123xyz
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        custom: []
+    cleanQueryParameters:
+      tid: abc123xyz
+      aff_click_id: abc123xyz
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: '1x1 transparent GIF image'
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 400
+        content: '{"error": "Missing Transaction ID"}'
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []

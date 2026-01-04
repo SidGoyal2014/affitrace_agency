@@ -1,0 +1,2572 @@
+openapi: 3.0.3
+info:
+  title: 'Affitrace API Documentation'
+  description: 'RESTful API for Affitrace affiliate tracking platform. Supports Admin, Affiliate, and Advertiser operations.'
+  version: 1.0.0
+servers:
+  -
+    url: 'http://82.29.160.75'
+paths:
+  /api/login:
+    post:
+      summary: Login
+      operationId: login
+      description: "Authenticate a user and obtain access and refresh tokens.\nThis endpoint does not require authentication."
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Login successful'
+                  access_token: 1|abc123...
+                  refresh_token: 2|def456...
+                  token_type: Bearer
+                  user:
+                    id: 1
+                    name: 'Admin User'
+                    email: admin@example.com
+                properties:
+                  message:
+                    type: string
+                    example: 'Login successful'
+                  access_token:
+                    type: string
+                    example: 1|abc123...
+                  refresh_token:
+                    type: string
+                    example: 2|def456...
+                  token_type:
+                    type: string
+                    example: Bearer
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'Admin User'
+                      email:
+                        type: string
+                        example: admin@example.com
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: 'Invalid credentials'
+                properties:
+                  error:
+                    type: string
+                    example: 'Invalid credentials'
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  errors:
+                    email:
+                      - 'The email field is required.'
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      email:
+                        type: array
+                        example:
+                          - 'The email field is required.'
+                        items:
+                          type: string
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eai:
+                  type: string
+                  description: 'The agency/tenant identifier.'
+                  example: agency123
+                email:
+                  type: string
+                  description: "The user's email address."
+                  example: admin@example.com
+                password:
+                  type: string
+                  description: "The user's password."
+                  example: password123
+                user_type:
+                  type: string
+                  description: 'The type of user (admin, affiliate, advertiser).'
+                  example: admin
+              required:
+                - eai
+                - email
+                - password
+                - user_type
+      security: []
+  /api/logout:
+    post:
+      summary: Logout
+      operationId: logout
+      description: 'Revoke the current access token, logging the user out.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Logged out successfully'
+                properties:
+                  message:
+                    type: string
+                    example: 'Logged out successfully'
+      tags:
+        - Authentication
+  /api/refresh-token:
+    post:
+      summary: 'Refresh Token'
+      operationId: refreshToken
+      description: "Exchange a valid refresh token for a new access/refresh token pair.\nMust be authenticated with the refresh token (not access token)."
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Token refreshed successfully'
+                  access_token: 3|ghi789...
+                  refresh_token: 4|jkl012...
+                  token_type: Bearer
+                properties:
+                  message:
+                    type: string
+                    example: 'Token refreshed successfully'
+                  access_token:
+                    type: string
+                    example: 3|ghi789...
+                  refresh_token:
+                    type: string
+                    example: 4|jkl012...
+                  token_type:
+                    type: string
+                    example: Bearer
+        403:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Invalid token ability. Access tokens cannot be used to refresh.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Invalid token ability. Access tokens cannot be used to refresh.'
+      tags:
+        - Authentication
+  /api/me:
+    get:
+      summary: 'Get Current User'
+      operationId: getCurrentUser
+      description: "Retrieve the authenticated user's profile information."
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: 1
+                  name: 'Admin User'
+                  email: admin@example.com
+                  user_type: admin
+                  created_at: '2024-01-01T00:00:00.000000Z'
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                    example: 'Admin User'
+                  email:
+                    type: string
+                    example: admin@example.com
+                  user_type:
+                    type: string
+                    example: admin
+                  created_at:
+                    type: string
+                    example: '2024-01-01T00:00:00.000000Z'
+      tags:
+        - Authentication
+  /api/admin/dashboard:
+    get:
+      summary: ''
+      operationId: getApiAdminDashboard
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/dashboard could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/dashboard could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/profile:
+    get:
+      summary: ''
+      operationId: getApiAdminProfile
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/profile could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/profile could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/update_profile:
+    post:
+      summary: ''
+      operationId: postApiAdminUpdate_profile
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/admin/advertisers/list:
+    get:
+      summary: ''
+      operationId: getApiAdminAdvertisersList
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/advertisers/list could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/advertisers/list could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/advertisers/create:
+    get:
+      summary: ''
+      operationId: getApiAdminAdvertisersCreate
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/advertisers/create could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/advertisers/create could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/advertisers/save:
+    post:
+      summary: ''
+      operationId: postApiAdminAdvertisersSave
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  '/api/admin/advertisers/edit/{id}':
+    get:
+      summary: ''
+      operationId: getApiAdminAdvertisersEditId
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/advertisers/edit/a could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/advertisers/edit/a could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the edit.'
+        example: a
+        required: true
+        schema:
+          type: string
+  /api/admin/advertisers/update:
+    post:
+      summary: ''
+      operationId: postApiAdminAdvertisersUpdate
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/admin/affiliates/list:
+    get:
+      summary: ''
+      operationId: getApiAdminAffiliatesList
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/affiliates/list could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/affiliates/list could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/affiliates/create:
+    get:
+      summary: ''
+      operationId: getApiAdminAffiliatesCreate
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/affiliates/create could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/affiliates/create could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/affiliates/save:
+    post:
+      summary: ''
+      operationId: postApiAdminAffiliatesSave
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  '/api/admin/affiliates/edit/{id}':
+    get:
+      summary: ''
+      operationId: getApiAdminAffiliatesEditId
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/affiliates/edit/exercitationem could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/affiliates/edit/exercitationem could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the edit.'
+        example: exercitationem
+        required: true
+        schema:
+          type: string
+  /api/admin/affiliates/update:
+    post:
+      summary: ''
+      operationId: postApiAdminAffiliatesUpdate
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/admin/mmp/platforms:
+    get:
+      summary: ''
+      operationId: getApiAdminMmpPlatforms
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/mmp/platforms could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/mmp/platforms could not be found.'
+      tags:
+        - Endpoints
+  '/api/admin/mmp/setup/{id}':
+    get:
+      summary: ''
+      operationId: getApiAdminMmpSetupId
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/mmp/setup/autem could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/mmp/setup/autem could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the setup.'
+        example: autem
+        required: true
+        schema:
+          type: string
+  /api/admin/offer/index:
+    get:
+      summary: ''
+      operationId: getApiAdminOfferIndex
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/offer/index could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/offer/index could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/offer/create:
+    get:
+      summary: ''
+      operationId: getApiAdminOfferCreate
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/offer/create could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/offer/create could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/offer/save:
+    post:
+      summary: ''
+      operationId: postApiAdminOfferSave
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/admin/offer/update-mmp-details:
+    post:
+      summary: ''
+      operationId: postApiAdminOfferUpdateMmpDetails
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  '/api/admin/offer/edit/{id}':
+    get:
+      summary: ''
+      operationId: getApiAdminOfferEditId
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/offer/edit/optio could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/offer/edit/optio could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the edit.'
+        example: optio
+        required: true
+        schema:
+          type: string
+  /api/admin/offer/update_offer:
+    post:
+      summary: ''
+      operationId: postApiAdminOfferUpdate_offer
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  '/api/admin/offer/delete/{id}':
+    delete:
+      summary: ''
+      operationId: deleteApiAdminOfferDeleteId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the delete.'
+        example: animi
+        required: true
+        schema:
+          type: string
+  '/api/admin/offer/restore/{id}':
+    post:
+      summary: ''
+      operationId: postApiAdminOfferRestoreId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the restore.'
+        example: atque
+        required: true
+        schema:
+          type: string
+  /api/admin/offer/approved:
+    get:
+      summary: ''
+      operationId: getApiAdminOfferApproved
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/offer/approved could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/offer/approved could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/offer/pending:
+    get:
+      summary: ''
+      operationId: getApiAdminOfferPending
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/offer/pending could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/offer/pending could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/offer/ended:
+    get:
+      summary: ''
+      operationId: getApiAdminOfferEnded
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/offer/ended could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/offer/ended could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/offer/deleted:
+    get:
+      summary: ''
+      operationId: getApiAdminOfferDeleted
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/offer/deleted could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/offer/deleted could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/offer/update-targetting:
+    post:
+      summary: ''
+      operationId: postApiAdminOfferUpdateTargetting
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/admin/offer/save-payout-rules:
+    post:
+      summary: ''
+      operationId: postApiAdminOfferSavePayoutRules
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/admin/offer/stu:
+    post:
+      summary: ''
+      operationId: postApiAdminOfferStu
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  '/api/admin/offer/show-events/{id}':
+    get:
+      summary: ''
+      operationId: getApiAdminOfferShowEventsId
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/offer/show-events/veritatis could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/offer/show-events/veritatis could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the show event.'
+        example: veritatis
+        required: true
+        schema:
+          type: string
+  '/api/admin/offer/assign/{oid}/{aid}':
+    get:
+      summary: ''
+      operationId: getApiAdminOfferAssignOidAid
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/offer/assign/voluptate/placeat could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/offer/assign/voluptate/placeat could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: oid
+        description: ''
+        example: voluptate
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: aid
+        description: ''
+        example: placeat
+        required: true
+        schema:
+          type: string
+  '/api/admin/offer/reject/{oid}/{aid}':
+    get:
+      summary: ''
+      operationId: getApiAdminOfferRejectOidAid
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/offer/reject/ut/placeat could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/offer/reject/ut/placeat could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: oid
+        description: ''
+        example: ut
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: aid
+        description: ''
+        example: placeat
+        required: true
+        schema:
+          type: string
+  '/api/admin/offer/unassign/{oid}/{aid}':
+    get:
+      summary: ''
+      operationId: getApiAdminOfferUnassignOidAid
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/offer/unassign/quis/delectus could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/offer/unassign/quis/delectus could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: oid
+        description: ''
+        example: quis
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: aid
+        description: ''
+        example: delectus
+        required: true
+        schema:
+          type: string
+  /api/admin/offer/save-event:
+    post:
+      summary: ''
+      operationId: postApiAdminOfferSaveEvent
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  '/api/admin/offer/get-event/{eid}':
+    get:
+      summary: ''
+      operationId: getApiAdminOfferGetEventEid
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/offer/get-event/iste could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/offer/get-event/iste could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: eid
+        description: ''
+        example: iste
+        required: true
+        schema:
+          type: string
+  '/api/admin/offer/get-rule/{oid}/{eid}':
+    get:
+      summary: ''
+      operationId: getApiAdminOfferGetRuleOidEid
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/offer/get-rule/in/quia could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/offer/get-rule/in/quia could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: oid
+        description: ''
+        example: in
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: eid
+        description: ''
+        example: quia
+        required: true
+        schema:
+          type: string
+  /api/admin/offer/update-event:
+    post:
+      summary: ''
+      operationId: postApiAdminOfferUpdateEvent
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/admin/offer/update-event-postback:
+    post:
+      summary: ''
+      operationId: postApiAdminOfferUpdateEventPostback
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  '/api/admin/offer/remove-event/{oid}/{eid}':
+    get:
+      summary: ''
+      operationId: getApiAdminOfferRemoveEventOidEid
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/offer/remove-event/dolores/id could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/offer/remove-event/dolores/id could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: oid
+        description: ''
+        example: dolores
+        required: true
+        schema:
+          type: string
+      -
+        in: path
+        name: eid
+        description: ''
+        example: id
+        required: true
+        schema:
+          type: string
+  /api/admin/payments/show-subscriptions:
+    get:
+      summary: ''
+      operationId: getApiAdminPaymentsShowSubscriptions
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/payments/show-subscriptions could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/payments/show-subscriptions could not be found.'
+      tags:
+        - Endpoints
+  '/api/admin/payments/pause-subscription/{id}':
+    get:
+      summary: ''
+      operationId: getApiAdminPaymentsPauseSubscriptionId
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/payments/pause-subscription/quia could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/payments/pause-subscription/quia could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the pause subscription.'
+        example: quia
+        required: true
+        schema:
+          type: string
+  '/api/admin/payments/resume-subscription/{id}':
+    get:
+      summary: ''
+      operationId: getApiAdminPaymentsResumeSubscriptionId
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/payments/resume-subscription/commodi could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/payments/resume-subscription/commodi could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the resume subscription.'
+        example: commodi
+        required: true
+        schema:
+          type: string
+  '/api/admin/payments/delete-subscription/{id}':
+    get:
+      summary: ''
+      operationId: getApiAdminPaymentsDeleteSubscriptionId
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/payments/delete-subscription/id could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/payments/delete-subscription/id could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the delete subscription.'
+        example: id
+        required: true
+        schema:
+          type: string
+  /api/admin/reports/transactions:
+    get:
+      summary: ''
+      operationId: getApiAdminReportsTransactions
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reports/transactions could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reports/transactions could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/reports/logs:
+    get:
+      summary: ''
+      operationId: getApiAdminReportsLogs
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reports/logs could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reports/logs could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/reports/all-offers:
+    get:
+      summary: ''
+      operationId: getApiAdminReportsAllOffers
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reports/all-offers could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reports/all-offers could not be found.'
+      tags:
+        - Endpoints
+  '/api/admin/reports/offer-clicks/{offer_id}':
+    get:
+      summary: ''
+      operationId: getApiAdminReportsOfferClicksOffer_id
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reports/offer-clicks/qui could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reports/offer-clicks/qui could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: offer_id
+        description: 'The ID of the offer.'
+        example: qui
+        required: true
+        schema:
+          type: string
+  /api/admin/reports/offer-clicks/search:
+    post:
+      summary: ''
+      operationId: postApiAdminReportsOfferClicksSearch
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/admin/reports/all-payouts:
+    get:
+      summary: ''
+      operationId: getApiAdminReportsAllPayouts
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reports/all-payouts could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reports/all-payouts could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/reports/all-payouts/search:
+    post:
+      summary: ''
+      operationId: postApiAdminReportsAllPayoutsSearch
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  '/api/admin/reports/offer-payouts/{oid}':
+    get:
+      summary: ''
+      operationId: getApiAdminReportsOfferPayoutsOid
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reports/offer-payouts/labore could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reports/offer-payouts/labore could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: oid
+        description: ''
+        example: labore
+        required: true
+        schema:
+          type: string
+  /api/admin/reports/offer-payouts/search:
+    post:
+      summary: ''
+      operationId: postApiAdminReportsOfferPayoutsSearch
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  '/api/admin/reports/affiliate-payouts/{aid}':
+    get:
+      summary: ''
+      operationId: getApiAdminReportsAffiliatePayoutsAid
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reports/affiliate-payouts/ipsum could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reports/affiliate-payouts/ipsum could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: aid
+        description: ''
+        example: ipsum
+        required: true
+        schema:
+          type: string
+  /api/admin/reports/affiliate-payouts/search:
+    post:
+      summary: ''
+      operationId: postApiAdminReportsAffiliatePayoutsSearch
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  '/api/admin/reports/offers-assigned/{aid}':
+    get:
+      summary: ''
+      operationId: getApiAdminReportsOffersAssignedAid
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reports/offers-assigned/eum could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reports/offers-assigned/eum could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: aid
+        description: ''
+        example: eum
+        required: true
+        schema:
+          type: string
+  /api/admin/reports/click-conversion-report:
+    post:
+      summary: ''
+      operationId: postApiAdminReportsClickConversionReport
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/admin/integrations/config:
+    get:
+      summary: ''
+      operationId: getApiAdminIntegrationsConfig
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/integrations/config could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/integrations/config could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/integrations/save:
+    post:
+      summary: ''
+      operationId: postApiAdminIntegrationsSave
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider:
+                  type: string
+                  description: ''
+                  example: offer18
+                  enum:
+                    - offer18
+                    - trackier
+                api_key:
+                  type: string
+                  description: ''
+                  example: cupiditate
+              required:
+                - provider
+                - api_key
+  /api/admin/integrations/sync:
+    post:
+      summary: ''
+      operationId: postApiAdminIntegrationsSync
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: ''
+                  example: quasi
+              required:
+                - id
+  /api/admin/integrations/upload-csv:
+    post:
+      summary: ''
+      operationId: postApiAdminIntegrationsUploadCsv
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                csv_file:
+                  type: string
+                  format: binary
+                  description: 'Must be a file.'
+                type:
+                  type: string
+                  description: ''
+                  example: clicks
+                  enum:
+                    - advertiser
+                    - affiliate
+                    - clicks
+                    - conversions
+              required:
+                - csv_file
+                - type
+  /api/admin/invoices/stats:
+    get:
+      summary: 'Dashboard statistics'
+      operationId: dashboardStatistics
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/invoices/stats could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/invoices/stats could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/invoices:
+    get:
+      summary: 'List invoices (DataTables compatible with filters)'
+      operationId: listInvoicesDataTablesCompatibleWithFilters
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/invoices could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/invoices could not be found.'
+      tags:
+        - Endpoints
+    post:
+      summary: 'Store new invoice (manual input)'
+      operationId: storeNewInvoicemanualInput
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                advertiser_id:
+                  type: string
+                  description: ''
+                  example: sunt
+                title:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: yl
+                total_amount:
+                  type: number
+                  description: 'Must be at least 0.01.'
+                  example: 49
+                invoice_date:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2025-12-30T19:03:44'
+                due_date:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2025-12-30T19:03:44'
+              required:
+                - advertiser_id
+                - total_amount
+  '/api/admin/invoices/{id}':
+    get:
+      summary: 'Show single invoice (JSON)'
+      operationId: showSingleInvoiceJSON
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/invoices/et could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/invoices/et could not be found.'
+      tags:
+        - Endpoints
+    put:
+      summary: 'Update draft invoice'
+      operationId: updateDraftInvoice
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: kwp
+                total_amount:
+                  type: number
+                  description: 'Must be at least 0.01.'
+                  example: 4
+                invoice_date:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2025-12-30T19:03:44'
+                due_date:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2025-12-30T19:03:44'
+    delete:
+      summary: 'Delete draft invoice'
+      operationId: deleteDraftInvoice
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the invoice.'
+        example: et
+        required: true
+        schema:
+          type: string
+  '/api/admin/invoices/{id}/send':
+    post:
+      summary: 'Send invoice (generate PDF, change status)'
+      operationId: sendInvoicegeneratePDFChangeStatus
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the invoice.'
+        example: itaque
+        required: true
+        schema:
+          type: string
+  '/api/admin/invoices/{id}/download':
+    get:
+      summary: 'Download PDF - returns signed URL as JSON'
+      operationId: downloadPDFReturnsSignedURLAsJSON
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/invoices/dicta/download could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/invoices/dicta/download could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the invoice.'
+        example: dicta
+        required: true
+        schema:
+          type: string
+  '/api/admin/invoices/{id}/pay':
+    post:
+      summary: 'Mark invoice as paid'
+      operationId: markInvoiceAsPaid
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the invoice.'
+        example: eveniet
+        required: true
+        schema:
+          type: string
+  /api/admin/reports/exports:
+    get:
+      summary: "List user's exports."
+      operationId: listUsersExports
+      description: 'GET /api/admin/reports/exports'
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reports/exports could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reports/exports could not be found.'
+      tags:
+        - Endpoints
+  /api/admin/reports/export:
+    post:
+      summary: 'Initiate an async report export.'
+      operationId: initiateAnAsyncReportExport
+      description: 'POST /api/admin/reports/export'
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                report_type:
+                  type: string
+                  description: ''
+                  example: all_trackings
+                  enum:
+                    - clicks
+                    - conversions
+                    - all_trackings
+                format:
+                  type: string
+                  description: ''
+                  example: xlsx
+                  enum:
+                    - csv
+                    - xlsx
+                filters:
+                  type: object
+                  description: ''
+                  example: null
+                  properties: {  }
+                columns:
+                  type: object
+                  description: ''
+                  example: null
+                  properties: {  }
+              required:
+                - report_type
+                - format
+  '/api/admin/reports/export/{id}/status':
+    get:
+      summary: 'Check export status.'
+      operationId: checkExportStatus
+      description: 'GET /api/admin/reports/export/{id}/status'
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reports/export/et/status could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reports/export/et/status could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the export.'
+        example: et
+        required: true
+        schema:
+          type: string
+  '/api/admin/reports/export/{id}/download':
+    get:
+      summary: 'Download the generated report.'
+      operationId: downloadTheGeneratedReport
+      description: "GET /api/admin/reports/export/{id}/download\n\nReturns:\n- 200: Streams file and deletes after\n- 403: Not authorized\n- 404: Export not found\n- 409: Export not ready yet\n- 410: Export expired"
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reports/export/voluptatem/download could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reports/export/voluptatem/download could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the export.'
+        example: voluptatem
+        required: true
+        schema:
+          type: string
+  /api/affiliate/dashboard:
+    get:
+      summary: ''
+      operationId: getApiAffiliateDashboard
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/affiliate/dashboard could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/affiliate/dashboard could not be found.'
+      tags:
+        - Endpoints
+  /api/affiliate/reports/summary:
+    get:
+      summary: ''
+      operationId: getApiAffiliateReportsSummary
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/affiliate/reports/summary could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/affiliate/reports/summary could not be found.'
+      tags:
+        - Endpoints
+  '/api/affiliate/reports/offer-clicks/{offer_id}':
+    get:
+      summary: ''
+      operationId: getApiAffiliateReportsOfferClicksOffer_id
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/affiliate/reports/offer-clicks/ex could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/affiliate/reports/offer-clicks/ex could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: offer_id
+        description: 'The ID of the offer.'
+        example: ex
+        required: true
+        schema:
+          type: string
+  /api/affiliate/reports/offer-clicks/search:
+    post:
+      summary: ''
+      operationId: postApiAffiliateReportsOfferClicksSearch
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/affiliate/reports/click-conversion-report:
+    get:
+      summary: ''
+      operationId: getApiAffiliateReportsClickConversionReport
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/affiliate/reports/click-conversion-report could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/affiliate/reports/click-conversion-report could not be found.'
+      tags:
+        - Endpoints
+  '/api/affiliate/reports/offer-payouts/{oid}':
+    get:
+      summary: ''
+      operationId: getApiAffiliateReportsOfferPayoutsOid
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/affiliate/reports/offer-payouts/dolor could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/affiliate/reports/offer-payouts/dolor could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: oid
+        description: ''
+        example: dolor
+        required: true
+        schema:
+          type: string
+  /api/affiliate/reports/offer-payouts/search:
+    post:
+      summary: ''
+      operationId: postApiAffiliateReportsOfferPayoutsSearch
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/affiliate/reports/payouts:
+    get:
+      summary: ''
+      operationId: getApiAffiliateReportsPayouts
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/affiliate/reports/payouts could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/affiliate/reports/payouts could not be found.'
+      tags:
+        - Endpoints
+  /api/affiliate/reports/payouts/search:
+    post:
+      summary: ''
+      operationId: postApiAffiliateReportsPayoutsSearch
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/affiliate/offers/approved:
+    get:
+      summary: ''
+      operationId: getApiAffiliateOffersApproved
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/affiliate/offers/approved could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/affiliate/offers/approved could not be found.'
+      tags:
+        - Endpoints
+  '/api/affiliate/offers/tracking-url/{oid}':
+    get:
+      summary: ''
+      operationId: getApiAffiliateOffersTrackingUrlOid
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/affiliate/offers/tracking-url/quos could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/affiliate/offers/tracking-url/quos could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: oid
+        description: ''
+        example: quos
+        required: true
+        schema:
+          type: string
+  /api/affiliate/profile:
+    get:
+      summary: ''
+      operationId: getApiAffiliateProfile
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/affiliate/profile could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/affiliate/profile could not be found.'
+      tags:
+        - Endpoints
+    post:
+      summary: ''
+      operationId: postApiAffiliateProfile
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/affiliate/postback-cols:
+    get:
+      summary: ''
+      operationId: getApiAffiliatePostbackCols
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/affiliate/postback-cols could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/affiliate/postback-cols could not be found.'
+      tags:
+        - Endpoints
+    post:
+      summary: ''
+      operationId: postApiAffiliatePostbackCols
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/advertiser/dashboard:
+    get:
+      summary: ''
+      operationId: getApiAdvertiserDashboard
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/advertiser/dashboard could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/advertiser/dashboard could not be found.'
+      tags:
+        - Endpoints
+  /api/advertiser/profile:
+    get:
+      summary: ''
+      operationId: getApiAdvertiserProfile
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/advertiser/profile could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/advertiser/profile could not be found.'
+      tags:
+        - Endpoints
+  /api/advertiser/update_profile:
+    post:
+      summary: ''
+      operationId: postApiAdvertiserUpdate_profile
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  /api/advertiser/offers/my:
+    get:
+      summary: ''
+      operationId: getApiAdvertiserOffersMy
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/advertiser/offers/my could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/advertiser/offers/my could not be found.'
+      tags:
+        - Endpoints
+  /api/advertiser/offers/approved:
+    get:
+      summary: ''
+      operationId: getApiAdvertiserOffersApproved
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/advertiser/offers/approved could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/advertiser/offers/approved could not be found.'
+      tags:
+        - Endpoints
+  /api/advertiser/reports/summary:
+    get:
+      summary: 'Get summary report with optional filters'
+      operationId: getSummaryReportWithOptionalFilters
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/advertiser/reports/summary could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/advertiser/reports/summary could not be found.'
+      tags:
+        - Endpoints
+  /api/advertiser/reports/clicks-conversions:
+    get:
+      summary: 'Get detailed click and conversion report with filters'
+      operationId: getDetailedClickAndConversionReportWithFilters
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/advertiser/reports/clicks-conversions could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/advertiser/reports/clicks-conversions could not be found.'
+      tags:
+        - Endpoints
+  /api/advertiser/invoices:
+    get:
+      summary: 'Get invoices for advertiser'
+      operationId: getInvoicesForAdvertiser
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/advertiser/invoices could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/advertiser/invoices could not be found.'
+      tags:
+        - Endpoints
+  '/api/advertiser/invoices/{id}/download':
+    get:
+      summary: 'Download invoice PDF'
+      operationId: downloadInvoicePDF
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/advertiser/invoices/itaque/download could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/advertiser/invoices/itaque/download could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the invoice.'
+        example: itaque
+        required: true
+        schema:
+          type: string
+  /api/employee/profile:
+    get:
+      summary: ''
+      operationId: getApiEmployeeProfile
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/employee/profile could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/employee/profile could not be found.'
+      tags:
+        - Endpoints
+  /api/employee/update_profile:
+    post:
+      summary: ''
+      operationId: postApiEmployeeUpdate_profile
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+  '/api/admin/reject-assign-request/{oaid}':
+    get:
+      summary: ''
+      operationId: getApiAdminRejectAssignRequestOaid
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reject-assign-request/harum could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reject-assign-request/harum could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: oaid
+        description: ''
+        example: harum
+        required: true
+        schema:
+          type: string
+  '/api/admin/reports/top-offers/{dod}':
+    get:
+      summary: ''
+      operationId: getApiAdminReportsTopOffersDod
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reports/top-offers/velit could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reports/top-offers/velit could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: dod
+        description: ''
+        example: velit
+        required: true
+        schema:
+          type: string
+  '/api/admin/reports/top-affiliates/{dod}':
+    get:
+      summary: ''
+      operationId: getApiAdminReportsTopAffiliatesDod
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reports/top-affiliates/maiores could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reports/top-affiliates/maiores could not be found.'
+      tags:
+        - Endpoints
+    parameters:
+      -
+        in: path
+        name: dod
+        description: ''
+        example: maiores
+        required: true
+        schema:
+          type: string
+  /api/admin/reports/get-all-offer-clicks:
+    get:
+      summary: ''
+      operationId: getApiAdminReportsGetAllOfferClicks
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/admin/reports/get-all-offer-clicks could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/admin/reports/get-all-offer-clicks could not be found.'
+      tags:
+        - Endpoints
+  /api/pixel:
+    get:
+      summary: 'Fire Conversion Pixel'
+      operationId: fireConversionPixel
+      description: 'Record a conversion via pixel tracking. Returns a 1x1 transparent GIF.'
+      parameters:
+        -
+          in: query
+          name: tid
+          description: 'The transaction/click ID.'
+          example: abc123xyz
+          required: false
+          schema:
+            type: string
+            description: 'The transaction/click ID.'
+            example: abc123xyz
+        -
+          in: query
+          name: aff_click_id
+          description: 'Alternative parameter for transaction ID.'
+          example: abc123xyz
+          required: false
+          schema:
+            type: string
+            description: 'Alternative parameter for transaction ID.'
+            example: abc123xyz
+      responses:
+        200:
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: '1x1 transparent GIF image'
+        400:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: 'Missing Transaction ID'
+                properties:
+                  error:
+                    type: string
+                    example: 'Missing Transaction ID'
+      tags:
+        - 'Tracking (Pixel)'
+      security: []
+  /api/offer/sd:
+    get:
+      summary: 'Process Postback (S2S Conversion)'
+      operationId: processPostbackS2SConversion
+      description: 'Server-to-server postback endpoint for recording conversions.'
+      parameters:
+        -
+          in: query
+          name: tid
+          description: 'The transaction/click ID.'
+          example: abc123
+          required: false
+          schema:
+            type: string
+            description: 'The transaction/click ID.'
+            example: abc123
+        -
+          in: query
+          name: amount
+          description: 'Optional payout amount override.'
+          example: 10.5
+          required: false
+          schema:
+            type: number
+            description: 'Optional payout amount override.'
+            example: 10.5
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: 'Y'
+                  message: 'Conversion recorded'
+                properties:
+                  success:
+                    type: string
+                    example: 'Y'
+                  message:
+                    type: string
+                    example: 'Conversion recorded'
+        400:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  success: 'N'
+                  message: 'Invalid transaction ID'
+                properties:
+                  success:
+                    type: string
+                    example: 'N'
+                  message:
+                    type: string
+                    example: 'Invalid transaction ID'
+      tags:
+        - 'Tracking (Server-to-Server)'
+      security: []
+tags:
+  -
+    name: Authentication
+    description: "\nEndpoints for user authentication, token management, and profile retrieval."
+  -
+    name: Endpoints
+    description: ''
+  -
+    name: 'Tracking (Pixel)'
+    description: "\nPixel-based conversion tracking endpoints.\nThese endpoints do not require authentication."
+  -
+    name: 'Tracking (Server-to-Server)'
+    description: "\nPublic endpoints for tracking clicks and conversions.\nThese endpoints do not require authentication."
+components:
+  securitySchemes:
+    default:
+      type: http
+      scheme: bearer
+      description: 'Authenticate using Laravel Sanctum. First call <code>POST /api/login</code> to obtain an access token, then include it as <code>Bearer {ACCESS_TOKEN}</code> in the Authorization header for protected endpoints.'
+security:
+  -
+    default: []

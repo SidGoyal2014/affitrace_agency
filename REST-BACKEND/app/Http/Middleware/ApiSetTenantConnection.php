@@ -5,9 +5,12 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Cache;
+use App\Http\Traits\MultiTenantResolver;
 
 class ApiSetTenantConnection
 {
+    use MultiTenantResolver;
     /**
      * Handle an incoming request.
      *
@@ -17,42 +20,24 @@ class ApiSetTenantConnection
      */
     public function handle(Request $request, Closure $next)
     {
-        // 1. Get Agency ID from Header (e.g. the username of the agency admin, 'eai')
-        $agencyId = $request->header('X-Agency-ID');
+        // 1. Get Agency ID using the 3-Strategy Resolver
+        $agencyId = $this->resolve_agency_username($request);
 
         if (!$agencyId) {
-            // If not in header, check input (for login)
-            $agencyId = $request->input('eai');
+            return response()->json(['error' => 'Agency identity not found. Check hostname or aff_click_id.'], 400);
         }
 
-        if (!$agencyId) {
-            return response()->json(['error' => 'X-Agency-ID header or eai parameter is required'], 400);
-        }
-
-        // 2. Find the Tenant in Main DB
-        // We assume 'eai' maps to 'username' of the User who is the Agency Owner
-        // And 'tenants' table links to that User via 'agency_id'
-
+        // 2. Find the Tenant in Main DB (with caching for performance)
+        // Cache tenant lookup for 1 hour to reduce DB queries
         try {
-            // Find the Agency User first (to get their ID)
-            $agencyUser = DB::connection('mysql_main')
-                ->table('users')
-                ->where('username', $agencyId) // 'eai' matches 'username'
-                ->where('user_type', 'admin') // Assuming agency owner is admin
-                ->first();
+            $tenantData = Cache::remember("tenant:{$agencyId}", 3600, function () use ($agencyId) {
+                // Optimization: Agency Name IS the Tenant DB Name.
+                // We skip looking up the user and tenants table.
+                return (object) ['database_name' => $agencyId];
+            });
 
-            if (!$agencyUser) {
-                return response()->json(['error' => 'Agency not found'], 404);
-            }
-
-            // Find the Tenant Record
-            $tenant = DB::connection('mysql_main')
-                ->table('tenants')
-                ->where('agency_id', $agencyUser->id)
-                ->first();
-
-            if (!$tenant) {
-                return response()->json(['error' => 'Tenant database info not found'], 500);
+            if (!$tenantData) {
+                return response()->json(['error' => 'Agency not found: ' . $agencyId], 404);
             }
 
             // 3. Configure the Tenant Connection
@@ -60,23 +45,26 @@ class ApiSetTenantConnection
             // or we could use specific ones if stored in tenant record.
             // Based on TenantSwitchingMiddleware logic:
 
-            $dbName = $tenant->database_name;
-            $dbHost = env('DB_HOST');
-            $dbPort = env('DB_PORT');
-            $dbUser = env('DB_USERNAME');
-            $dbPassword = env('DB_PASSWORD');
+            $dbName = $tenantData->database_name;
+            // IMPORTANT: Use config() instead of env() because env() returns null 
+            // when config is cached in production (php artisan config:cache)
+            $dbHost = config('database.connections.pgsql.host');
+            $dbPort = config('database.connections.pgsql.port');
+            $dbUser = config('database.connections.pgsql.username');
+            $dbPassword = config('database.connections.pgsql.password');
 
             Config::set('database.connections.tenant_db_con_runtime', [
-                'driver' => 'mysql',
+                'driver' => 'pgsql',
                 'host' => $dbHost,
                 'port' => $dbPort,
                 'database' => $dbName,
                 'username' => $dbUser,
                 'password' => $dbPassword,
-                'charset' => 'utf8mb4',
-                'collation' => 'utf8mb4_unicode_ci',
+                'charset' => 'utf8',
                 'prefix' => '',
-                'strict' => true,
+                'prefix_indexes' => true,
+                'search_path' => 'public',
+                'sslmode' => 'disable',
             ]);
 
             Config::set('database.default', 'tenant_db_con_runtime');
