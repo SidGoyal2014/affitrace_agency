@@ -4,8 +4,12 @@ $activePage = 'offers';
 $pageTitle = 'Edit Offer';
 
 // Bootstrap Laravel removed to prevent 500 error
+
 include $pathPrefix . '/includes/head.php';
 ?>
+<!-- Countries and Locations JS -->
+<script src="../../common/js/countries.js"></script>
+<script src="../../common/js/locations.js"></script>
 
 <body id="page-top">
 
@@ -82,6 +86,8 @@ include $pathPrefix . '/includes/head.php';
                                         </div>
                                     </div>
                                 </div>
+
+
 
                                 <div class="form-group">
                                     <label>Offer URL</label>
@@ -247,10 +253,15 @@ include $pathPrefix . '/includes/head.php';
                                         </select>
                                     </div>
                                     <div class="col-md-4">
-                                        <input type="text" name="target_country" class="form-control"
-                                            placeholder="e.g., US, GB, IN (comma separated)">
+                                        <select name="target_country" class="form-control select2-country"
+                                            style="width: 100%;">
+                                            <option value="">Global (All Countries)</option>
+                                            <!-- Populated by JS -->
+                                        </select>
                                     </div>
                                 </div>
+
+
 
                                 <!-- State -->
                                 <div class="row mb-4">
@@ -264,8 +275,10 @@ include $pathPrefix . '/includes/head.php';
                                         </select>
                                     </div>
                                     <div class="col-md-4">
-                                        <input type="text" name="target_state" class="form-control"
-                                            placeholder="e.g., California, Texas (comma separated)">
+                                        <select name="target_state" class="form-control select2-state"
+                                            style="width: 100%;">
+                                            <option value="">All States</option>
+                                        </select>
                                     </div>
                                 </div>
 
@@ -484,6 +497,28 @@ include $pathPrefix . '/includes/head.php';
             if (user) $('.user-name').text(user.name);
 
             await loadOfferData();
+
+            // Initialize Select2 for country dropdown
+            $('.select2-country').select2({
+                placeholder: "Select Countries (Leave empty for Global)",
+                allowClear: true,
+                width: '100%',
+                theme: 'bootstrap4'
+            });
+
+            // Initialize Select2 for State/City
+            $('.select2-state').select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                tags: true
+            });
+
+            // Event Listeners for Cascading
+            $('select[name="target_country"]').on('change', function () {
+                populateStateDropdown($(this).val());
+            });
+
+
         });
 
         async function loadOfferData() {
@@ -526,11 +561,38 @@ include $pathPrefix . '/includes/head.php';
 
                 // Targeting Tab
                 $('select[name="country_permission"]').val(offer.country_permission || 'allow');
-                $('input[name="target_country"]').val(offer.target_country || '');
+
+                // Populate Countries Dropdown
+                const countrySelect = $('select[name="target_country"]');
+                Object.entries(COUNTRIES).forEach(([code, name]) => {
+                    countrySelect.append(new Option(name, code));
+                });
+
+                // Pre-select values
+                if (offer.target_country) {
+                    // Try to match exact value first (single country)
+                    // If it contains commas (legacy data), just take the first one or clear it? 
+                    // User said "Only 1 country", so let's try to handle it gracefully.
+                    // If the stored value has commas, we might only be able to show one.
+                    let val = offer.target_country;
+                    if (val.includes(',')) {
+                        val = val.split(',')[0].trim();
+                    }
+                    countrySelect.val(val).trigger('change');
+                } else {
+                    countrySelect.val("").trigger('change');
+                }
                 $('select[name="state_permission"]').val(offer.state_permission || 'allow');
-                $('input[name="target_state"]').val(offer.target_state || '');
+
+                // Populate State and City
+                // Handle legacy comma-separated values by taking the first one
+                let savedState = offer.target_state ? offer.target_state.split(',')[0].trim() : '';
+                let savedCity = offer.target_city ? offer.target_city.split(',')[0].trim() : '';
+
+                populateStateDropdown(countrySelect.val(), savedState);
+                $('input[name="target_city"]').val(savedCity);
+
                 $('select[name="city_permission"]').val(offer.city_permission || 'allow');
-                $('input[name="target_city"]').val(offer.target_city || '');
                 $('select[name="device_permission"]').val(offer.device_permission || 'allow');
                 $('select[name="target_device"]').val(offer.target_device || '');
                 $('select[name="browser_permission"]').val(offer.browser_permission || 'allow');
@@ -568,6 +630,27 @@ include $pathPrefix . '/includes/head.php';
                 });
             }
         }
+
+        function populateStateDropdown(countryCode, selectedState = null) {
+            const stateSelect = $('select[name="target_state"]');
+            // Save current value if not provided (for simple refreshes)
+            if (selectedState === null) selectedState = stateSelect.val();
+
+            stateSelect.empty().append('<option value="">All States</option>');
+
+            if (countryCode && typeof LOCATIONS !== 'undefined' && LOCATIONS[countryCode]) {
+                const states = Object.keys(LOCATIONS[countryCode]);
+                states.forEach(state => {
+                    stateSelect.append(new Option(state, state));
+                });
+            }
+
+            if (selectedState) {
+                stateSelect.val(selectedState).trigger('change.select2');
+            }
+        }
+
+
 
         function loadAffiliates(affiliates, assignments, offer) {
             const assigned = {};
@@ -708,12 +791,12 @@ include $pathPrefix . '/includes/head.php';
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         offer_id: offerId,
-                        country_permission: $('select[name="country_permission"]').val(),
-                        target_country: $('input[name="target_country"]').val(),
+                        country_permission: $('select[name="country_permission"]').val() || 'allow',
+                        target_country: $('select[name="target_country"]').val(),
                         state_permission: $('select[name="state_permission"]').val(),
-                        target_state: $('input[name="target_state"]').val(),
+                        target_state: $('select[name="target_state"]').val(),
                         city_permission: $('select[name="city_permission"]').val(),
-                        target_city: $('input[name="target_city"]').val(),
+                        target_city: $('select[name="target_city"]').val(),
                         device_permission: $('select[name="device_permission"]').val(),
                         target_device: $('select[name="target_device"]').val(),
                         browser_permission: $('select[name="browser_permission"]').val(),
