@@ -67,6 +67,15 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
+            // Check if user is active (handle legacy empty status as 'active')
+            $rawStatus = $user->getRawOriginal('status');
+            $userStatus = \App\Enums\UserStatus::tryFrom($rawStatus) ?? \App\Enums\UserStatus::Active;
+
+            if ($userStatus !== \App\Enums\UserStatus::Active) {
+                Auth::logout(); // Invalidate session/token immediately if any
+                return response()->json(['error' => 'Account is not active'], 403);
+            }
+
             // 1. Create Short-lived Access Token (1 Hour)
             $accessToken = $user->createToken('access_token', ['access-api'], now()->addMinutes(60))->plainTextToken;
 

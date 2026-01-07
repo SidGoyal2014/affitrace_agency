@@ -39,6 +39,21 @@ include $pathPrefix . '/includes/head.php';
                         </div>
 
                         <div class="form-group col-lg-6">
+                            <label class="d-block">Status <span style='color:#f00;'>*</span></label>
+                            <div class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" id="statusActive" name="status" class="custom-control-input"
+                                    value="active">
+                                <label class="custom-control-label" for="statusActive">Active</label>
+                            </div>
+                            <div class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" id="statusInactive" name="status" class="custom-control-input"
+                                    value="inactive">
+                                <label class="custom-control-label" for="statusInactive">Inactive</label>
+                            </div>
+                            <span style='color:#f00;'></span>
+                        </div>
+
+                        <div class="form-group col-lg-6">
                             <input type="password" name="password" class="form-control form-control"
                                 id="exampleInputPassword" placeholder="Enter Password">
                             <span style='color:#f00;'></span>
@@ -131,7 +146,15 @@ include $pathPrefix . '/includes/head.php';
                     $('input[name="email"]').val(data.email);
                     $('input[name="company"]').val(data.company);
                     $('input[name="country"]').val(data.country);
+                    $('input[name="country"]').val(data.country);
                     $('input[name="phone"]').val(data.phone);
+
+                    // Set Status
+                    if (data.status) {
+                        $(`input[name="status"][value="${data.status}"]`).prop('checked', true);
+                    } else {
+                        $('#statusActive').prop('checked', true);
+                    }
                 }
             } catch (error) {
                 console.error("Load Error:", error);
@@ -155,7 +178,7 @@ include $pathPrefix . '/includes/head.php';
                 if (!payload.instant_messenger_value) payload.instant_messenger_value = 'N/A';
 
                 try {
-                    const response = await API.fetchWithAuth('admin/update_affiliate', {
+                    const response = await API.fetchWithAuth('admin/affiliates/update', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'

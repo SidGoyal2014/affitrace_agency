@@ -150,6 +150,7 @@ class AdminService
         $user->company = $request->company;
         $user->country = $request->country;
         $user->phone = $request->phone;
+        $user->status = \App\Enums\UserStatus::Active;
         $user->save();
 
         $aud = new AffiliateUserDetail();
