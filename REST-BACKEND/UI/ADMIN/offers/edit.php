@@ -518,6 +518,22 @@ include $pathPrefix . '/includes/head.php';
                 populateStateDropdown($(this).val());
             });
 
+            // Tab Persistence
+            // 1. Check if hash exists and switch to that tab
+            const hash = window.location.hash;
+            if (hash) {
+                $('.nav-tabs a[href="' + hash + '"]').tab('show');
+            }
+
+            // 2. Update hash on tab switch (use replaceState to avoid history pollution/jumping)
+            $('.nav-tabs a').on('shown.bs.tab', function (e) {
+                if (history.replaceState) {
+                    history.replaceState(null, null, e.target.hash);
+                } else {
+                    window.location.hash = e.target.hash;
+                }
+            });
+
 
         });
 
@@ -847,7 +863,10 @@ include $pathPrefix . '/includes/head.php';
         async function assignOffer(oid, aid) {
             try {
                 const res = await API.fetchWithAuth(`admin/offer/assign/${oid}/${aid}`);
-                if (res.status === 1) location.reload();
+                if (res.status === 1) {
+                    Toast.success('Success', 'Affiliate assigned successfully');
+                    await loadOfferData();
+                }
                 else Toast.error('Assignment Failed', res.error || 'Failed to assign affiliate');
             } catch (e) { Toast.error('Error', e.message); }
         }
@@ -856,7 +875,10 @@ include $pathPrefix . '/includes/head.php';
             if (!confirm("Unassign this affiliate?")) return;
             try {
                 const res = await API.fetchWithAuth(`admin/offer/unassign/${oid}/${aid}`);
-                if (res.status === 1) location.reload();
+                if (res.status === 1) {
+                    Toast.success('Success', 'Affiliate unassigned successfully');
+                    await loadOfferData();
+                }
                 else Toast.error('Unassign Failed', res.error || 'Failed to unassign affiliate');
             } catch (e) { Toast.error('Error', e.message); }
         }
@@ -934,8 +956,11 @@ include $pathPrefix . '/includes/head.php';
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ offer_id: offerId, event_name: name, event_token: token })
-            }).then(res => {
-                if (res.status === 1) location.reload();
+            }).then(async res => {
+                if (res.status === 1) {
+                    Toast.success('Success', 'Event created successfully');
+                    await loadOfferData();
+                }
                 else Toast.error('Save Failed', res.error || 'Failed to create event');
             });
         }
@@ -946,8 +971,11 @@ include $pathPrefix . '/includes/head.php';
 
         function deleteEvent(eid) {
             if (!confirm("Delete this event?")) return;
-            API.fetchWithAuth(`admin/offer/remove-event/${offerId}/${eid}`).then(res => {
-                if (res.status === 1) location.reload();
+            API.fetchWithAuth(`admin/offer/remove-event/${offerId}/${eid}`).then(async res => {
+                if (res.status === 1) {
+                    Toast.success('Success', 'Event deleted successfully');
+                    await loadOfferData();
+                }
                 else Toast.error('Delete Failed', res.error || 'Failed to delete event');
             });
         }
