@@ -68,8 +68,10 @@ include $pathPrefix . '/includes/head.php';
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Target Country</label>
-                                            <input type="text" name="target_country" class="form-control"
-                                                placeholder="e.g., US, IN, Global">
+                                            <select name="target_country" class="form-control select2-country">
+                                                <option value="">Global (All Countries)</option>
+                                                <!-- Populated by JS -->
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
@@ -208,8 +210,19 @@ include $pathPrefix . '/includes/head.php';
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
 
+
+    <!-- Countries JS -->
+    <script src="../../common/js/countries.js"></script>
     <script>
         $(document).ready(async function () {
+            // Initialize Select2 for country dropdown
+            $('.select2-country').select2({
+                placeholder: "Select Countries (Leave empty for Global)",
+                allowClear: true,
+                width: '100%',
+                theme: 'bootstrap4'
+            });
+
             if (!API.isAuthenticated()) {
                 window.location.href = '../login.php';
                 return;
@@ -269,6 +282,12 @@ include $pathPrefix . '/includes/head.php';
                     });
                 }
 
+                // 6. Countries
+                const countrySelect = $('select[name="target_country"]');
+                Object.entries(COUNTRIES).forEach(([code, name]) => {
+                    countrySelect.append(new Option(name, code));
+                });
+
             } catch (e) {
                 console.error("Failed to load initial data:", e);
                 $('#alert-container').html(`<div class="alert alert-danger">Failed to load reference data: ${e.message}</div>`);
@@ -292,7 +311,8 @@ include $pathPrefix . '/includes/head.php';
                     ad_pricing: parseFloat($('input[name="ad_pricing"]').val()).toFixed(2),
                     aff_pricing: parseFloat($('input[name="aff_pricing"]').val()).toFixed(2),
                     currency: $('select[name="currency"]').val(),
-                    target_country: $('input[name="target_country"]').val(),
+                    target_country: $('select[name="target_country"]').val(),
+                    country_permission: $('input[name="country_permission"]').val(),
                     offer_visibility: $('select[name="offer_visibility"]').val(),
                     offer_status: $('select[name="offer_status"]').val(),
                     campaign_start_date: $('input[name="campaign_start_date"]').val(),

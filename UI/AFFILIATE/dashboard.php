@@ -357,7 +357,7 @@ include $pathPrefix . '/includes/head.php';
                                         <div class="text-right">
                                             ${data.arr_affiliate_offers.includes(offer.id.toString()) ?
                                 '<span class="badge badge-success">Assigned</span>' :
-                                `<button class="btn btn-sm btn-primary" onclick="alert('Request feature pending'); return false;">Apply for Approval</button>`
+                                `<button class="btn btn-sm btn-primary" onclick="Toast.info('Coming Soon', 'Request feature is under development'); return false;">Apply for Approval</button>`
                             }
                                         </div>
                                     </div>

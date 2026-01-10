@@ -39,6 +39,21 @@ include $pathPrefix . '/includes/head.php';
                         </div>
 
                         <div class="form-group col-lg-6">
+                            <label class="d-block">Status <span style='color:#f00;'>*</span></label>
+                            <div class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" id="statusActive" name="status" class="custom-control-input"
+                                    value="active">
+                                <label class="custom-control-label" for="statusActive">Active</label>
+                            </div>
+                            <div class="custom-control custom-radio custom-control-inline">
+                                <input type="radio" id="statusInactive" name="status" class="custom-control-input"
+                                    value="inactive">
+                                <label class="custom-control-label" for="statusInactive">Inactive</label>
+                            </div>
+                            <span style='color:#f00;'></span>
+                        </div>
+
+                        <div class="form-group col-lg-6">
                             <input type="password" name="password" class="form-control form-control"
                                 id="exampleInputPassword" placeholder="Enter Password">
                             <span style='color:#f00;'></span>
@@ -116,7 +131,7 @@ include $pathPrefix . '/includes/head.php';
             const id = urlParams.get('id');
 
             if (!id) {
-                alert("No ID provided");
+                Toast.error('Error', 'No ID provided');
                 window.location.href = 'list.php';
                 return;
             }
@@ -131,11 +146,19 @@ include $pathPrefix . '/includes/head.php';
                     $('input[name="email"]').val(data.email);
                     $('input[name="company"]').val(data.company);
                     $('input[name="country"]').val(data.country);
+                    $('input[name="country"]').val(data.country);
                     $('input[name="phone"]').val(data.phone);
+
+                    // Set Status
+                    if (data.status) {
+                        $(`input[name="status"][value="${data.status}"]`).prop('checked', true);
+                    } else {
+                        $('#statusActive').prop('checked', true);
+                    }
                 }
             } catch (error) {
                 console.error("Load Error:", error);
-                alert("Failed to load data");
+                Toast.error('Load Failed', 'Failed to load affiliate data');
             }
 
             // Submit
@@ -155,7 +178,7 @@ include $pathPrefix . '/includes/head.php';
                 if (!payload.instant_messenger_value) payload.instant_messenger_value = 'N/A';
 
                 try {
-                    const response = await API.fetchWithAuth('admin/update_affiliate', {
+                    const response = await API.fetchWithAuth('admin/affiliates/update', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -164,8 +187,8 @@ include $pathPrefix . '/includes/head.php';
                     });
 
                     if (response.status === 1) {
-                        alert(response.msg || 'Updated successfully');
-                        window.location.href = 'list.php';
+                        Toast.success('Updated', response.msg || 'Affiliate updated successfully');
+                        setTimeout(() => window.location.href = 'list.php', 1500);
                     } else {
                         if (response.error && typeof response.error === 'object') {
                             for (const field in response.error) {

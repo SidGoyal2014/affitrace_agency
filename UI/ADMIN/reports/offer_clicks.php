@@ -92,7 +92,7 @@ include $pathPrefix . '/includes/head.php';
             const offerId = urlParams.get('id');
 
             if (!offerId) {
-                alert("No offer specified");
+                Toast.error('Error', 'No offer specified');
                 return;
             }
 
@@ -156,7 +156,7 @@ include $pathPrefix . '/includes/head.php';
 
             } catch (error) {
                 console.error("Error loading offer clicks:", error);
-                alert("Failed to load offer clicks");
+                Toast.error('Load Failed', 'Failed to load offer clicks');
             }
         });
     </script>

@@ -135,7 +135,7 @@ include $pathPrefix . '/includes/head.php';
                 };
 
                 if (!payload.advertiser_id || !payload.total_amount) {
-                    alert('Please fill in required fields.');
+                    Toast.warning('Required Fields', 'Please fill in required fields.');
                     return;
                 }
 
@@ -155,7 +155,7 @@ include $pathPrefix . '/includes/head.php';
                     }
                 } catch (error) {
                     console.error(error);
-                    alert("Error: " + error.message);
+                    Toast.error('Error', error.message);
                     $('#submitBtn').prop('disabled', false).html('<i class="fas fa-plus-circle mr-2"></i> Create Invoice');
                 }
             });

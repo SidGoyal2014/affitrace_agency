@@ -52,7 +52,7 @@ include $pathPrefix . '/includes/head.php';
             $('#createOfferForm').on('submit', function (e) {
                 e.preventDefault();
                 // TODO: API integration
-                alert('Offer creation feature pending API integration.');
+                Toast.info('Coming Soon', 'Offer creation feature is under development.');
             });
         });
     </script>
