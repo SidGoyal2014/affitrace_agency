@@ -218,7 +218,7 @@ include $pathPrefix . '/includes/head.php';
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    data: function(d) {
+                    data: function (d) {
                         // Merge filter params with DataTables params
                         return $.extend({}, d, getFilterParams());
                     },
@@ -277,13 +277,13 @@ include $pathPrefix . '/includes/head.php';
             });
 
             // Filter form submit
-            $('#filterForm').on('submit', function(e) {
+            $('#filterForm').on('submit', function (e) {
                 e.preventDefault();
                 table.ajax.reload();
             });
 
             // Clear filters
-            $('#clearFilters').on('click', function() {
+            $('#clearFilters').on('click', function () {
                 $('#filterForm')[0].reset();
                 table.ajax.reload();
             });
@@ -293,7 +293,7 @@ include $pathPrefix . '/includes/head.php';
                 try {
                     const data = await API.fetchWithAuth('admin/advertisers/list');
                     const select = $('#filter_advertiser');
-                    
+
                     const list = data.data ? data.data : data;
                     if (Array.isArray(list)) {
                         list.forEach(adv => {
@@ -371,7 +371,7 @@ include $pathPrefix . '/includes/head.php';
                     throw new Error(response.message || "Failed to get download URL");
                 }
             } catch (err) {
-                alert("Download Error: " + err.message);
+                Toast.error('Download Error', err.message);
             }
         }
     </script>

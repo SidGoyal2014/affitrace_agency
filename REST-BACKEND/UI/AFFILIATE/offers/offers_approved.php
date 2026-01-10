@@ -169,8 +169,12 @@ include $pathPrefix . '/includes/head.php';
             var copyText = document.getElementById("tracking_url");
             copyText.select();
             copyText.setSelectionRange(0, 99999);
-            document.execCommand("copy");
-            alert("Copied the link!");
+            try {
+                document.execCommand("copy");
+                Toast.success('Copied!', 'Tracking link copied to clipboard');
+            } catch (err) {
+                Toast.error('Copy Failed', 'Unable to copy to clipboard');
+            }
         }
     </script>
 </body>

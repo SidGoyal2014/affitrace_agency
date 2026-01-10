@@ -131,7 +131,7 @@ include $pathPrefix . '/includes/head.php';
             const id = urlParams.get('id');
 
             if (!id) {
-                alert("No ID provided");
+                Toast.error('Error', 'No ID provided');
                 window.location.href = 'list.php';
                 return;
             }
@@ -158,7 +158,7 @@ include $pathPrefix . '/includes/head.php';
                 }
             } catch (error) {
                 console.error("Load Error:", error);
-                alert("Failed to load data");
+                Toast.error('Load Failed', 'Failed to load affiliate data');
             }
 
             // Submit
@@ -187,8 +187,8 @@ include $pathPrefix . '/includes/head.php';
                     });
 
                     if (response.status === 1) {
-                        alert(response.msg || 'Updated successfully');
-                        window.location.href = 'list.php';
+                        Toast.success('Updated', response.msg || 'Affiliate updated successfully');
+                        setTimeout(() => window.location.href = 'list.php', 1500);
                     } else {
                         if (response.error && typeof response.error === 'object') {
                             for (const field in response.error) {

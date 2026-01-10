@@ -363,14 +363,14 @@ include $pathPrefix . '/includes/head.php';
                 });
 
                 if (response.success) {
-                    alert('Export queued successfully!\n\nGo to Reports > My Exports to download your file when ready.\n\nExport ID: ' + response.data.export_id);
+                    Toast.success('Export Queued', 'Go to Reports > My Exports to download your file when ready. Export ID: ' + response.data.export_id);
                 } else {
-                    alert('Export failed: ' + (response.message || 'Unknown error'));
+                    Toast.error('Export Failed', response.message || 'Unknown error');
                 }
 
             } catch (error) {
                 console.error('Export error:', error);
-                alert('Failed to start export. Please try again.');
+                Toast.error('Export Failed', 'Failed to start export. Please try again.');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalHtml;

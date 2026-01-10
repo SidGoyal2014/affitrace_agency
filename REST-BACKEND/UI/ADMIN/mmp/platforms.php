@@ -85,7 +85,7 @@ include $pathPrefix . '/includes/head.php';
         });
 
         function showConfig(id, name) {
-            alert(`To integrate with ${name}, please configure the Postback URL in your ${name} dashboard.\n\nPostback URL Format:\nhttps://{domain}.com/api/postback?aff_click_id={click_id}&event_id={event_id}`);
+            Toast.info('Integration Instructions', `To integrate with ${name}, configure the Postback URL in your ${name} dashboard. Format: https://{domain}.com/api/postback?aff_click_id={click_id}&event_id={event_id}`, { duration: 10000 });
         }
     </script>
 </body>

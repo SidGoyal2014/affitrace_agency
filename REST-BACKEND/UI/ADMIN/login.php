@@ -22,6 +22,7 @@
     <link href="assets/css/sb-admin-2.css" rel="stylesheet">
     <link href="assets/css/modern-theme.css" rel="stylesheet">
     <link href="assets/css/custom.css" rel="stylesheet">
+    <link href="assets/css/toast.css" rel="stylesheet">
 </head>
 
 <body>
@@ -109,6 +110,7 @@
     <!-- Custom scripts for all pages-->
     <script src="assets/js/sb-admin-2.min.js"></script>
     <script src="assets/js/api.js"></script>
+    <script src="assets/js/toast.js"></script>
 
     <script>
         $(document).ready(function () {
@@ -124,7 +126,7 @@
                 const eai = $('input[name="eai"]').val();
 
                 if (!email || !password || !user_type) {
-                    alert('Please fill in all fields');
+                    Toast.warning('Required Fields', 'Please fill in all fields');
                     return;
                 }
 

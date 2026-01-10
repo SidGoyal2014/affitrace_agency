@@ -91,8 +91,9 @@ include $pathPrefix . '/includes/head.php';
             if (!confirm('Restore this offer?')) return;
             try {
                 await API.fetchWithAuth(`admin/offer/restore/${id}`, { method: 'POST' });
+                Toast.success('Restored', 'Offer has been restored');
                 location.reload();
-            } catch (e) { alert('Failed to restore'); }
+            } catch (e) { Toast.error('Restore Failed', 'Failed to restore the offer'); }
         }
     </script>
 </body>
