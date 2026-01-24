@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice {{invoice_number}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #4e73df;
+            padding-bottom: 20px;
+        }
+
+        .company-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4e73df;
+        }
+
+        .invoice-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            text-align: right;
+        }
+
+        .invoice-number {
+            font-size: 14px;
+            color: #666;
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        .details-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+
+        .bill-to,
+        .invoice-info {
+            width: 48%;
+        }
+
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #888;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .advertiser-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .info-label {
+            color: #666;
+        }
+
+        .info-value {
+            font-weight: 600;
+        }
+
+        .description-section {
+            background: #f8f9fc;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .description-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .description-text {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .amount-section {
+            background: #4e73df;
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .amount-label {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .amount-value {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="invoice-container">
+        <div class="header">
+            <div>
+                <div class="company-name">Affitrace</div>
+            </div>
+            <div>
+                <div class="invoice-title">INVOICE</div>
+                <div class="invoice-number">{{invoice_number}}</div>
+            </div>
+        </div>
+
+        <div class="details-section">
+            <div class="bill-to">
+                <div class="section-title">Bill To</div>
+                <div class="advertiser-name">{{advertiser_name}}</div>
+            </div>
+            <div class="invoice-info">
+                <div class="info-row">
+                    <span class="info-label">Invoice Date:</span>
+                    <span class="info-value">{{invoice_date}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Due Date:</span>
+                    <span class="info-value">{{due_date}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="description-section">
+            <div class="description-title">Description</div>
+            <div class="description-text">{{title}}</div>
+        </div>
+
+        <div class="amount-section">
+            <div class="amount-label">Total Amount Due</div>
+            <div class="amount-value">${{total_amount}}</div>
+        </div>
+
+        <div class="footer">
+            <p>Thank you for your business!</p>
+            <p>Generated by Affitrace Invoice System</p>
+        </div>
+    </div>
+</body>
+
+</html>
