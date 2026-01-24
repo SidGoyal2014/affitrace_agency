@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Profile</title>
+
+    <!-- Custom fonts for this template-->
+    <link href="assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="assets/css/sb-admin-2.css" rel="stylesheet">
+    <link href="assets/css/dropdown.css" rel="stylesheet">
+    <link href="assets/css/arrow.css" rel="stylesheet">
+    <link href="assets/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+
+    <link href="assets/css/tab.css" rel="stylesheet">
+    <link href="assets/css/custom.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <!-- Sidebar - Brand -->
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="dashboard.html">
+                <div class="sidebar-brand-icon rotate-n-15">
+                    <i class="fab fa-hive"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">Admin</div>
+            </a>
+
+            <!-- Nav Item - Dashboard -->
+            <li class="nav-item">
+                <a class="nav-link" href="dashboard.html">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span></a>
+            </li>
+
+            <!-- Nav Item - Pages Collapse Menu -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseOffers"
+                    aria-expanded="true" aria-controls="collapseTwo">
+                    <i class="fa fa-bullhorn"></i>
+                    <span>Offers</span>
+                </a>
+                <div id="collapseOffers" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <a class="collapse-item" href="offers/create.html">Create Offer</a>
+                        <a class="collapse-item" href="offers/approved.html">Offers - Approved</a>
+                        <a class="collapse-item" href="offers/pending.html">Offers - Pending</a>
+                        <a class="collapse-item" href="offers/ended.html">Offers - Ended</a>
+                        <a class="collapse-item" href="offers/trash.html">Trash</a>
+                    </div>
+                </div>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRepLogs"
+                    aria-expanded="true" aria-controls="collapseTwo">
+                    <i class="fa fa-briefcase"></i>
+                    <span>Affiliates</span>
+                </a>
+                <div id="collapseAff" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Custom Components:</h6>
+                        <a class="collapse-item" href="affiliates/create.html">Create Affiliate</a>
+                        <a class="collapse-item" href="affiliates/list.html">Affiliates</a>
+                    </div>
+                </div>
+            </li>
+
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAds"
+                    aria-expanded="true" aria-controls="collapseTwo">
+                    <i class="fa fa-handshake"></i>
+                    <span>Advertisers</span>
+                </a>
+                <div id="collapseAds" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Custom Components:</h6>
+                        <a class="collapse-item" href="#">Create Advertiser</a>
+                        <a class="collapse-item" href="advertisers/list.html">Advertisers</a>
+                    </div>
+                </div>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMMP"
+                    aria-expanded="true" aria-controls="collapseTwo">
+                    <i class="fa fa-handshake"></i>
+                    <span>Mobile Marketing</span>
+                </a>
+                <div id="collapseMMP" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Custom Components:</h6>
+                        <a class="collapse-item" href="mmp/platforms.html">List platforms</a>
+
+                    </div>
+                </div>
+            </li>
+
+
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTools"
+                    aria-expanded="true" aria-controls="collapseTwo">
+                    <i class="fa fa-fw fa-cog"></i>
+                    <span>Payments</span>
+                </a>
+                <div id="collapseTools" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Custom Components:</h6>
+                        <a class="collapse-item" href="payments/plans.html">Plan details</a>
+                        <a class="collapse-item" href="payments/subscriptions.html">Subscriptions</a>
+                        <a class="collapse-item" href="payments/transactions.html">Transactions</a>
+                    </div>
+                </div>
+            </li>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider d-none d-md-block">
+            <!-- Sidebar Toggler (Sidebar) -->
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+        </ul>
+        <!-- End of Sidebar -->
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4-new static-top shadow">
+                    <h4 class="h4 mb-0 text-gray-800"><strong>Profile</strong>
+                    </h4>
+
+                    <!-- Topbar Navbar -->
+                    <ul class="navbar-nav ml-auto">
+
+                        <!-- Nav Item - Search Dropdown (Visible Only XS) -->
+                        <div class="topbar-divider d-none d-sm-block"></div>
+
+                        <!-- Nav Item - User Information -->
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Admin</span>
+                                <img class="img-profile rounded-circle" src="assets/img/undraw_profile.svg">
+                            </a>
+                            <!-- Dropdown - User Information -->
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                                aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="profile.html">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Profile
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" onclick="API.logout(); return false;">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </li>
+
+                    </ul>
+
+                </nav>
+                <!-- End of Topbar -->
+
+                <!-- Begin Page Content -->
+                <div class="container-fluid">
+
+                    <div class="card-body">
+
+                        <form name="frmCreatePlan" method="post" action="#">
+
+                            <div class="form-group row">
+                                <div class="col-sm-6 mb-3 mb-sm-0">
+                                    <div class="form-group row">
+                                        <div class="col-sm-12 mb-6 mb-sm-0">
+                                            <label for><strong>Name:</strong></label>
+                                            <input type="text" name="name" value="Admin User"
+                                                class="form-control form-control-user">
+                                        </div>
+
+                                        <div class="col-sm-12 mb-6 mb-sm-0">
+                                            <br>
+                                            <label><strong>Phone:</strong></label>
+                                            <input type="text" name="phone" value="1234567890"
+                                                class="form-control form-control-user">
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 mb-3 mb-sm-0">
+                                    <div class="form-group row">
+                                        <div class="col-sm-12 mb-6 mb-sm-0">
+                                            <label><strong>Email:</strong></label>
+                                            <input type="text" name="email" value="admin@example.com"
+                                                class="form-control form-control-user">
+                                        </div>
+                                        <div class="col-sm-12 mb-6 mb-sm-0">
+                                            <br>
+                                            <label><strong>Password:</strong></label>
+                                            <input type="text" name="password" value=""
+                                                class="form-control form-control-user">
+                                        </div>
+                                        <div class="col-sm-12 mb-6 mb-sm-0">
+                                            <br>
+                                            <input type="submit" value="Submit" class="btn btn-primary">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+                <!-- /.container-fluid -->
+
+            </div>
+            <!-- End of Main Content -->
+
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright &copy; Affitrace 2023</span>
+                    </div>
+                </div>
+            </footer>
+            <!-- End of Footer -->
+
+        </div>
+        <!-- End of Content Wrapper -->
+
+    </div>
+    <!-- End of Page Wrapper -->
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="assets/vendor/jquery/jquery.min.js"></script>
+    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="assets/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script src="assets/js/sb-admin-2.min.js"></script>
+    <script src="assets/js/api.js"></script>
+
+    <script>
+        $(document).ready(async function () {
+            // Check auth
+            if (!API.isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Navbar User Info
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                $('#userDropdown span').text(user.name);
+            }
+
+            // Fetch Profile Data
+            try {
+                const data = await API.fetchWithAuth('admin/profile');
+                if (data.user) {
+                    $('input[name="name"]').val(data.user.name);
+                    $('input[name="email"]').val(data.user.email);
+                    $('input[name="phone"]').val(data.user.phone);
+                    // Password left empty
+                }
+            } catch (error) {
+                console.error("Profile Load Error:", error);
+                alert("Failed to load profile data.");
+            }
+
+            // Handle Profile Update
+            $('form[name="frmCreatePlan"]').on('submit', async function (e) {
+                e.preventDefault();
+                $('.alert').remove(); // Clear previous alerts
+
+                const formData = {
+                    name: $('input[name="name"]').val(),
+                    email: $('input[name="email"]').val(),
+                    phone: $('input[name="phone"]').val(),
+                    password: $('input[name="password"]').val()
+                };
+
+                try {
+                    const response = await API.fetchWithAuth('admin/update_profile', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.status === 1) {
+                        const alertHtml = `<div class="alert alert-success alert-dismissible fade show" role="alert">
+                            ${response.msg}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>`;
+                        $('.card-body').prepend(alertHtml);
+
+                        // Update local storage user name if changed
+                        if (user) {
+                            user.name = formData.name;
+                            localStorage.setItem('user', JSON.stringify(user));
+                            $('#userDropdown span').text(user.name);
+                        }
+
+                    } else {
+                        let errorMsg = 'Update failed';
+                        if (response.error) {
+                            if (typeof response.error === 'object') {
+                                errorMsg = Object.values(response.error).join('<br>');
+                            } else {
+                                errorMsg = response.error;
+                            }
+                        }
+                        throw new Error(errorMsg);
+                    }
+
+                } catch (error) {
+                    const alertHtml = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            ${error.message}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>`;
+                    $('.card-body').prepend(alertHtml);
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,83 @@
+<?php
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Cache;
+use App\Http\Traits\MultiTenantResolver;
+
+class ApiSetTenantConnection
+{
+    use MultiTenantResolver;
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @return mixed
+     */
+    public function handle(Request $request, Closure $next)
+    {
+        // 1. Get Agency ID using the 3-Strategy Resolver
+        $agencyId = $this->resolve_agency_username($request);
+
+        if (!$agencyId) {
+            return response()->json(['error' => 'Agency identity not found. Check hostname or aff_click_id.'], 400);
+        }
+
+        // 2. Find the Tenant in Main DB (with caching for performance)
+        // Cache tenant lookup for 1 hour to reduce DB queries
+        try {
+            $tenantData = Cache::remember("tenant:{$agencyId}", 3600, function () use ($agencyId) {
+                // Optimization: Agency Name IS the Tenant DB Name.
+                // We skip looking up the user and tenants table.
+                return (object) ['database_name' => $agencyId];
+            });
+
+            if (!$tenantData) {
+                return response()->json(['error' => 'Agency not found: ' . $agencyId], 404);
+            }
+
+            // 3. Configure the Tenant Connection
+            // We use the env variables for DB user/pass as they seem shared in this setup
+            // or we could use specific ones if stored in tenant record.
+            // Based on TenantSwitchingMiddleware logic:
+
+            $dbName = $tenantData->database_name;
+            // IMPORTANT: Use config() instead of env() because env() returns null 
+            // when config is cached in production (php artisan config:cache)
+            $dbHost = config('database.connections.pgsql.host');
+            $dbPort = config('database.connections.pgsql.port');
+            $dbUser = config('database.connections.pgsql.username');
+            $dbPassword = config('database.connections.pgsql.password');
+
+            Config::set('database.connections.tenant_db_con_runtime', [
+                'driver' => 'pgsql',
+                'host' => $dbHost,
+                'port' => $dbPort,
+                'database' => $dbName,
+                'username' => $dbUser,
+                'password' => $dbPassword,
+                'charset' => 'utf8',
+                'prefix' => '',
+                'prefix_indexes' => true,
+                'search_path' => 'public',
+                'sslmode' => 'disable',
+            ]);
+
+            Config::set('database.default', 'tenant_db_con_runtime');
+            Config::set('auth.providers.users.connection', 'tenant_db_con_runtime');
+
+            DB::purge('tenant_db_con_runtime');
+            DB::reconnect('tenant_db_con_runtime');
+            DB::setDefaultConnection('tenant_db_con_runtime');
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to connect to tenant database: ' . $e->getMessage()], 500);
+        }
+
+        return $next($request);
+    }
+}
