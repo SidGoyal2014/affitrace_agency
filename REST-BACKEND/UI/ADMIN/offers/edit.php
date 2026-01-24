@@ -488,7 +488,7 @@ include $pathPrefix . '/includes/head.php';
                 return;
             }
             if (!offerId) {
-                alert("No offer ID specified");
+                Toast.error('Error', 'No offer ID specified');
                 window.location.href = 'approved.php';
                 return;
             }
@@ -516,6 +516,22 @@ include $pathPrefix . '/includes/head.php';
             // Event Listeners for Cascading
             $('select[name="target_country"]').on('change', function () {
                 populateStateDropdown($(this).val());
+            });
+
+            // Tab Persistence
+            // 1. Check if hash exists and switch to that tab
+            const hash = window.location.hash;
+            if (hash) {
+                $('.nav-tabs a[href="' + hash + '"]').tab('show');
+            }
+
+            // 2. Update hash on tab switch (use replaceState to avoid history pollution/jumping)
+            $('.nav-tabs a').on('shown.bs.tab', function (e) {
+                if (history.replaceState) {
+                    history.replaceState(null, null, e.target.hash);
+                } else {
+                    window.location.hash = e.target.hash;
+                }
             });
 
 
@@ -612,7 +628,7 @@ include $pathPrefix . '/includes/head.php';
 
             } catch (error) {
                 console.error("Load Error:", error);
-                alert("Failed to load offer data: " + error.message);
+                Toast.error('Load Failed', 'Failed to load offer data: ' + error.message);
             }
         }
 
@@ -746,8 +762,12 @@ include $pathPrefix . '/includes/head.php';
             const copyText = document.getElementById("pixelCodeDisplay");
             copyText.select();
             copyText.setSelectionRange(0, 99999);
-            document.execCommand("copy");
-            alert("Pixel code copied to clipboard!");
+            try {
+                document.execCommand("copy");
+                Toast.success('Copied!', 'Pixel code copied to clipboard');
+            } catch (err) {
+                Toast.error('Copy Failed', 'Unable to copy to clipboard');
+            }
         }
 
         // Form Submissions
@@ -843,18 +863,24 @@ include $pathPrefix . '/includes/head.php';
         async function assignOffer(oid, aid) {
             try {
                 const res = await API.fetchWithAuth(`admin/offer/assign/${oid}/${aid}`);
-                if (res.status === 1) location.reload();
-                else alert(res.error || 'Failed');
-            } catch (e) { alert(e.message); }
+                if (res.status === 1) {
+                    Toast.success('Success', 'Affiliate assigned successfully');
+                    await loadOfferData();
+                }
+                else Toast.error('Assignment Failed', res.error || 'Failed to assign affiliate');
+            } catch (e) { Toast.error('Error', e.message); }
         }
 
         async function unassignOffer(oid, aid) {
             if (!confirm("Unassign this affiliate?")) return;
             try {
                 const res = await API.fetchWithAuth(`admin/offer/unassign/${oid}/${aid}`);
-                if (res.status === 1) location.reload();
-                else alert(res.error || 'Failed');
-            } catch (e) { alert(e.message); }
+                if (res.status === 1) {
+                    Toast.success('Success', 'Affiliate unassigned successfully');
+                    await loadOfferData();
+                }
+                else Toast.error('Unassign Failed', res.error || 'Failed to unassign affiliate');
+            } catch (e) { Toast.error('Error', e.message); }
         }
 
         function showTrackingUrl(url) {
@@ -894,9 +920,9 @@ include $pathPrefix . '/includes/head.php';
             // Navigator clipboard api needs a secure context (https)
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text).then(function () {
-                    alert('Copied to clipboard!');
+                    Toast.success('Copied!', 'Tracking URL copied to clipboard');
                 }, function (err) {
-                    alert('Could not copy text: ', err);
+                    Toast.error('Copy Failed', 'Unable to copy to clipboard');
                 });
             } else {
                 // Fallback for non-secure context (http)
@@ -908,10 +934,13 @@ include $pathPrefix . '/includes/head.php';
                 textArea.select();
                 try {
                     const successful = document.execCommand('copy');
-                    const msg = successful ? 'successful' : 'unsuccessful';
-                    alert('Copied to clipboard!');
+                    if (successful) {
+                        Toast.success('Copied!', 'Tracking URL copied to clipboard');
+                    } else {
+                        Toast.error('Copy Failed', 'Unable to copy to clipboard');
+                    }
                 } catch (err) {
-                    alert('Fallback: Oops, unable to copy', err);
+                    Toast.error('Copy Failed', 'Unable to copy to clipboard');
                 }
                 document.body.removeChild(textArea);
             }
@@ -927,21 +956,27 @@ include $pathPrefix . '/includes/head.php';
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ offer_id: offerId, event_name: name, event_token: token })
-            }).then(res => {
-                if (res.status === 1) location.reload();
-                else alert(res.error || 'Failed');
+            }).then(async res => {
+                if (res.status === 1) {
+                    Toast.success('Success', 'Event created successfully');
+                    await loadOfferData();
+                }
+                else Toast.error('Save Failed', res.error || 'Failed to create event');
             });
         }
 
         function editEvent(eid) {
-            alert("Edit event: " + eid);
+            Toast.info('Coming Soon', 'Edit event feature is under development');
         }
 
         function deleteEvent(eid) {
             if (!confirm("Delete this event?")) return;
-            API.fetchWithAuth(`admin/offer/remove-event/${offerId}/${eid}`).then(res => {
-                if (res.status === 1) location.reload();
-                else alert(res.error || 'Failed');
+            API.fetchWithAuth(`admin/offer/remove-event/${offerId}/${eid}`).then(async res => {
+                if (res.status === 1) {
+                    Toast.success('Success', 'Event deleted successfully');
+                    await loadOfferData();
+                }
+                else Toast.error('Delete Failed', res.error || 'Failed to delete event');
             });
         }
     </script>

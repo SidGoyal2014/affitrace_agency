@@ -36,4 +36,7 @@
     <!-- Modern Theme Overrides -->
     <link href="<?php echo $pathPrefix; ?>/assets/css/modern-theme.css" rel="stylesheet">
 
+    <!-- Toast Notifications -->
+    <link href="<?php echo $pathPrefix; ?>/assets/css/toast.css" rel="stylesheet">
+
 </head>

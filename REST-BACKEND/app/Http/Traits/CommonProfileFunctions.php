@@ -147,6 +147,11 @@ trait CommonProfileFunctions
 			$user->country = $request->country;
 			$user->zipcode = $request->zipcode;
 
+			// Allow Admin to update status
+			if ($request->user()->user_type === \App\Enums\UserType::Admin->value && $request->has('status')) {
+				$user->status = \App\Enums\UserStatus::tryFrom($request->status) ?? $user->status;
+			}
+
 			$user->save();
 
 			//$aud = AffiliateUserDetail::where('user_id', Auth::id())->first();

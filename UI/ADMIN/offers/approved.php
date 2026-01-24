@@ -125,13 +125,13 @@ include $pathPrefix . '/includes/head.php';
                 });
 
                 if (response.status === 1) {
-                    alert('Offer deleted');
+                    Toast.success('Deleted', 'Offer has been deleted');
                     location.reload();
                 } else {
-                    alert(response.error || 'Delete failed');
+                    Toast.error('Delete Failed', response.error || 'Failed to delete offer');
                 }
             } catch (error) {
-                alert("Error: " + error.message);
+                Toast.error('Error', error.message);
             }
         }
     </script>

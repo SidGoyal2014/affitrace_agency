@@ -176,7 +176,7 @@ include $pathPrefix . '/includes/head.php';
                     throw new Error(response.message || "Failed to get download URL");
                 }
             } catch (err) {
-                alert("Download Error: " + err.message);
+                Toast.error('Download Error', err.message);
             }
         }
     </script>

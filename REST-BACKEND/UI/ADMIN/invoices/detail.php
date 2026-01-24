@@ -138,7 +138,7 @@ include $pathPrefix . '/includes/head.php';
             const invoiceId = urlParams.get('id');
 
             if (!invoiceId) {
-                alert("Invalid Invoice ID");
+                Toast.error('Error', 'Invalid Invoice ID');
                 window.location.href = 'index.php';
                 return;
             }
@@ -160,7 +160,7 @@ include $pathPrefix . '/includes/head.php';
                         throw new Error(response.message || 'Error sending invoice');
                     }
                 } catch (err) {
-                    alert('Error: ' + err.message);
+                    Toast.error('Send Failed', err.message);
                     $('#confirmSendBtn').prop('disabled', false).html('<i class="fas fa-paper-plane mr-2"></i> Send Invoice');
                 }
             });
@@ -180,7 +180,7 @@ include $pathPrefix . '/includes/head.php';
                         throw new Error(response.message || 'Error marking paid');
                     }
                 } catch (err) {
-                    alert('Error: ' + err.message);
+                    Toast.error('Payment Failed', err.message);
                     $('#confirmPayBtn').prop('disabled', false).html('<i class="fas fa-check-circle mr-2"></i> Mark as Paid');
                 }
             });
@@ -195,7 +195,7 @@ include $pathPrefix . '/includes/head.php';
                         window.location.href = 'index.php';
                     }
                 } catch (err) {
-                    alert("Delete Failed: " + err.message);
+                    Toast.error('Delete Failed', err.message);
                 }
             });
 
@@ -211,7 +211,7 @@ include $pathPrefix . '/includes/head.php';
                         throw new Error(response.message || "Failed to get download URL");
                     }
                 } catch (err) {
-                    alert("Download Error: " + err.message);
+                    Toast.error('Download Error', err.message);
                 }
             };
 

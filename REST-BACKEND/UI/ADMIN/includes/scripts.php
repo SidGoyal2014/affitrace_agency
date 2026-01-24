@@ -16,3 +16,6 @@
 
 <!-- API Integration -->
 <script src="<?php echo $pathPrefix; ?>/assets/js/api.js"></script>
+
+<!-- Toast Notifications -->
+<script src="<?php echo $pathPrefix; ?>/assets/js/toast.js"></script>

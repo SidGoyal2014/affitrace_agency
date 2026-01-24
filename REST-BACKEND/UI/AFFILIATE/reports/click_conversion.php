@@ -134,7 +134,7 @@ include $pathPrefix . '/includes/head.php';
 
                 } catch (error) {
                     console.error('Failed to load report:', error);
-                    alert('Failed to load data. Please try again.');
+                    Toast.error('Load Failed', 'Failed to load data. Please try again.');
                 }
             }
 

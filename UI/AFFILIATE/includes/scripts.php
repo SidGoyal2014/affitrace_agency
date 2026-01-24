@@ -11,6 +11,9 @@
 <!-- API Integration -->
 <script src="<?php echo $pathPrefix; ?>/assets/js/api.js"></script>
 
+<!-- Toast Notifications -->
+<script src="<?php echo $pathPrefix; ?>/assets/js/toast.js"></script>
+
 <script>
     // Check auth for affiliate pages
     $(document).ready(function () {
@@ -21,8 +24,8 @@
         } else {
             const user = JSON.parse(localStorage.getItem('user'));
             if (user && user.user_type !== 'affiliate') {
-                alert('Unauthorized access');
-                API.logout();
+                Toast.error('Unauthorized', 'You do not have access to this area');
+                setTimeout(() => API.logout(), 2000);
             }
             if (user) {
                 $('.user-name').text(user.name);
