@@ -25,191 +25,129 @@ include $pathPrefix . '/includes/head.php';
                 </a>
             </div>
 
-            <!-- Tab Navigation -->
-            <ul class="nav mb-4 sticky-top bg-light pt-2 pl-3 pb-2 custom-scroll-nav" id="offerTabs"
-                style="top: 60px; z-index: 1000; box-shadow: 0 4px 6px -6px #222; border-bottom: 2px solid #ddd;">
-                <style>
-                    .offer-sections .offer-section {
-                        display: block !important;
-                        opacity: 1 !important;
-                        visibility: visible !important;
-                        min-height: 200px;
-                        margin-bottom: 3rem !important;
-                    }
-
-                    .custom-scroll-nav .nav-link {
-                        color: #495057;
-                        border-radius: 4px;
-                        margin-right: 5px;
-                    }
-
-                    .custom-scroll-nav .nav-link.active {
-                        background-color: #4e73df;
-                        color: #fff;
-                    }
-                </style>
+            <!-- Scroll Navigation -->
+            <ul class="offer-scroll-nav" id="offerTabs">
                 <li class="nav-item">
                     <a class="nav-link active" href="#tabGeneral">
-                        <i class="fas fa-info-circle mr-2"></i>General
+                        <i class="fas fa-info-circle"></i> General
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#tabTargeting">
-                        <i class="fas fa-crosshairs mr-2"></i>Targeting
+                        <i class="fas fa-crosshairs"></i> Targeting
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#tabAffiliates">
-                        <i class="fas fa-users mr-2"></i>Affiliates
+                        <i class="fas fa-users"></i> Affiliates
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#tabEvents">
-                        <i class="fas fa-bullseye mr-2"></i>Events/Goals
+                        <i class="fas fa-bullseye"></i> Events/Goals
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#tabMMP">
-                        <i class="fas fa-share-alt mr-2"></i>MMP Config
+                        <i class="fas fa-share-alt"></i> MMP Config
                     </a>
                 </li>
             </ul>
 
             <div class="offer-sections">
-                <!-- General Tab -->
+
+                <!-- ============ GENERAL TAB ============ -->
                 <div class="offer-section mb-5 pt-3" id="tabGeneral">
                     <div class="card-modern">
                         <div class="card-header">
-                            <h6 class="m-0 font-weight-bold">Offer Details</h6>
+                            <h6 class="m-0 font-weight-bold">
+                                <i class="fas fa-edit mr-2" style="color: var(--primary-main);"></i>Offer Details
+                            </h6>
                         </div>
                         <div class="card-body">
                             <div id="general-alert"></div>
                             <form id="frmOffer">
                                 <input type="hidden" name="offer_id" id="offer_id">
 
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Offer Name</label>
-                                            <input type="text" name="offer_name" class="form-control">
+                                <!-- Basic Info -->
+                                <div class="offer-form-section section-hero">
+                                    <div class="section-title">
+                                        <div class="section-icon"><i class="fas fa-info-circle"></i></div>
+                                        <h6>Basic Information</h6>
+                                        <span class="section-badge"><i class="fas fa-pencil-alt"></i> Core
+                                            details</span>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Offer Name</label>
+                                                <input type="text" name="offer_name" class="form-control"
+                                                    placeholder="Enter offer name">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Advertiser</label>
+                                                <select name="advertiser_id" class="form-control"></select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Category</label>
+                                                <select name="category_id" class="form-control"></select>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>Advertiser</label>
-                                            <select name="advertiser_id" class="form-control"></select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>Category</label>
-                                            <select name="category_id" class="form-control"></select>
+
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label>Offer URL</label>
+                                                <textarea name="offer_url" class="form-control" rows="2"
+                                                    placeholder="https://example.com/offer?click_id={tid}"></textarea>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
+                                <hr class="form-divider">
 
+                                <!-- Pricing -->
+                                <div class="offer-form-section">
+                                    <div class="section-title">
+                                        <div class="section-icon"><i class="fas fa-dollar-sign"></i></div>
+                                        <h6>Pricing Model</h6>
+                                    </div>
 
-                                <div class="form-group">
-                                    <label>Offer URL</label>
-                                    <textarea name="offer_url" class="form-control" rows="2"></textarea>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>Ad Model</label>
-                                            <select name="ad_model" class="form-control"></select>
+                                    <div class="field-group">
+                                        <div class="field-group-label">
+                                            <i class="fas fa-chart-line"></i> Revenue & Payout
                                         </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>Revenue (Ad Pricing)</label>
-                                            <input type="number" name="ad_pricing" class="form-control" step="0.01">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>Aff Model</label>
-                                            <select name="aff_model" class="form-control"></select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>Payout (Aff Pricing)</label>
-                                            <input type="number" name="aff_pricing" class="form-control" step="0.01">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>Currency</label>
-                                            <select name="currency" class="form-control"></select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>Status</label>
-                                            <select name="offer_status" class="form-control">
-                                                <option value="approve">Approved</option>
-                                                <option value="pending">Pending</option>
-                                                <option value="ended">Ended</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>Start Date</label>
-                                            <input type="datetime-local" name="campaign_start_date"
-                                                class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>End Date</label>
-                                            <input type="datetime-local" name="campaign_end_date" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="card bg-light mb-3">
-                                            <div class="card-body py-3">
-                                                <div class="row align-items-center">
-                                                    <div class="col-md-4">
-                                                        <div class="form-group mb-0">
-                                                            <label class="font-weight-bold">Conversion Tracking
-                                                                Method</label>
-                                                            <select name="conversion_tracking_method"
-                                                                class="form-control"
-                                                                onchange="updatePixelCodeDisplay()">
-                                                                <option value="s2s">Server Postback (S2S)</option>
-                                                                <option value="image_pixel">Image Pixel</option>
-                                                                <option value="iframe_pixel">Iframe Pixel</option>
-                                                                <option value="script_pixel">Javascript Pixel</option>
-                                                            </select>
-                                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="pricing-pair">
+                                                    <div class="form-group">
+                                                        <label>Ad Model</label>
+                                                        <select name="ad_model" class="form-control"></select>
                                                     </div>
-                                                    <div class="col-md-8">
-                                                        <div class="form-group mb-0" id="pixelCodeGroup"
-                                                            style="display:none;">
-                                                            <label>Tracking Code (For Advertiser)</label>
-                                                            <div class="input-group">
-                                                                <input type="text" id="pixelCodeDisplay"
-                                                                    class="form-control" readonly>
-                                                                <div class="input-group-append">
-                                                                    <button class="btn btn-outline-secondary"
-                                                                        type="button"
-                                                                        onclick="copyPixelCode()">Copy</button>
-                                                                </div>
-                                                            </div>
-                                                            <small class="text-muted">Place on Thank You page. Replace
-                                                                <code>CLICK_ID_MACRO</code> with the advertiser's macro
-                                                                for our Click ID.</small>
-                                                        </div>
+                                                    <div class="form-group">
+                                                        <label>Revenue</label>
+                                                        <input type="number" name="ad_pricing" class="form-control"
+                                                            step="0.01">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="pricing-pair">
+                                                    <div class="form-group">
+                                                        <label>Aff Model</label>
+                                                        <select name="aff_model" class="form-control"></select>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>Payout</label>
+                                                        <input type="number" name="aff_pricing" class="form-control"
+                                                            step="0.01">
                                                     </div>
                                                 </div>
                                             </div>
@@ -217,18 +155,116 @@ include $pathPrefix . '/includes/head.php';
                                     </div>
                                 </div>
 
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label>Description</label>
-                                            <textarea name="offer_desc" class="form-control" rows="3"></textarea>
+                                <hr class="form-divider">
+
+                                <!-- Settings -->
+                                <div class="offer-form-section">
+                                    <div class="section-title">
+                                        <div class="section-icon"><i class="fas fa-cog"></i></div>
+                                        <h6>Settings & Schedule</h6>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Currency</label>
+                                                <select name="currency" class="form-control"></select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label>Status</label>
+                                                <select name="offer_status" class="form-control">
+                                                    <option value="approve">Approved</option>
+                                                    <option value="pending">Pending</option>
+                                                    <option value="ended">Ended</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label><i class="fas fa-play-circle mr-1 text-success"></i> Start
+                                                    Date</label>
+                                                <input type="datetime-local" name="campaign_start_date"
+                                                    class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label><i class="fas fa-stop-circle mr-1 text-danger"></i> End
+                                                    Date</label>
+                                                <input type="datetime-local" name="campaign_end_date"
+                                                    class="form-control">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="text-right">
+                                <hr class="form-divider">
+
+                                <!-- Conversion Tracking -->
+                                <div class="offer-form-section">
+                                    <div class="section-title">
+                                        <div class="section-icon"><i class="fas fa-exchange-alt"></i></div>
+                                        <h6>Conversion Tracking</h6>
+                                    </div>
+
+                                    <div class="tracking-config-card">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-0">
+                                                    <label class="font-weight-bold">Tracking Method</label>
+                                                    <select name="conversion_tracking_method" class="form-control"
+                                                        onchange="updatePixelCodeDisplay()">
+                                                        <option value="s2s">Server Postback (S2S)</option>
+                                                        <option value="image_pixel">Image Pixel</option>
+                                                        <option value="iframe_pixel">Iframe Pixel</option>
+                                                        <option value="script_pixel">Javascript Pixel</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="form-group mb-0" id="pixelCodeGroup" style="display:none;">
+                                                    <label>Tracking Code (For Advertiser)</label>
+                                                    <div class="input-group">
+                                                        <input type="text" id="pixelCodeDisplay" class="form-control"
+                                                            readonly>
+                                                        <div class="input-group-append">
+                                                            <button class="btn btn-outline-secondary" type="button"
+                                                                onclick="copyPixelCode()">Copy</button>
+                                                        </div>
+                                                    </div>
+                                                    <small class="text-muted">Place on Thank You page. Replace
+                                                        <code>CLICK_ID_MACRO</code> with the advertiser's macro
+                                                        for our Click ID.</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr class="form-divider">
+
+                                <!-- Description -->
+                                <div class="offer-form-section">
+                                    <div class="section-title">
+                                        <div class="section-icon"><i class="fas fa-align-left"></i></div>
+                                        <h6>Description</h6>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <textarea name="offer_desc" class="form-control" rows="3"
+                                                    placeholder="Enter a public description for this offer..."></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Submit -->
+                                <div class="form-submit-area">
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save mr-2"></i>Update Offer
+                                        <i class="fas fa-save"></i> Update Offer
                                     </button>
                                 </div>
                             </form>
@@ -236,12 +272,13 @@ include $pathPrefix . '/includes/head.php';
                     </div>
                 </div>
 
-                <!-- Targeting Tab -->
+                <!-- ============ TARGETING TAB ============ -->
                 <div class="offer-section mb-5 pt-3" id="tabTargeting">
                     <div class="card-modern">
                         <div class="card-header">
                             <h6 class="m-0 font-weight-bold">
-                                <i class="fas fa-shield-alt mr-2"></i>Tracking Filters
+                                <i class="fas fa-shield-alt mr-2" style="color: var(--primary-main);"></i>Tracking
+                                Filters
                             </h6>
                             <small class="text-muted">Block or allow traffic based on location, device, and
                                 browser</small>
@@ -250,40 +287,42 @@ include $pathPrefix . '/includes/head.php';
                             <div id="targeting-alert"></div>
                             <form id="frmTargeting">
 
+                                <!-- Location group -->
+                                <div class="targeting-group-title">
+                                    <i class="fas fa-map-marker-alt mr-1"></i> Location Filters
+                                </div>
+
                                 <!-- Country -->
-                                <div class="row mb-4">
-                                    <div class="col-md-2">
-                                        <label class="font-weight-bold"><i class="fas fa-globe mr-2"></i>Country</label>
+                                <div class="targeting-row">
+                                    <div class="targeting-label">
+                                        <i class="fas fa-globe"></i> Country
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="targeting-permission">
                                         <select name="country_permission" class="form-control">
                                             <option value="allow">Allow</option>
                                             <option value="block">Block</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="targeting-value">
                                         <select name="target_country" class="form-control select2-country"
                                             style="width: 100%;">
                                             <option value="">Global (All Countries)</option>
-                                            <!-- Populated by JS -->
                                         </select>
                                     </div>
                                 </div>
 
-
-
                                 <!-- State -->
-                                <div class="row mb-4">
-                                    <div class="col-md-2">
-                                        <label class="font-weight-bold"><i class="fas fa-map mr-2"></i>State</label>
+                                <div class="targeting-row">
+                                    <div class="targeting-label">
+                                        <i class="fas fa-map"></i> State
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="targeting-permission">
                                         <select name="state_permission" class="form-control">
                                             <option value="allow">Allow</option>
                                             <option value="block">Block</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="targeting-value">
                                         <select name="target_state" class="form-control select2-state"
                                             style="width: 100%;">
                                             <option value="">All States</option>
@@ -292,37 +331,39 @@ include $pathPrefix . '/includes/head.php';
                                 </div>
 
                                 <!-- City -->
-                                <div class="row mb-4">
-                                    <div class="col-md-2">
-                                        <label class="font-weight-bold"><i class="fas fa-city mr-2"></i>City</label>
+                                <div class="targeting-row">
+                                    <div class="targeting-label">
+                                        <i class="fas fa-city"></i> City
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="targeting-permission">
                                         <select name="city_permission" class="form-control">
                                             <option value="allow">Allow</option>
                                             <option value="block">Block</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="targeting-value">
                                         <input type="text" name="target_city" class="form-control"
                                             placeholder="e.g., New York, Los Angeles (comma separated)">
                                     </div>
                                 </div>
 
-                                <hr>
+                                <!-- Device/Browser group -->
+                                <div class="targeting-group-title">
+                                    <i class="fas fa-laptop mr-1"></i> Device & Browser Filters
+                                </div>
 
                                 <!-- Device -->
-                                <div class="row mb-4">
-                                    <div class="col-md-2">
-                                        <label class="font-weight-bold"><i
-                                                class="fas fa-mobile-alt mr-2"></i>Device</label>
+                                <div class="targeting-row">
+                                    <div class="targeting-label">
+                                        <i class="fas fa-mobile-alt"></i> Device
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="targeting-permission">
                                         <select name="device_permission" class="form-control">
                                             <option value="allow">Allow</option>
                                             <option value="block">Block</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="targeting-value">
                                         <select name="target_device" class="form-control">
                                             <option value="">All Devices</option>
                                             <option value="iPhone">iPhone</option>
@@ -335,18 +376,17 @@ include $pathPrefix . '/includes/head.php';
                                 </div>
 
                                 <!-- Browser -->
-                                <div class="row mb-4">
-                                    <div class="col-md-2">
-                                        <label class="font-weight-bold"><i
-                                                class="fab fa-chrome mr-2"></i>Browser</label>
+                                <div class="targeting-row">
+                                    <div class="targeting-label">
+                                        <i class="fab fa-chrome"></i> Browser
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="targeting-permission">
                                         <select name="browser_permission" class="form-control">
                                             <option value="allow">Allow</option>
                                             <option value="block">Block</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="targeting-value">
                                         <select name="browser" class="form-control">
                                             <option value="">All Browsers</option>
                                             <option value="Chrome">Chrome</option>
@@ -358,9 +398,9 @@ include $pathPrefix . '/includes/head.php';
                                     </div>
                                 </div>
 
-                                <div class="text-right">
+                                <div class="form-submit-area">
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save mr-2"></i>Save Targeting
+                                        <i class="fas fa-save"></i> Save Targeting
                                     </button>
                                 </div>
                             </form>
@@ -368,14 +408,15 @@ include $pathPrefix . '/includes/head.php';
                     </div>
                 </div>
 
-                <!-- Affiliates Tab -->
+                <!-- ============ AFFILIATES TAB ============ -->
                 <div class="offer-section mb-5 pt-3" id="tabAffiliates">
                     <div class="row">
                         <div class="col-lg-5">
                             <div class="card-modern">
                                 <div class="card-header">
                                     <h6 class="m-0 font-weight-bold">
-                                        <i class="fas fa-user-plus mr-2"></i>Assign Affiliates
+                                        <i class="fas fa-user-plus mr-2" style="color: var(--primary-main);"></i>Assign
+                                        Affiliates
                                     </h6>
                                 </div>
                                 <div class="card-body p-0">
@@ -402,7 +443,7 @@ include $pathPrefix . '/includes/head.php';
                             <div class="card-modern">
                                 <div class="card-header">
                                     <h6 class="m-0 font-weight-bold">
-                                        <i class="fas fa-link mr-2"></i>Tracking URL
+                                        <i class="fas fa-link mr-2" style="color: var(--primary-main);"></i>Tracking URL
                                     </h6>
                                 </div>
                                 <div class="card-body">
@@ -420,11 +461,13 @@ include $pathPrefix . '/includes/head.php';
                     </div>
                 </div>
 
-                <!-- Events Tab -->
+                <!-- ============ EVENTS TAB ============ -->
                 <div class="offer-section mb-5 pt-3" id="tabEvents">
                     <div class="card-modern">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h6 class="m-0 font-weight-bold">Events / Goals</h6>
+                            <h6 class="m-0 font-weight-bold">
+                                <i class="fas fa-bullseye mr-2" style="color: var(--primary-main);"></i>Events / Goals
+                            </h6>
                             <button onclick="createNewOfferEvent()" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus mr-2"></i>Create Event
                             </button>
@@ -449,34 +492,48 @@ include $pathPrefix . '/includes/head.php';
                         </div>
                     </div>
                 </div>
-                <!-- MMP Tab -->
+
+                <!-- ============ MMP TAB ============ -->
                 <div class="offer-section mb-5 pt-3" id="tabMMP">
                     <div class="card-modern">
                         <div class="card-header">
-                            <h6 class="m-0 font-weight-bold">MMP Configuration</h6>
+                            <h6 class="m-0 font-weight-bold">
+                                <i class="fas fa-share-alt mr-2" style="color: var(--primary-main);"></i>MMP
+                                Configuration
+                            </h6>
                         </div>
                         <div class="card-body">
                             <div id="mmp-alert"></div>
                             <form id="frmMMP">
-                                <div class="form-group">
-                                    <label>MMP Platform</label>
-                                    <select name="mmp_id" id="mmp_id" class="form-control">
-                                        <option value="">Select Platform</option>
-                                    </select>
+                                <div class="offer-form-section">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>MMP Platform</label>
+                                                <select name="mmp_id" id="mmp_id" class="form-control">
+                                                    <option value="">Select Platform</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Attribution URL</label>
+                                        <textarea name="attribution_url" class="form-control" rows="3"
+                                            placeholder="Paste the attribution link from the MMP..."></textarea>
+                                        <small class="text-muted">This URL will be used as the destination (Attribution
+                                            Link) for this offer.</small>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label>Attribution URL</label>
-                                    <textarea name="attribution_url" class="form-control" rows="3"
-                                        placeholder="Paste the attribution link from the MMP..."></textarea>
-                                    <small class="text-muted">This URL will be used as the destination (Attribution
-                                        Link)
-                                        for this offer.</small>
+                                <div class="form-submit-area">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Save MMP Settings
+                                    </button>
                                 </div>
-                                <button type="submit" class="btn btn-primary">Save MMP Settings</button>
                             </form>
                         </div>
                     </div>
                 </div>
+
             </div>
 
         </div>
@@ -514,35 +571,29 @@ include $pathPrefix . '/includes/head.php';
                     theme: 'bootstrap4',
                     width: '100%',
                     allowClear: true,
-                    dropdownParent: $el.parent() // Fixes stacking/focus issues in Firefox
+                    dropdownParent: $el.parent()
                 };
 
-                // Set a sensible placeholder from the first empty-value option if present
                 const firstOpt = $el.find('option[value=""]');
                 if (firstOpt.length) {
                     opts.placeholder = firstOpt.text();
                 }
 
-                // Country dropdown: keep specific class-based config
                 if ($el.hasClass('select2-country')) {
                     opts.placeholder = "Select Countries (Leave empty for Global)";
                 }
 
-                // State dropdown: allow free-text tags
                 if ($el.hasClass('select2-state')) {
                     opts.tags = true;
                 }
 
                 $el.select2(opts);
 
-                // Firefox specific fix: Search box focus loss
+                // Firefox fix: search box focus
                 $el.on('select2:open', function () {
-                    // Small timeout ensures the DOM is rendered before focusing
                     setTimeout(function () {
                         const searchField = document.querySelector('.select2-container--open .select2-search__field');
-                        if (searchField) {
-                            searchField.focus();
-                        }
+                        if (searchField) searchField.focus();
                     }, 50);
                 });
             });
@@ -555,7 +606,7 @@ include $pathPrefix . '/includes/head.php';
             // ScrollSpy for Sections
             $(window).on('scroll', function () {
                 let current = '';
-                const scrollPos = $(window).scrollTop() + 160; // offset the sticky header
+                const scrollPos = $(window).scrollTop() + 160;
 
                 $('.offer-section').each(function () {
                     if (scrollPos >= $(this).offset().top) {
@@ -613,8 +664,6 @@ include $pathPrefix . '/includes/head.php';
                 $('input[name="campaign_start_date"]').val(offer.campaign_start_date);
                 $('input[name="campaign_end_date"]').val(offer.campaign_end_date);
                 $('textarea[name="offer_desc"]').val(offer.offer_desc);
-                $('textarea[name="private_note"]').val(offer.private_note);
-                $('textarea[name="offer_terms"]').val(offer.offer_terms);
                 $('select[name="offer_status"]').val(offer.offer_status);
                 $('select[name="conversion_tracking_method"]').val(offer.conversion_tracking_method || 's2s').trigger('change');
 
@@ -648,10 +697,6 @@ include $pathPrefix . '/includes/head.php';
 
                 // Pre-select values
                 if (offer.target_country) {
-                    // Try to match exact value first (single country)
-                    // If it contains commas (legacy data), just take the first one or clear it? 
-                    // User said "Only 1 country", so let's try to handle it gracefully.
-                    // If the stored value has commas, we might only be able to show one.
                     let val = offer.target_country;
                     if (val.includes(',')) {
                         val = val.split(',')[0].trim();
@@ -663,7 +708,6 @@ include $pathPrefix . '/includes/head.php';
                 $('select[name="state_permission"]').val(offer.state_permission || 'allow');
 
                 // Populate State and City
-                // Handle legacy comma-separated values by taking the first one
                 let savedState = offer.target_state ? offer.target_state.split(',')[0].trim() : '';
                 let savedCity = offer.target_city ? offer.target_city.split(',')[0].trim() : '';
 
@@ -711,7 +755,6 @@ include $pathPrefix . '/includes/head.php';
 
         function populateStateDropdown(countryCode, selectedState = null) {
             const stateSelect = $('select[name="target_state"]');
-            // Save current value if not provided (for simple refreshes)
             if (selectedState === null) selectedState = stateSelect.val();
 
             stateSelect.empty().append('<option value="">All States</option>');
@@ -805,7 +848,6 @@ include $pathPrefix . '/includes/head.php';
 
             group.show();
 
-            // Construct Pixel URL based on API Configuration
             const pixelUrl = `${API_BASE_URL}/pixel?aff_click_id=CLICK_ID_MACRO`;
 
             let code = '';
@@ -854,9 +896,7 @@ include $pathPrefix . '/includes/head.php';
                         campaign_start_date: $('input[name="campaign_start_date"]').val(),
                         campaign_end_date: $('input[name="campaign_end_date"]').val(),
                         offer_status: $('select[name="offer_status"]').val(),
-                        offer_desc: $('textarea[name="offer_desc"]').val(),
-                        private_note: $('textarea[name="private_note"]').val(),
-                        offer_terms: $('textarea[name="offer_terms"]').val()
+                        offer_desc: $('textarea[name="offer_desc"]').val()
                     })
                 });
                 $('#general-alert').html(`<div class="alert alert-${res.status === 1 ? 'success' : 'danger'}">${res.msg || res.error || 'Error'}</div>`);
@@ -957,10 +997,8 @@ include $pathPrefix . '/includes/head.php';
             }
             let finalUrl = currentBaseUrl;
 
-            // Append Agency ID from localStorage to ensure link works on localhost/single-domain
             const agencyId = localStorage.getItem('agency_id');
             if (agencyId && !finalUrl.includes('eai=')) {
-                // Check if URL already has query params
                 finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'eai=' + agencyId;
             }
 
@@ -979,7 +1017,6 @@ include $pathPrefix . '/includes/head.php';
         }
 
         function copyToClipboard(text) {
-            // Navigator clipboard api needs a secure context (https)
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text).then(function () {
                     Toast.success('Copied!', 'Tracking URL copied to clipboard');
@@ -987,10 +1024,9 @@ include $pathPrefix . '/includes/head.php';
                     Toast.error('Copy Failed', 'Unable to copy to clipboard');
                 });
             } else {
-                // Fallback for non-secure context (http)
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
-                textArea.style.position = "fixed";  // Avoid scrolling to bottom
+                textArea.style.position = "fixed";
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();

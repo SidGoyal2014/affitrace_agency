@@ -601,11 +601,11 @@ nav.navbar.navbar-expand.topbar {
 .form-control {
     border: 1px solid var(--border-default);
     border-radius: var(--radius-md);
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem;
     font-size: 0.9375rem;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
     width: 100%;
-    height: auto;
+    height: 46px;
 }
 
 .form-control:focus {
@@ -622,8 +622,13 @@ nav.navbar.navbar-expand.topbar {
 select.form-control {
     padding: 0.5rem 1rem;
     line-height: 1.5;
+    height: 46px;
+    min-height: 46px;
+}
+
+textarea.form-control {
     height: auto;
-    min-height: calc(1.5em + 1rem + 2px);
+    min-height: 46px;
 }
 
 label {
