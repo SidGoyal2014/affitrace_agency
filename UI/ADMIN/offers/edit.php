@@ -26,37 +26,58 @@ include $pathPrefix . '/includes/head.php';
             </div>
 
             <!-- Tab Navigation -->
-            <ul class="nav nav-tabs mb-4" id="offerTabs">
+            <ul class="nav mb-4 sticky-top bg-light pt-2 pl-3 pb-2 custom-scroll-nav" id="offerTabs"
+                style="top: 60px; z-index: 1000; box-shadow: 0 4px 6px -6px #222; border-bottom: 2px solid #ddd;">
+                <style>
+                    .offer-sections .offer-section {
+                        display: block !important;
+                        opacity: 1 !important;
+                        visibility: visible !important;
+                        min-height: 200px;
+                        margin-bottom: 3rem !important;
+                    }
+
+                    .custom-scroll-nav .nav-link {
+                        color: #495057;
+                        border-radius: 4px;
+                        margin-right: 5px;
+                    }
+
+                    .custom-scroll-nav .nav-link.active {
+                        background-color: #4e73df;
+                        color: #fff;
+                    }
+                </style>
                 <li class="nav-item">
-                    <a class="nav-link active" data-toggle="tab" href="#tabGeneral">
+                    <a class="nav-link active" href="#tabGeneral">
                         <i class="fas fa-info-circle mr-2"></i>General
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-toggle="tab" href="#tabTargeting">
+                    <a class="nav-link" href="#tabTargeting">
                         <i class="fas fa-crosshairs mr-2"></i>Targeting
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-toggle="tab" href="#tabAffiliates">
+                    <a class="nav-link" href="#tabAffiliates">
                         <i class="fas fa-users mr-2"></i>Affiliates
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-toggle="tab" href="#tabEvents">
+                    <a class="nav-link" href="#tabEvents">
                         <i class="fas fa-bullseye mr-2"></i>Events/Goals
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-toggle="tab" href="#tabMMP">
+                    <a class="nav-link" href="#tabMMP">
                         <i class="fas fa-share-alt mr-2"></i>MMP Config
                     </a>
                 </li>
             </ul>
 
-            <div class="tab-content">
+            <div class="offer-sections">
                 <!-- General Tab -->
-                <div class="tab-pane fade show active" id="tabGeneral">
+                <div class="offer-section mb-5 pt-3" id="tabGeneral">
                     <div class="card-modern">
                         <div class="card-header">
                             <h6 class="m-0 font-weight-bold">Offer Details</h6>
@@ -203,7 +224,7 @@ include $pathPrefix . '/includes/head.php';
                                             <textarea name="offer_desc" class="form-control" rows="3"></textarea>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <!-- <div class="col-md-4">
                                         <div class="form-group">
                                             <label>Private Note</label>
                                             <textarea name="private_note" class="form-control" rows="3"></textarea>
@@ -214,7 +235,7 @@ include $pathPrefix . '/includes/head.php';
                                             <label>Terms</label>
                                             <textarea name="offer_terms" class="form-control" rows="3"></textarea>
                                         </div>
-                                    </div>
+                                    </div> -->
                                 </div>
 
                                 <div class="text-right">
@@ -228,7 +249,7 @@ include $pathPrefix . '/includes/head.php';
                 </div>
 
                 <!-- Targeting Tab -->
-                <div class="tab-pane fade" id="tabTargeting">
+                <div class="offer-section mb-5 pt-3" id="tabTargeting">
                     <div class="card-modern">
                         <div class="card-header">
                             <h6 class="m-0 font-weight-bold">
@@ -360,7 +381,7 @@ include $pathPrefix . '/includes/head.php';
                 </div>
 
                 <!-- Affiliates Tab -->
-                <div class="tab-pane fade" id="tabAffiliates">
+                <div class="offer-section mb-5 pt-3" id="tabAffiliates">
                     <div class="row">
                         <div class="col-lg-5">
                             <div class="card-modern">
@@ -412,7 +433,7 @@ include $pathPrefix . '/includes/head.php';
                 </div>
 
                 <!-- Events Tab -->
-                <div class="tab-pane fade" id="tabEvents">
+                <div class="offer-section mb-5 pt-3" id="tabEvents">
                     <div class="card-modern">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h6 class="m-0 font-weight-bold">Events / Goals</h6>
@@ -441,7 +462,7 @@ include $pathPrefix . '/includes/head.php';
                     </div>
                 </div>
                 <!-- MMP Tab -->
-                <div class="tab-pane fade" id="tabMMP">
+                <div class="offer-section mb-5 pt-3" id="tabMMP">
                     <div class="card-modern">
                         <div class="card-header">
                             <h6 class="m-0 font-weight-bold">MMP Configuration</h6>
@@ -498,19 +519,44 @@ include $pathPrefix . '/includes/head.php';
 
             await loadOfferData();
 
-            // Initialize Select2 for country dropdown
-            $('.select2-country').select2({
-                placeholder: "Select Countries (Leave empty for Global)",
-                allowClear: true,
-                width: '100%',
-                theme: 'bootstrap4'
-            });
+            // Initialize Select2 for ALL dropdowns (searchable)
+            $('select.form-control').each(function () {
+                const $el = $(this);
+                const opts = {
+                    theme: 'bootstrap4',
+                    width: '100%',
+                    allowClear: true,
+                    dropdownParent: $el.parent() // Fixes stacking/focus issues in Firefox
+                };
 
-            // Initialize Select2 for State/City
-            $('.select2-state').select2({
-                theme: 'bootstrap4',
-                width: '100%',
-                tags: true
+                // Set a sensible placeholder from the first empty-value option if present
+                const firstOpt = $el.find('option[value=""]');
+                if (firstOpt.length) {
+                    opts.placeholder = firstOpt.text();
+                }
+
+                // Country dropdown: keep specific class-based config
+                if ($el.hasClass('select2-country')) {
+                    opts.placeholder = "Select Countries (Leave empty for Global)";
+                }
+
+                // State dropdown: allow free-text tags
+                if ($el.hasClass('select2-state')) {
+                    opts.tags = true;
+                }
+
+                $el.select2(opts);
+
+                // Firefox specific fix: Search box focus loss
+                $el.on('select2:open', function () {
+                    // Small timeout ensures the DOM is rendered before focusing
+                    setTimeout(function () {
+                        const searchField = document.querySelector('.select2-container--open .select2-search__field');
+                        if (searchField) {
+                            searchField.focus();
+                        }
+                    }, 50);
+                });
             });
 
             // Event Listeners for Cascading
@@ -518,21 +564,49 @@ include $pathPrefix . '/includes/head.php';
                 populateStateDropdown($(this).val());
             });
 
-            // Tab Persistence
-            // 1. Check if hash exists and switch to that tab
-            const hash = window.location.hash;
-            if (hash) {
-                $('.nav-tabs a[href="' + hash + '"]').tab('show');
-            }
+            // ScrollSpy for Sections
+            $(window).on('scroll', function () {
+                let current = '';
+                const scrollPos = $(window).scrollTop() + 160; // offset the sticky header
 
-            // 2. Update hash on tab switch (use replaceState to avoid history pollution/jumping)
-            $('.nav-tabs a').on('shown.bs.tab', function (e) {
-                if (history.replaceState) {
-                    history.replaceState(null, null, e.target.hash);
-                } else {
-                    window.location.hash = e.target.hash;
+                $('.offer-section').each(function () {
+                    if (scrollPos >= $(this).offset().top) {
+                        current = $(this).attr('id');
+                    }
+                });
+
+                if (current) {
+                    $('#offerTabs .nav-link').removeClass('active');
+                    $(`#offerTabs .nav-link[href="#${current}"]`).addClass('active');
                 }
             });
+
+            // Smooth scrolling for nav links
+            $('#offerTabs a').on('click', function (e) {
+                e.preventDefault();
+                const targetId = $(this).attr('href');
+                if ($(targetId).length) {
+                    const targetPosition = $(targetId).offset().top - 120;
+                    $('html, body').stop().animate({
+                        scrollTop: targetPosition
+                    }, 500, 'swing');
+
+                    if (history.replaceState) {
+                        history.replaceState(null, null, targetId);
+                    }
+                }
+            });
+
+            // Initial Scroll to Hash
+            const hash = window.location.hash;
+            if (hash && $(hash).length) {
+                setTimeout(() => {
+                    const targetPosition = $(hash).offset().top - 120;
+                    $('html, body').stop().animate({
+                        scrollTop: targetPosition
+                    }, 500, 'swing');
+                }, 500);
+            }
 
 
         });
