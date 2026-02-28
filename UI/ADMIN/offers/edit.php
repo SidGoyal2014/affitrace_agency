@@ -224,18 +224,6 @@ include $pathPrefix . '/includes/head.php';
                                             <textarea name="offer_desc" class="form-control" rows="3"></textarea>
                                         </div>
                                     </div>
-                                    <!-- <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label>Private Note</label>
-                                            <textarea name="private_note" class="form-control" rows="3"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label>Terms</label>
-                                            <textarea name="offer_terms" class="form-control" rows="3"></textarea>
-                                        </div>
-                                    </div> -->
                                 </div>
 
                                 <div class="text-right">

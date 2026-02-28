@@ -179,19 +179,6 @@ include $pathPrefix . '/includes/head.php';
 
                                 <hr class="my-4">
 
-                                <!-- Description -->
-                                <!-- <h6 class="text-muted mb-3">Additional Details</h6>
-                                <div class="form-group">
-                                    <label>Description</label>
-                                    <textarea name="offer_desc" class="form-control" rows="3"
-                                        placeholder="Public description visible to affiliates"></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label>Private Note</label>
-                                    <textarea name="private_note" class="form-control" rows="2"
-                                        placeholder="Internal notes (not visible to affiliates)"></textarea>
-                                </div> -->
-
                                 <div class="text-right mt-4">
                                     <button type="submit" class="btn btn-primary btn-lg">
                                         <i class="fas fa-save mr-2"></i> Create Offer
