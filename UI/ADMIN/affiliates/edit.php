@@ -83,6 +83,12 @@ include $pathPrefix . '/includes/head.php';
                             <span style='color:#f00;'></span>
                         </div>
 
+                        <div class="form-group col-lg-6">
+                            <label class="d-block">Role</label>
+                            <select name="role_id" id="role_id" class="form-control">
+                                <option value="">Select Role</option>
+                            </select>
+                        </div>
 
                     </div>
 
@@ -126,6 +132,17 @@ include $pathPrefix . '/includes/head.php';
                 $('#userDropdown span').text(user.name);
             }
 
+            try {
+                const rolesRes = await API.fetchWithAuth('admin/roles');
+                if(rolesRes && rolesRes.length > 0) {
+                    rolesRes.forEach(r => {
+                        if(r.user_type === 'affiliate') {
+                            $('#role_id').append(`<option value="${r.id}">${r.name}</option>`);
+                        }
+                    });
+                }
+            } catch(e) { console.error("Failed to load roles"); }
+
             // Get ID
             const urlParams = new URLSearchParams(window.location.search);
             const id = urlParams.get('id');
@@ -148,6 +165,7 @@ include $pathPrefix . '/includes/head.php';
                     $('input[name="country"]').val(data.country);
                     $('input[name="country"]').val(data.country);
                     $('input[name="phone"]').val(data.phone);
+                    $('#role_id').val(data.role_id);
 
                     // Set Status
                     if (data.status) {

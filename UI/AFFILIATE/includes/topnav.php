@@ -16,6 +16,50 @@ function url($path)
 }
 ?>
 
+<div id="impersonation-banner" style="display:none; background: #ff9800; color: #fff; text-align: center; padding: 10px; font-weight: bold; z-index: 10000; position: fixed; top: 0; left: 0; right: 0; height: 50px;">
+    You are currently masquerading as <span id="impersonated-user-name"></span>. 
+    <button onclick="exitImpersonation()" class="btn btn-sm btn-light ml-3">Exit Impersonation</button>
+</div>
+<style>
+    /* Push navbar down when banner is present */
+    body.impersonating .top-navbar { top: 50px; }
+    body.impersonating main { padding-top: 130px; } 
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if(localStorage.getItem('is_impersonating') === 'true') {
+            document.body.classList.add('impersonating');
+            document.getElementById('impersonation-banner').style.display = 'block';
+            const user = JSON.parse(localStorage.getItem('user'));
+            if(user) {
+                document.getElementById('impersonated-user-name').innerText = user.name;
+            }
+        }
+    });
+
+    async function exitImpersonation() {
+        try {
+            await API.fetchWithAuth('admin/stop-impersonate', { method: 'POST' });
+        } catch(e) { console.error(e); }
+        
+        const adminToken = localStorage.getItem('admin_token');
+        const adminUser = localStorage.getItem('admin_user');
+        
+        localStorage.removeItem('is_impersonating');
+        localStorage.removeItem('impersonator');
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        
+        if (adminToken && adminUser) {
+            localStorage.setItem('token', adminToken);
+            localStorage.setItem('user', adminUser);
+            window.location.href = '../ADMIN/dashboard.php';
+        } else {
+            window.location.href = '../login.php';
+        }
+    }
+</script>
+
 <nav class="top-navbar">
     <!-- Brand -->
     <a class="navbar-brand" href="<?php echo url('dashboard.php'); ?>">

@@ -39,7 +39,7 @@ function url($path)
         </li>
 
         <!-- Offers Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('offers', $activePage); ?>">
+        <li class="nav-item <?php echo isActiveNav('offers', $activePage); ?> require-permission" data-module="offers">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-bullhorn"></i>
                 Offers
@@ -55,7 +55,7 @@ function url($path)
         </li>
 
         <!-- Affiliates Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('affiliates', $activePage); ?>">
+        <li class="nav-item <?php echo isActiveNav('affiliates', $activePage); ?> require-permission" data-module="affiliates">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-users"></i>
                 Affiliates
@@ -68,7 +68,7 @@ function url($path)
         </li>
 
         <!-- Advertisers Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('advertisers', $activePage); ?>">
+        <li class="nav-item <?php echo isActiveNav('advertisers', $activePage); ?> require-permission" data-module="advertisers">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-handshake"></i>
                 Advertisers
@@ -81,7 +81,7 @@ function url($path)
         </li>
 
         <!-- Invoices Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('invoices', $activePage); ?>">
+        <li class="nav-item <?php echo isActiveNav('invoices', $activePage); ?> require-permission" data-module="invoices">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-file-invoice-dollar"></i>
                 Invoices
@@ -94,7 +94,7 @@ function url($path)
         </li>
 
         <!-- Reports Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('reports', $activePage); ?>">
+        <li class="nav-item <?php echo isActiveNav('reports', $activePage); ?> require-permission" data-module="reports">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-chart-line"></i>
                 Reports
@@ -113,7 +113,7 @@ function url($path)
         </li>
 
         <!-- Settings Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('settings', $activePage); ?>">
+        <li class="nav-item <?php echo isActiveNav('settings', $activePage); ?> require-permission" data-module="integrations">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-cog"></i>
                 Integrations
@@ -121,14 +121,46 @@ function url($path)
             </a>
             <div class="dropdown-menu">
                 <a class="dropdown-item" href="<?php echo url('mmp/platforms.php'); ?>">MMP Platforms</a>
-                <a class="dropdown-item" href="<?php echo url('integrations/data-integrations.php'); ?>">Data
-                    Integrations</a>
+                <a class="dropdown-item" href="<?php echo url('integrations/data-integrations.php'); ?>">Data Integrations</a>
                 <a class="dropdown-item" href="<?php echo url('payments/plans.php'); ?>">Payment Plans</a>
                 <a class="dropdown-item" href="<?php echo url('payments/subscriptions.php'); ?>">Subscriptions</a>
                 <a class="dropdown-item" href="<?php echo url('payments/transactions.php'); ?>">Transactions</a>
             </div>
         </li>
+
+        <!-- User Management Dropdown -->
+        <li class="nav-item <?php echo isActiveNav('users', $activePage); ?> require-permission" data-module="role_management">
+            <a class="nav-link" href="#" data-toggle="dropdown">
+                <i class="fas fa-user-shield"></i>
+                Users & Roles
+                <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
+            </a>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" href="<?php echo url('employees/list.php'); ?>">Employees</a>
+                <a class="dropdown-item" href="<?php echo url('roles/list.php'); ?>">Roles</a>
+                <a class="dropdown-item" href="<?php echo url('designations/list.php'); ?>">Designations</a>
+                <a class="dropdown-item" href="<?php echo url('impersonation/logs.php'); ?>">Impersonation Logs</a>
+            </div>
+        </li>
     </ul>
+
+    <!-- Script to toggle menus by permission -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const permissions = JSON.parse(localStorage.getItem('permissions') || '{}');
+            
+            if (user.user_type === 'admin') return; // Admins see everything
+
+            // Hide nav items the user doesn't have view access to
+            document.querySelectorAll('.require-permission').forEach(function(item) {
+                const moduleSlug = item.getAttribute('data-module');
+                if (moduleSlug && (!permissions[moduleSlug] || !permissions[moduleSlug].can_view)) {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    </script>
 
     <!-- Right Side - User Menu -->
     <div class="navbar-right">

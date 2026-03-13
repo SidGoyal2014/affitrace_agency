@@ -74,7 +74,8 @@ include $pathPrefix . '/includes/head.php';
                                 <td>${adv.email}</td>
                                 <td>${adv.company || '-'}</td>
                                 <td>
-                                    <a href="edit.php?id=${adv.uid}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                    <a href="edit.php?id=${adv.uid}" class="btn btn-sm btn-outline-primary mr-1">Edit</a>
+                                    <button onclick="impersonateUser(${adv.uid})" class="btn btn-sm btn-outline-warning mr-1">Login As</button>
                                 </td>
                             </tr>
                         `);
@@ -88,6 +89,27 @@ include $pathPrefix . '/includes/head.php';
                 $('#table_body').html('<tr><td colspan="5" class="text-center py-4 text-danger">Failed to load</td></tr>');
             }
         });
+
+        async function impersonateUser(id) {
+            if(!confirm("Are you sure you want to log in as this advertiser?")) return;
+            try {
+                const res = await API.fetchWithAuth(`admin/impersonate/${id}`, { method: 'POST' });
+                
+                // Save admin state
+                localStorage.setItem('admin_token', localStorage.getItem('token'));
+                localStorage.setItem('admin_user', localStorage.getItem('user'));
+                
+                // Set impersonated state
+                localStorage.setItem('token', res.token);
+                localStorage.setItem('user', JSON.stringify(res.user));
+                localStorage.setItem('is_impersonating', 'true');
+                localStorage.setItem('impersonator', JSON.stringify(res.impersonator));
+                
+                window.location.href = '../../ADVERTISER/dashboard.php';
+            } catch (e) {
+                alert('Failed to start impersonation: ' + (typeof e.message === 'object' ? Object.values(e.message).flat().join(' ') : e.message));
+            }
+        }
     </script>
 </body>
 

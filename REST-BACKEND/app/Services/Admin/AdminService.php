@@ -45,6 +45,21 @@ class AdminService
         ];
     }
 
+    public function listEmployees()
+    {
+        $data = DB::table('users')
+            ->select('users.*', 'roles.name as role_name', 'designations.name as designation_name')
+            ->leftJoin('roles', 'users.role_id', '=', 'roles.id')
+            ->leftJoin('designations', 'users.designation_id', '=', 'designations.id')
+            ->where('users.user_type', \App\Enums\UserType::Employee->value)
+            ->get();
+
+        return [
+            'module_name' => "List Employees",
+            'data' => $data
+        ];
+    }
+
     public function getProfileData($user)
     {
         $logged_in_user_type = $user->user_type;
@@ -151,6 +166,7 @@ class AdminService
         $user->country = $request->country;
         $user->phone = $request->phone;
         $user->status = \App\Enums\UserStatus::Active;
+        $user->role_id = $request->filled('role_id') ? $request->role_id : null;
         $user->save();
 
         $aud = new AffiliateUserDetail();
@@ -187,6 +203,7 @@ class AdminService
         $user->company = $request->company;
         $user->country = $request->country;
         $user->phone = $request->phone;
+        $user->role_id = $request->filled('role_id') ? $request->role_id : null;
 
         $user->save();
 
@@ -237,9 +254,64 @@ class AdminService
         return $this->sanitize_utf8_recursive($responseData);
     }
 
+    public function editEmployee($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return ['error' => 'User not found', 'code' => 404];
+        }
+
+        $responseData = [
+            'module_name' => 'Profile',
+            'title' => 'Employee Profile',
+            'user' => $user->toArray(),
+            'uid' => $id,
+            'logged_in_user_type' => 'employee',
+            'form_action_url' => 'admin/update_employee'
+        ];
+
+        return $this->sanitize_utf8_recursive($responseData);
+    }
+
+    public function saveEmployee($request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|min:5',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|confirmed|string|min:5',
+            'phone' => 'nullable|string'
+        ]);
+
+        if ($validator->fails()) {
+            return ['status' => 0, 'error' => $validator->errors()->toArray(), 'code' => 422];
+        }
+
+        $code = bin2hex(random_bytes(5));
+        $user = new User();
+        $user->code = $code;
+        $user->name = $request->name;
+        $user->username = str_replace(' ', '', strtolower($request->name));
+        $user->email = $request->email;
+        $user->password = Hash::make($request->password);
+        $user->user_type = \App\Enums\UserType::Employee->value;
+        $user->phone = $request->phone;
+        $user->role_id = $request->filled('role_id') ? $request->role_id : null;
+        $user->designation_id = $request->filled('designation_id') ? $request->designation_id : null;
+        $user->status = \App\Enums\UserStatus::Active;
+        $user->save();
+
+        return ['status' => 1, 'msg' => 'Employee created successfully', 'user_id' => $user->id, 'code' => 200];
+    }
+
     public function updateAdvertiserProfile($request)
     {
         return $this->update_advertiser_profile($request);
+    }
+
+    public function updateEmployeeProfile($request)
+    {
+        return $this->update_employee_profile($request);
     }
 
     public function updateAffiliateProfile($request)

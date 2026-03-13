@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 
 /**
@@ -46,7 +47,7 @@ class AuthController extends Controller
     {
         // 1. Validate Input
         $validator = Validator::make($request->all(), [
-            'eai' => 'required', // Agency ID / Username
+            //'eai' => 'required', // Agency ID / Username
             'email' => 'required|email',
             'password' => 'required|string',
             'user_type' => 'required|string'
@@ -58,11 +59,11 @@ class AuthController extends Controller
 
         // 2. Authenticate (DB connection is already set by api.tenant middleware)
         if (
-            Auth::attempt([
-                'email' => $request->email,
-                'password' => $request->password,
-                'user_type' => $request->user_type
-            ])
+        Auth::attempt([
+        'email' => $request->email,
+        'password' => $request->password,
+        'user_type' => $request->user_type
+        ])
         ) {
 
             $user = Auth::user();
@@ -82,12 +83,17 @@ class AuthController extends Controller
             // 2. Create Long-lived Refresh Token (2 Weeks)
             $refreshToken = $user->createToken('refresh_token', ['issue-access-token'], now()->addWeeks(2))->plainTextToken;
 
+            // 3. Load role & permissions for the UI
+            $user->load(['role.modules', 'designation']);
+            $permissions = $user->getPermissions();
+
             return response()->json([
                 'message' => 'Login successful',
                 'access_token' => $accessToken,
                 'refresh_token' => $refreshToken,
                 'token_type' => 'Bearer',
-                'user' => $user
+                'user' => $user,
+                'permissions' => $permissions,
             ]);
         }
 
@@ -169,4 +175,3 @@ class AuthController extends Controller
         return response()->json($request->user());
     }
 }
-

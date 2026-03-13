@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('subscription_status_details', function (Blueprint $table) {
-            $table->id();
-            $table->integer('subscription_id')->nullable();
-            $table->string('stripe_subscription_id')->nullable();
-            $table->enum('status',['Created','Paused', 'Resumed', 'Cancelled', 'Deleted'])->nullable();            
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('subscription_status_details')) {
+            Schema::create('subscription_status_details', function (Blueprint $table) {
+                $table->id();
+                $table->integer('subscription_id')->nullable();
+                $table->string('stripe_subscription_id')->nullable();
+                $table->enum('status',['Created','Paused', 'Resumed', 'Cancelled', 'Deleted'])->nullable();            
+                $table->timestamps();
+            });
+        }
     }
 
     /**

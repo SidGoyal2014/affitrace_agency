@@ -99,6 +99,7 @@ include $pathPrefix . '/includes/head.php';
                                 <td>${aff.country || '-'}</td>
                                 <td>
                                     <a href="edit.php?id=${aff.uid}" class="btn btn-sm btn-outline-primary mr-1">Edit</a>
+                                    <button onclick="impersonateUser(${aff.uid})" class="btn btn-sm btn-outline-warning mr-1">Login As</button>
                                     <a href="../reports/payouts.php?aid=${aff.uid}" class="btn btn-sm btn-outline-secondary">Reports</a>
                                 </td>
                             </tr>
@@ -115,6 +116,27 @@ include $pathPrefix . '/includes/head.php';
                 $('#table_body').html('<tr><td colspan="7" class="text-center py-4 text-danger">Failed to load affiliates</td></tr>');
             }
         });
+
+        async function impersonateUser(id) {
+            if(!confirm("Are you sure you want to log in as this affiliate?")) return;
+            try {
+                const res = await API.fetchWithAuth(`admin/impersonate/${id}`, { method: 'POST' });
+                
+                // Save admin state
+                localStorage.setItem('admin_token', localStorage.getItem('token'));
+                localStorage.setItem('admin_user', localStorage.getItem('user'));
+                
+                // Set impersonated state
+                localStorage.setItem('token', res.token);
+                localStorage.setItem('user', JSON.stringify(res.user));
+                localStorage.setItem('is_impersonating', 'true');
+                localStorage.setItem('impersonator', JSON.stringify(res.impersonator));
+                
+                window.location.href = '../../AFFILIATE/dashboard.php';
+            } catch (e) {
+                alert('Failed to start impersonation: ' + (typeof e.message === 'object' ? Object.values(e.message).flat().join(' ') : e.message));
+            }
+        }
     </script>
 </body>
 

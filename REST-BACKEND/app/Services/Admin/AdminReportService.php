@@ -220,7 +220,7 @@ class AdminReportService extends BaseReportService
      */
     public function allPayouts()
     {
-        $data = DB::select('SELECT C.affiliate_id as aff_id, U.name as affiliate_name, O.id as offer_id, O.offer_name, count(*) as total_conversions, C.aff_sub1 as sub1, C.revenue as revenue, C.payout as payout, C.currency as ot_currency, SUM(C.revenue) as total_revenue, SUM(C.payout) as total_payout, OE.event_name FROM offers O LEFT JOIN conversions C ON O.id = C.offer_id LEFT JOIN users U ON C.affiliate_id = U.id LEFT JOIN payout_rules PR ON C.event_id = PR.event_id LEFT JOIN offer_events OE ON PR.event_id = OE.id GROUP BY C.offer_id, C.affiliate_id, C.event_id, C.aff_sub1, C.revenue, C.payout, C.currency');
+        $data = DB::select('SELECT C.affiliate_id as aff_id, U.name as affiliate_name, O.id as offer_id, O.offer_name, count(*) as total_conversions, C.aff_sub1 as sub1, C.revenue as revenue, C.payout as payout, C.currency as ot_currency, SUM(C.revenue) as total_revenue, SUM(C.payout) as total_payout, OE.event_name FROM offers O LEFT JOIN conversions C ON O.id = C.offer_id LEFT JOIN users U ON C.affiliate_id = U.id LEFT JOIN payout_rules PR ON C.event_id = PR.event_id LEFT JOIN offer_events OE ON PR.event_id = OE.id GROUP BY C.offer_id, O.id, O.offer_name, C.affiliate_id, U.name, C.event_id, OE.event_name, C.aff_sub1, C.revenue, C.payout, C.currency');
 
         return [
             'module_name' => "Payouts Report",
@@ -238,7 +238,7 @@ class AdminReportService extends BaseReportService
             $str = " AND C.updated_at BETWEEN '" . $request->from . "' AND '" . $request->to . "'";
         }
 
-        $data = DB::select("SELECT C.affiliate_id as aff_id, U.name as affiliate_name, O.id as offer_id, O.offer_name, count(*) as total_conversions, C.aff_sub1 as sub1, C.revenue as revenue, C.payout as payout, C.currency as ot_currency, SUM(C.revenue) as total_revenue, SUM(C.payout) as total_payout, OE.event_name FROM offers O LEFT JOIN conversions C ON O.id = C.offer_id LEFT JOIN users U ON C.affiliate_id = U.id LEFT JOIN payout_rules PR ON C.event_id = PR.event_id LEFT JOIN offer_events OE ON PR.event_id = OE.id WHERE 1=1 " . $str . " GROUP BY C.offer_id, C.affiliate_id, C.event_id");
+        $data = DB::select("SELECT C.affiliate_id as aff_id, U.name as affiliate_name, O.id as offer_id, O.offer_name, count(*) as total_conversions, C.aff_sub1 as sub1, C.revenue as revenue, C.payout as payout, C.currency as ot_currency, SUM(C.revenue) as total_revenue, SUM(C.payout) as total_payout, OE.event_name FROM offers O LEFT JOIN conversions C ON O.id = C.offer_id LEFT JOIN users U ON C.affiliate_id = U.id LEFT JOIN payout_rules PR ON C.event_id = PR.event_id LEFT JOIN offer_events OE ON PR.event_id = OE.id WHERE 1=1 " . $str . " GROUP BY C.offer_id, O.id, O.offer_name, C.affiliate_id, U.name, C.event_id, OE.event_name, C.aff_sub1, C.revenue, C.payout, C.currency");
 
         return [
             'module_name' => "All Payouts",

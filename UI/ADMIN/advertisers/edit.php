@@ -244,6 +244,13 @@ include $pathPrefix . '/includes/head.php';
                                     <label for="country">Country</label>
                                 </div>
 
+                                <div class="form-group mb-4">
+                                    <label class="text-muted" style="font-size: 14px; padding-left: 16px;">Role Assignment</label>
+                                    <select name="role_id" id="role_id" class="form-control" style="border-radius:12px; height:58px; padding-left:16px;">
+                                        <option value="">Select Role (Optional)</option>
+                                    </select>
+                                </div>
+
                                 <div class="divider"><span>Change Password (Optional)</span></div>
 
                                 <div class="row row-gap">
@@ -287,6 +294,17 @@ include $pathPrefix . '/includes/head.php';
             const user = JSON.parse(localStorage.getItem('user'));
             if (user) $('.user-name').text(user.name);
 
+            try {
+                const rolesRes = await API.fetchWithAuth('admin/roles');
+                if(rolesRes && rolesRes.length > 0) {
+                    rolesRes.forEach(r => {
+                        if(r.user_type === 'advertiser') {
+                            $('#role_id').append(`<option value="${r.id}">${r.name}</option>`);
+                        }
+                    });
+                }
+            } catch(e) { console.error("Failed to load roles"); }
+
             // Get ID from URL
             const urlParams = new URLSearchParams(window.location.search);
             advertiserId = urlParams.get('id');
@@ -309,6 +327,7 @@ include $pathPrefix . '/includes/head.php';
                     $('#company').val(data.company || '');
                     $('#phone').val(data.phone || '');
                     $('#country').val(data.country || '');
+                    $('#role_id').val(data.role_id);
                 }
             } catch (error) {
                 console.error('Load Error:', error);
@@ -340,6 +359,7 @@ include $pathPrefix . '/includes/head.php';
                     phone: $('#phone').val(),
                     country: $('#country').val(),
                     user_type: 'advertiser',
+                    role_id: $('#role_id').val(),
                     instant_messenger_name: 'Skype',
                     instant_messenger_value: 'N/A'
                 };

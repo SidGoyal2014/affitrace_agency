@@ -25,6 +25,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('refresh-token', [App\Http\Controllers\Api\AuthController::class, 'refreshToken']);
     Route::get('me', [App\Http\Controllers\Api\AuthController::class, 'me']);
 
+    // Impersonation Exit (Must be outside 'admin' middleware so impersonated users can call it)
+    Route::post('admin/stop-impersonate', [App\Http\Controllers\Admin\ImpersonationController::class, 'stop']);
+
     // Admin Routes
     Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::get('dashboard', [App\Http\Controllers\Admin\AdminDashboardController::class, 'dashboard']);
@@ -44,6 +47,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('affiliates/save', [App\Http\Controllers\Admin\AdminController::class, 'save_affiliate']);
         Route::get('affiliates/edit/{id}', [App\Http\Controllers\Admin\AdminController::class, 'edit_affiliate']);
         Route::post('affiliates/update', [App\Http\Controllers\Admin\AdminController::class, 'update_affiliate']);
+
+        Route::get('employees/list', [App\Http\Controllers\Admin\AdminController::class, 'list_employees']);
+        Route::get('employees/create', [App\Http\Controllers\Admin\AdminController::class, 'create_employee']);
+        Route::post('employees/save', [App\Http\Controllers\Admin\AdminController::class, 'save_employee']);
+        Route::get('employees/edit/{id}', [App\Http\Controllers\Admin\AdminController::class, 'edit_employee']);
+        Route::post('employees/update', [App\Http\Controllers\Admin\AdminController::class, 'update_employee']);
 
         // MMP
         Route::get('mmp/platforms', [App\Http\Controllers\Admin\MMPlatformsController::class, 'list_platforms']);
@@ -127,6 +136,26 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('reports/export', [\App\Http\Controllers\Admin\ReportExportController::class, 'export']);
         Route::get('reports/export/{id}/status', [\App\Http\Controllers\Admin\ReportExportController::class, 'status']);
         Route::get('reports/export/{id}/download', [\App\Http\Controllers\Admin\ReportExportController::class, 'download']);
+
+        // ─── Role Management ──────────────────────────────
+        Route::get('roles', [App\Http\Controllers\Admin\RoleController::class, 'index']);
+        Route::post('roles', [App\Http\Controllers\Admin\RoleController::class, 'store']);
+        Route::get('roles/{id}', [App\Http\Controllers\Admin\RoleController::class, 'show']);
+        Route::put('roles/{id}', [App\Http\Controllers\Admin\RoleController::class, 'update']);
+        Route::delete('roles/{id}', [App\Http\Controllers\Admin\RoleController::class, 'destroy']);
+
+        // ─── Designations ─────────────────────────────────
+        Route::get('designations', [App\Http\Controllers\Admin\DesignationController::class, 'index']);
+        Route::post('designations', [App\Http\Controllers\Admin\DesignationController::class, 'store']);
+        Route::put('designations/{id}', [App\Http\Controllers\Admin\DesignationController::class, 'update']);
+        Route::delete('designations/{id}', [App\Http\Controllers\Admin\DesignationController::class, 'destroy']);
+
+        // ─── Modules (read-only) ──────────────────────────
+        Route::get('modules', [App\Http\Controllers\Admin\ModuleController::class, 'index']);
+
+        // ─── Impersonation ────────────────────────────────
+        Route::post('impersonate/{user_id}', [App\Http\Controllers\Admin\ImpersonationController::class, 'start']);
+        Route::get('impersonation-logs', [App\Http\Controllers\Admin\ImpersonationController::class, 'logs']);
     });
 
     // Affiliate Routes

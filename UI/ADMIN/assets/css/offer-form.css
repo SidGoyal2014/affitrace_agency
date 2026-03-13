@@ -8,6 +8,30 @@
    ============================================ */
 .offer-form-section {
     margin-bottom: 1.75rem;
+    position: relative;
+    z-index: 1;
+    overflow: visible;
+}
+
+/* Ensure earlier sections stay above later ones for Select2 dropdowns */
+.offer-form-section:nth-of-type(1) {
+    z-index: 6;
+}
+
+.offer-form-section:nth-of-type(2) {
+    z-index: 5;
+}
+
+.offer-form-section:nth-of-type(3) {
+    z-index: 4;
+}
+
+.offer-form-section:nth-of-type(4) {
+    z-index: 3;
+}
+
+.offer-form-section:nth-of-type(5) {
+    z-index: 2;
 }
 
 .offer-form-section .section-title {

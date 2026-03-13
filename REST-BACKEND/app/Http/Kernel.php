@@ -72,6 +72,7 @@ class Kernel extends HttpKernel
         'affiliate' => \App\Http\Middleware\AffiliateMiddleware::class,
         'advertiser' => \App\Http\Middleware\AdvertiserMiddleware::class,
         'employee' => \App\Http\Middleware\EmployeeMiddleware::class,
+        'module.access' => \App\Http\Middleware\CheckModuleAccess::class,
 
         'tenant.switch' => \App\Http\Middleware\TenantSwitchingMiddleware::class,
         'api.tenant' => \App\Http\Middleware\ApiSetTenantConnection::class,

@@ -193,7 +193,7 @@ main {
 .top-navbar .nav-link {
     display: flex;
     align-items: center;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.75rem;
     color: var(--text-navbar);
     font-weight: 500;
     font-size: 0.875rem;
@@ -742,7 +742,7 @@ label {
 /* ============================================
    RESPONSIVE - Mobile Menu
    ============================================ */
-@media (max-width: 991px) {
+@media (max-width: 1199px) {
     .top-navbar {
         flex-wrap: wrap;
         height: auto;
@@ -784,7 +784,7 @@ label {
     }
 }
 
-@media (min-width: 992px) {
+@media (min-width: 1200px) {
     .mobile-toggle {
         display: none !important;
     }

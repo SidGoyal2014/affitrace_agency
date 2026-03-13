@@ -70,6 +70,16 @@ include $pathPrefix . '/includes/head.php';
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
+                                            <label>Role</label>
+                                            <select name="role_id" id="role_id" class="form-control">
+                                                <option value="">Select Role</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
                                             <label>Password *</label>
                                             <input type="password" name="password" class="form-control" required>
                                         </div>
@@ -101,6 +111,17 @@ include $pathPrefix . '/includes/head.php';
             const user = JSON.parse(localStorage.getItem('user'));
             if (user) $('.user-name').text(user.name);
 
+            try {
+                const rolesRes = await API.fetchWithAuth('admin/roles');
+                if(rolesRes && rolesRes.length > 0) {
+                    rolesRes.forEach(r => {
+                        if(r.user_type === 'affiliate') {
+                            $('#role_id').append(`<option value="${r.id}">${r.name}</option>`);
+                        }
+                    });
+                }
+            } catch(e) { console.error("Failed to load roles"); }
+
             $('#createForm').on('submit', async function (e) {
                 e.preventDefault();
                 $('#alert-container').empty();
@@ -116,7 +137,8 @@ include $pathPrefix . '/includes/head.php';
                             country: $('input[name="country"]').val(),
                             password: $('input[name="password"]').val(),
                             password_confirmation: $('input[name="password_confirmation"]').val(),
-                            user_type: 'affiliate'
+                            user_type: 'affiliate',
+                            role_id: $('#role_id').val()
                         })
                     });
                     if (response.status === 1) {

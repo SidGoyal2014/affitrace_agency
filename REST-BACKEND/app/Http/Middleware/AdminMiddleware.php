@@ -17,7 +17,7 @@ class AdminMiddleware
     {
         //return $next($request);
 
-        if (strtolower(Auth::user()->user_type) != \App\Enums\UserType::Admin->value) {
+        if (!in_array(strtolower(Auth::user()->user_type), ['admin', 'employee'])) {
 
             // Revoke the token if it's not transient
             $accessToken = $request->user()->currentAccessToken();

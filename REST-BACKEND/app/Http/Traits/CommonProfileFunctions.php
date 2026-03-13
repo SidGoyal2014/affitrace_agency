@@ -69,8 +69,11 @@ trait CommonProfileFunctions
 			$user->country = $request->country;
 			$user->zipcode = $request->zipcode;
 
-			$user->save();
+			if ($request->has('role_id')) {
+				$user->role_id = $request->filled('role_id') ? $request->role_id : null;
+			}
 
+			$user->save();
 
 
 			$adud = AdvertiserUserDetail::where('user_id', $request->uid)->first();
@@ -152,6 +155,10 @@ trait CommonProfileFunctions
 				$user->status = \App\Enums\UserStatus::tryFrom($request->status) ?? $user->status;
 			}
 
+			if ($request->has('role_id')) {
+				$user->role_id = $request->filled('role_id') ? $request->role_id : null;
+			}
+
 			$user->save();
 
 			//$aud = AffiliateUserDetail::where('user_id', Auth::id())->first();
@@ -186,6 +193,47 @@ trait CommonProfileFunctions
 
 	}//update_affiliate_profile
 
+
+	function update_employee_profile(Request $request)
+	{
+		try {
+			$validator = Validator::make(request()->all(), [
+				'name' => 'required|string|min:5',
+				'phone' => 'nullable|string',
+				'email' => 'unique:users,email,' . $request->uid,
+			]);
+
+			if ($validator->fails()) {
+				return response()->json(['status' => 0, 'error' => $validator->errors()->toArray()], 422);
+			}
+
+			$user = User::findOrFail($request->uid);
+
+			$user->name = $request->name;
+			$user->email = $request->email;
+			$user->phone = $request->phone;
+			
+			if ($request->has('role_id')) {
+				$user->role_id = $request->filled('role_id') ? $request->role_id : null;
+			}
+			if ($request->has('designation_id')) {
+				$user->designation_id = $request->filled('designation_id') ? $request->designation_id : null;
+			}
+
+			if (strlen(trim($request->password)) > 0) {
+				$user->password = Hash::make($request->password);
+			}
+
+			if ($request->user()->user_type === \App\Enums\UserType::Admin->value && $request->has('status')) {
+				$user->status = \App\Enums\UserStatus::tryFrom($request->status) ?? $user->status;
+			}
+
+			$user->save();
+			return response()->json(['status' => 1, 'msg' => 'Employee Profile Updated']);
+		} catch (\Exception $e) {
+			return response()->json(['status' => 0, 'error' => $e->getMessage()], 500);
+		}
+	}
 
 
 }//CommonProfileFunctions
