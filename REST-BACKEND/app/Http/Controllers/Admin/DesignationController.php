@@ -3,18 +3,24 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Designation;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use App\Services\Admin\DesignationService;
 
 class DesignationController extends Controller
 {
+    protected $designationService;
+
+    public function __construct(DesignationService $designationService)
+    {
+        $this->designationService = $designationService;
+    }
+
     /**
      * List all designations.
      */
     public function index()
     {
-        $designations = Designation::withCount('users')->orderBy('name')->get();
+        $designations = $this->designationService->getAllDesignations();
 
         return response()->json(['designations' => $designations]);
     }
@@ -24,20 +30,15 @@ class DesignationController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name'        => 'required|string|max:255|unique:designations,name',
-            'description' => 'nullable|string',
-        ]);
+        $result = $this->designationService->createDesignation($request->all());
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        if (!$result['status']) {
+            return response()->json(['errors' => $result['errors']], $result['code']);
         }
-
-        $designation = Designation::create($request->only(['name', 'description']));
 
         return response()->json([
             'message'     => 'Designation created successfully',
-            'designation' => $designation,
+            'designation' => $result['designation'],
         ], 201);
     }
 
@@ -46,22 +47,15 @@ class DesignationController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $designation = Designation::findOrFail($id);
+        $result = $this->designationService->updateDesignation($id, $request->all());
 
-        $validator = Validator::make($request->all(), [
-            'name'        => 'required|string|max:255|unique:designations,name,' . $designation->id,
-            'description' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        if (!$result['status']) {
+            return response()->json(['errors' => $result['errors']], $result['code']);
         }
-
-        $designation->update($request->only(['name', 'description']));
 
         return response()->json([
             'message'     => 'Designation updated successfully',
-            'designation' => $designation,
+            'designation' => $result['designation'],
         ]);
     }
 
@@ -70,16 +64,14 @@ class DesignationController extends Controller
      */
     public function destroy($id)
     {
-        $designation = Designation::findOrFail($id);
+        $result = $this->designationService->deleteDesignation($id);
 
-        if ($designation->users()->count() > 0) {
+        if (!$result['status']) {
             return response()->json([
-                'message' => 'Cannot delete designation: ' . $designation->users()->count() . ' employee(s) are assigned to it.',
-            ], 409);
+                'message' => $result['message'],
+            ], $result['code']);
         }
 
-        $designation->delete();
-
-        return response()->json(['message' => 'Designation deleted successfully']);
+        return response()->json(['message' => $result['message']]);
     }
 }
