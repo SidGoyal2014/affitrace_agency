@@ -35,7 +35,16 @@ include $pathPrefix . '/includes/head.php';
                                 <label for="to">To Date</label>
                                 <input type="date" class="form-control" id="to" name="to">
                             </div>
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md-2">
+                                <label for="status">Status</label>
+                                <select class="form-control" id="status" name="status">
+                                    <option value="">All</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="confirmed">Confirmed</option>
+                                    <option value="declined">Declined</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-2">
                                 <label for="limit">Rows per page</label>
                                 <select class="form-control" id="limit" name="limit">
                                     <option value="10">10</option>
@@ -98,11 +107,13 @@ include $pathPrefix . '/includes/head.php';
                                     <th>Payout</th>
                                     <th>Country</th>
                                     <th>Device</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="reportTableBody">
                                 <tr>
-                                    <td colspan="10" class="text-center">Loading...</td>
+                                    <td colspan="12" class="text-center">Loading...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -145,6 +156,7 @@ include $pathPrefix . '/includes/head.php';
             if (urlParams.get('offer_id')) $('#offer_id').val(urlParams.get('offer_id'));
             if (urlParams.get('affiliate_id')) $('#affiliate_id').val(urlParams.get('affiliate_id'));
             if (urlParams.get('advertiser_id')) $('#advertiser_id').val(urlParams.get('advertiser_id'));
+            if (urlParams.get('status')) $('#status').val(urlParams.get('status'));
 
             if (!$('#from').val()) $('#from').val(formatDate(firstDay));
             if (!$('#to').val()) $('#to').val(formatDate(lastDay));
@@ -161,10 +173,60 @@ include $pathPrefix . '/includes/head.php';
             });
         });
 
+        function getStatusBadge(status) {
+            const map = {
+                'pending':   '<span class="badge badge-warning">Pending</span>',
+                'confirmed': '<span class="badge badge-success">Confirmed</span>',
+                'declined':  '<span class="badge badge-danger">Declined</span>',
+            };
+            return map[status] || `<span class="badge badge-secondary">${status || 'N/A'}</span>`;
+        }
+
+        function getActionButtons(row) {
+            if (row.status !== 'pending') {
+                return '<span class="text-muted">—</span>';
+            }
+            return `
+                <div class="btn-group btn-group-sm" role="group">
+                    <button class="btn btn-success btn-sm" onclick="updateConversionStatus(${row.conv_id || row.id}, 'confirmed')" title="Confirm">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="updateConversionStatus(${row.conv_id || row.id}, 'declined')" title="Decline">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        async function updateConversionStatus(id, status) {
+            const actionLabel = status.charAt(0).toUpperCase() + status.slice(1);
+            if (!confirm(`Are you sure you want to mark this conversion as "${actionLabel}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await API.fetchWithAuth('admin/reports/conversion/update-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id, status: status })
+                });
+
+                if (response.success) {
+                    Toast.success('Success', response.message);
+                    loadReport(currentPage);
+                } else {
+                    Toast.error('Error', response.message || 'Failed to update status');
+                }
+            } catch (error) {
+                console.error('Status update error:', error);
+                Toast.error('Error', 'Failed to update conversion status. Please try again.');
+            }
+        }
+
         async function loadReport(page) {
             currentPage = page;
             const tbody = $('#reportTableBody');
-            tbody.html('<tr><td colspan="10" class="text-center py-4"><div class="spinner-border text-success" role="status"><span class="sr-only">Loading...</span></div></td></tr>');
+            tbody.html('<tr><td colspan="12" class="text-center py-4"><div class="spinner-border text-success" role="status"><span class="sr-only">Loading...</span></div></td></tr>');
 
             try {
                 const formData = new FormData(document.getElementById('filterForm'));
@@ -181,7 +243,7 @@ include $pathPrefix . '/includes/head.php';
 
             } catch (error) {
                 console.error("Report Error:", error);
-                tbody.html('<tr><td colspan="10" class="text-center text-danger">Failed to load data. Please try again.</td></tr>');
+                tbody.html('<tr><td colspan="12" class="text-center text-danger">Failed to load data. Please try again.</td></tr>');
             }
         }
 
@@ -193,7 +255,7 @@ include $pathPrefix . '/includes/head.php';
             const rows = result.data;
 
             if (rows.length === 0) {
-                tbody.html('<tr><td colspan="10" class="text-center text-muted">No conversions found.</td></tr>');
+                tbody.html('<tr><td colspan="12" class="text-center text-muted">No conversions found.</td></tr>');
                 updatePagination(result);
                 return;
             }
@@ -225,6 +287,8 @@ include $pathPrefix . '/includes/head.php';
                         <td class="text-primary font-weight-bold">$${parseFloat(row.payout || 0).toFixed(2)}</td>
                         <td>${row.country || '-'}</td>
                         <td>${row.device || '-'}</td>
+                        <td>${getStatusBadge(row.status)}</td>
+                        <td>${getActionButtons(row)}</td>
                     </tr>
                 `;
                 tbody.append(tr);

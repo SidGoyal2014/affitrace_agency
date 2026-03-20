@@ -14,10 +14,10 @@ include $pathPrefix . '/includes/head.php';
         <div class="container-fluid">
 
             <!-- Page Header -->
-            <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                <h1 class="h3 mb-0 text-gray-800">Invoices</h1>
-                <a href="create.php" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-                    <i class="fas fa-plus fa-sm text-white-50"></i> Create New Invoice
+            <div class="page-header">
+                <h1>Invoices</h1>
+                <a href="create.php" class="btn btn-primary">
+                    <i class="fas fa-plus mr-2"></i> Create New Invoice
                 </a>
             </div>
 
@@ -27,51 +27,42 @@ include $pathPrefix . '/includes/head.php';
             <!-- Dashboard Stats -->
             <div class="row mb-4">
                 <div class="col-xl-4 col-md-6 mb-4">
-                    <div class="card border-left-success shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                        Payments Received</div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="stat-received">...</div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                                </div>
+                    <div class="card-modern">
+                        <div class="stat-card">
+                            <div class="stat-icon success">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Payments Received</div>
+                                <div class="stat-value" id="stat-received">...</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-xl-4 col-md-6 mb-4">
-                    <div class="card border-left-warning shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                        Payment Pending</div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="stat-pending">...</div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-clock fa-2x text-gray-300"></i>
-                                </div>
+                    <div class="card-modern">
+                        <div class="stat-card">
+                            <div class="stat-icon warning">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Payment Pending</div>
+                                <div class="stat-value" id="stat-pending">...</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-xl-4 col-md-6 mb-4">
-                    <div class="card border-left-secondary shadow h-100 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
-                                        Invoices Not Sent (Drafts)</div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="stat-drafts">...</div>
-                                </div>
-                                <div class="col-auto">
-                                    <i class="fas fa-file-invoice fa-2x text-gray-300"></i>
-                                </div>
+                    <div class="card-modern">
+                        <div class="stat-card">
+                            <div class="stat-icon info">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Invoices Not Sent (Drafts)</div>
+                                <div class="stat-value" id="stat-drafts">...</div>
                             </div>
                         </div>
                     </div>
@@ -80,9 +71,9 @@ include $pathPrefix . '/includes/head.php';
 
 
             <!-- Filters Card -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
+            <div class="card-modern mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold">Filters</h6>
                     <button class="btn btn-sm btn-outline-secondary" type="button" data-toggle="collapse"
                         data-target="#filtersCollapse">
                         <i class="fas fa-filter"></i> Toggle
@@ -98,6 +89,12 @@ include $pathPrefix . '/includes/head.php';
                                     <select class="form-control" id="filter_advertiser">
                                         <option value="">All Advertisers</option>
                                     </select>
+                                </div>
+
+                                <!-- Company Name -->
+                                <div class="col-md-3 mb-3">
+                                    <label for="filter_company_name">Company Name</label>
+                                    <input type="text" class="form-control" id="filter_company_name" placeholder="Search company...">
                                 </div>
 
                                 <!-- Status -->
@@ -149,18 +146,18 @@ include $pathPrefix . '/includes/head.php';
             </div>
 
             <!-- Invoices Table -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">All Invoices</h6>
+            <div class="card-modern mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold">All Invoices</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <table class="table table-flush mb-0" id="dataTable">
                             <thead>
                                 <tr>
                                     <th>ID</th>
                                     <th>Invoice #</th>
-                                    <th>Advertiser</th>
+                                    <th>Company</th>
                                     <th>Total Amount</th>
                                     <th>Status</th>
                                     <th>Date</th>
@@ -197,6 +194,7 @@ include $pathPrefix . '/includes/head.php';
             function getFilterParams() {
                 return {
                     advertiser_id: $('#filter_advertiser').val() || '',
+                    company_name: $('#filter_company_name').val() || '',
                     status: $('#filter_status').val() || '',
                     amount_min: $('#filter_amount_min').val() || '',
                     amount_max: $('#filter_amount_max').val() || '',
@@ -233,7 +231,7 @@ include $pathPrefix . '/includes/head.php';
                 columns: [
                     { data: 'id', name: 'id' },
                     { data: 'invoice_number', name: 'invoice_number' },
-                    { data: 'advertiser.company', name: 'advertiser.company', defaultContent: 'N/A' },
+                    { data: 'display_company', name: 'display_company', defaultContent: 'N/A', orderable: false },
                     {
                         data: 'total_amount',
                         name: 'total_amount',
@@ -243,9 +241,10 @@ include $pathPrefix . '/includes/head.php';
                         data: 'status',
                         name: 'status',
                         render: function (data) {
-                            let color = 'secondary';
+                            let color = '';
                             if (data === 'PAID') color = 'success';
                             if (data === 'SENT') color = 'warning';
+                            if (data === 'DRAFT') color = 'secondary';
                             return `<span class="badge badge-${color}">${data}</span>`;
                         }
                     },
@@ -264,10 +263,11 @@ include $pathPrefix . '/includes/head.php';
                         orderable: false,
                         searchable: false,
                         render: function (data, type, row) {
-                            let btns = `<a href="detail.php?id=${row.id}" class="btn btn-sm btn-primary shadow-sm" title="View"><i class="fas fa-eye"></i></a> `;
+                            let btns = `<a href="detail.php?id=${row.id}" class="btn btn-sm btn-outline-primary mr-1" title="View"><i class="fas fa-eye"></i></a>`;
+                            btns += `<a href="edit.php?id=${row.id}" class="btn btn-sm btn-outline-info mr-1" title="Edit"><i class="fas fa-edit"></i></a>`;
 
                             if (row.status === 'SENT' || row.status === 'PAID') {
-                                btns += `<button onclick="downloadPdf(${row.id})" class="btn btn-sm btn-info shadow-sm" title="Download PDF"><i class="fas fa-download"></i></button>`;
+                                btns += `<button onclick="downloadPdf(${row.id})" class="btn btn-sm btn-outline-success mr-1" title="Download PDF"><i class="fas fa-download"></i></button>`;
                             }
                             return btns;
                         }

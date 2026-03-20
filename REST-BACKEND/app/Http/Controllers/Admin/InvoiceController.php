@@ -30,6 +30,11 @@ class InvoiceController extends Controller
                 $query->where('advertiser_id', $request->advertiser_id);
             }
 
+            // Filter by company_name (search across advertisers, affiliates, custom)
+            if ($request->filled('company_name')) {
+                $query->where('company_name', 'ILIKE', '%' . $request->company_name . '%');
+            }
+
             // Filter by status
             if ($request->filled('status')) {
                 $query->where('status', $request->status);
@@ -60,7 +65,11 @@ class InvoiceController extends Controller
             }
 
             return DataTables::of($query)
-                ->addColumn('advertiser.company', function ($row) {
+                ->addColumn('display_company', function ($row) {
+                    // Use company_name if set, otherwise fall back to advertiser
+                    if ($row->company_name) {
+                        return $row->company_name;
+                    }
                     return $row->advertiser ? $row->advertiser->company : 'N/A';
                 })
                 ->editColumn('status', function ($row) {
@@ -72,7 +81,9 @@ class InvoiceController extends Controller
                     return '<span class="badge badge-' . $color . '">' . $row->status . '</span>';
                 })
                 ->addColumn('action', function ($row) {
-                    return '<a href="detail.php?id=' . $row->id . '" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></a>';
+                    $btns = '<a href="detail.php?id=' . $row->id . '" class="btn btn-sm btn-primary mr-1" title="View"><i class="fas fa-eye"></i></a>';
+                    $btns .= '<a href="edit.php?id=' . $row->id . '" class="btn btn-sm btn-info" title="Edit"><i class="fas fa-edit"></i></a>';
+                    return $btns;
                 })
                 ->rawColumns(['status', 'action'])
                 ->make(true);
@@ -82,21 +93,45 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Store new invoice (manual input)
+     * Store new invoice
      */
     public function store(Request $request)
     {
         $request->validate([
-            'advertiser_id' => 'required|exists:users,id',
+            'company_type' => 'required|in:advertiser,affiliate,custom',
+            'company_name' => 'required|string|max:255',
             'title' => 'nullable|string|max:255',
-            'total_amount' => 'required|numeric|min:0.01',
             'invoice_date' => 'nullable|date',
             'due_date' => 'nullable|date',
+            // From
+            'from_company' => 'nullable|string|max:255',
+            'from_address' => 'nullable|string',
+            'from_email' => 'nullable|email',
+            'from_vat_id' => 'nullable|string|max:100',
+            // To
+            'to_address' => 'nullable|string',
+            'to_email' => 'nullable|email',
+            'to_vat_id' => 'nullable|string|max:100',
+            // Offer
+            'offer_id' => 'nullable|integer',
+            // Amounts
+            'total_amount' => 'nullable|numeric|min:0',
+            'tax_percent' => 'nullable|numeric|min:0|max:100',
+            'discount_amount' => 'nullable|numeric|min:0',
+            // Line items
+            'line_items' => 'nullable|array',
+            'line_items.*.description' => 'nullable|string',
+            'line_items.*.quantity' => 'nullable|numeric|min:0',
+            'line_items.*.price' => 'nullable|numeric|min:0',
+            // Payment & extras
+            'payment_method' => 'nullable|string|max:50',
+            'notes' => 'nullable|string',
+            'terms' => 'nullable|string',
         ]);
 
         try {
             $invoice = $this->invoiceService->createDraft(
-                $request->only(['advertiser_id', 'title', 'total_amount', 'invoice_date', 'due_date']),
+                $request->all(),
                 auth()->id() ?? 1
             );
             return response()->json(['success' => true, 'invoice_id' => $invoice->id]);
@@ -110,7 +145,7 @@ class InvoiceController extends Controller
      */
     public function show($id)
     {
-        $invoice = Invoice::with('advertiser')->findOrFail($id);
+        $invoice = Invoice::with(['advertiser', 'lineItems'])->findOrFail($id);
         return response()->json($invoice);
     }
 
@@ -121,15 +156,34 @@ class InvoiceController extends Controller
     {
         $request->validate([
             'title' => 'nullable|string|max:255',
-            'total_amount' => 'nullable|numeric|min:0.01',
             'invoice_date' => 'nullable|date',
             'due_date' => 'nullable|date',
+            'company_type' => 'nullable|in:advertiser,affiliate,custom',
+            'company_name' => 'nullable|string|max:255',
+            'from_company' => 'nullable|string|max:255',
+            'from_address' => 'nullable|string',
+            'from_email' => 'nullable|email',
+            'from_vat_id' => 'nullable|string|max:100',
+            'to_address' => 'nullable|string',
+            'to_email' => 'nullable|email',
+            'to_vat_id' => 'nullable|string|max:100',
+            'offer_id' => 'nullable|integer',
+            'total_amount' => 'nullable|numeric|min:0',
+            'tax_percent' => 'nullable|numeric|min:0|max:100',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'line_items' => 'nullable|array',
+            'line_items.*.description' => 'nullable|string',
+            'line_items.*.quantity' => 'nullable|numeric|min:0',
+            'line_items.*.price' => 'nullable|numeric|min:0',
+            'payment_method' => 'nullable|string|max:50',
+            'notes' => 'nullable|string',
+            'terms' => 'nullable|string',
         ]);
 
         try {
             $invoice = $this->invoiceService->updateDraft(
                 $id,
-                $request->only(['title', 'total_amount', 'invoice_date', 'due_date'])
+                $request->all()
             );
             return response()->json(['success' => true, 'invoice' => $invoice]);
         } catch (\Exception $e) {
@@ -186,6 +240,32 @@ class InvoiceController extends Controller
             return response()->json(['success' => true, 'url' => $url]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 404);
+        }
+    }
+
+    /**
+     * Email invoice PDF to advertiser
+     */
+    public function email($id)
+    {
+        try {
+            $this->invoiceService->emailInvoice($id);
+            return response()->json(['success' => true, 'message' => 'Invoice emailed successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Revert SENT invoice back to DRAFT
+     */
+    public function revertToDraft($id)
+    {
+        try {
+            $this->invoiceService->revertToDraft($id);
+            return response()->json(['success' => true, 'message' => 'Invoice reverted to draft.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
     }
 

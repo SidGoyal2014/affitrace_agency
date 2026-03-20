@@ -14,16 +14,38 @@ class Invoice extends Model
         'invoice_number',
         'advertiser_id',
         'title',
+        // Invoice From
+        'from_company',
+        'from_address',
+        'from_email',
+        'from_vat_id',
+        // Invoice To
+        'company_type',
+        'company_name',
+        'to_address',
+        'to_email',
+        'to_vat_id',
+        // Optional offer
+        'offer_id',
+        // Status & dates
         'status',
         'invoice_date',
         'due_date',
         'sent_at',
         'paid_at',
+        // Amounts
         'subtotal_amount',
         'tax_amount',
+        'tax_percent',
+        'discount_amount',
+        'net_total',
         'total_amount',
+        // Payment & extras
+        'payment_method',
+        'notes',
+        'terms',
         'pdf_path',
-        'created_by'
+        'created_by',
     ];
 
     protected $casts = [
@@ -33,6 +55,9 @@ class Invoice extends Model
         'paid_at' => 'datetime',
         'subtotal_amount' => 'decimal:2',
         'tax_amount' => 'decimal:2',
+        'tax_percent' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'net_total' => 'decimal:2',
         'total_amount' => 'decimal:2',
     ];
 
@@ -47,6 +72,14 @@ class Invoice extends Model
     public function advertiser()
     {
         return $this->belongsTo(User::class, 'advertiser_id');
+    }
+
+    /**
+     * Get line items
+     */
+    public function lineItems()
+    {
+        return $this->hasMany(InvoiceLineItem::class);
     }
 
     public function getIsDraftAttribute()

@@ -443,6 +443,7 @@ class AdminReportService extends BaseReportService
                 'conversions.country',
                 'conversions.device',
                 'conversions.event',
+                'conversions.status',
                 'conversions.revenue',
                 'conversions.payout',
                 'affis.id as affiliate_id',
@@ -469,6 +470,9 @@ class AdminReportService extends BaseReportService
         if ($request->advertiser_id) {
             $query->where('conversions.advertiser_id', $request->advertiser_id);
         }
+        if ($request->status) {
+            $query->where('conversions.status', $request->status);
+        }
 
         $limit = $request->limit ?? 50;
         $results = $query->orderBy('conversions.id', 'desc')->paginate($limit);
@@ -479,4 +483,22 @@ class AdminReportService extends BaseReportService
             'filters' => $request->all()
         ];
     }
+
+    /**
+     * Update conversion status (confirm or decline)
+     */
+    public function updateConversionStatus($id, $status): array
+    {
+        $conversion = \App\Models\Conversion::find($id);
+
+        if (!$conversion) {
+            return ['success' => false, 'message' => 'Conversion not found'];
+        }
+
+        $conversion->status = $status;
+        $conversion->save();
+
+        return ['success' => true, 'message' => 'Conversion status updated to ' . $status];
+    }
 }
+

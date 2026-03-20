@@ -186,7 +186,7 @@ class TrackingService
         // === Event Data ===
         $conv->event_id = $request->event_id ?? null;
         $conv->event = $request->event ?? 'default';
-        $conv->status = $request->status ?? 'approved';
+        $conv->status = 'pending';
         $conv->status_type = $request->status_type ?? null;
         $conv->filter_log = $request->filter_log ?? null;
 
@@ -304,6 +304,7 @@ class TrackingService
         $conv->hour = now()->format('H');
         $conv->conversion_time = now();
         $conv->conversion = 1;
+        $conv->status = 'pending';
 
         $conv->save();
 

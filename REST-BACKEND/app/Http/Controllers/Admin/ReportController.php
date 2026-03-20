@@ -90,4 +90,16 @@ class ReportController extends Controller
 	{
 		return response()->json($this->reportService->getConversionsReport($request));
 	}
+
+	public function update_conversion_status(Request $request)
+	{
+		$request->validate([
+			'id' => 'required|integer',
+			'status' => 'required|in:confirmed,declined',
+		]);
+
+		$result = $this->reportService->updateConversionStatus($request->id, $request->status);
+
+		return response()->json($result, $result['success'] ? 200 : 404);
+	}
 }

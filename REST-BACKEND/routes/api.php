@@ -117,6 +117,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('reports/click-conversion-report', [App\Http\Controllers\Admin\ReportController::class, 'click_conversion_report']);
         Route::post('reports/clicks', [App\Http\Controllers\Admin\ReportController::class, 'clicks_report']);
         Route::post('reports/conversions', [App\Http\Controllers\Admin\ReportController::class, 'conversions_report']);
+        Route::post('reports/conversion/update-status', [App\Http\Controllers\Admin\ReportController::class, 'update_conversion_status']);
 
         // Integrations
         Route::get('integrations/config', [App\Http\Controllers\Admin\IntegrationController::class, 'get_config']);
@@ -130,6 +131,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('invoices/{id}/send', [\App\Http\Controllers\Admin\InvoiceController::class, 'send']);
         Route::get('invoices/{id}/download', [\App\Http\Controllers\Admin\InvoiceController::class, 'download'])->name('invoices.download');
         Route::post('invoices/{id}/pay', [\App\Http\Controllers\Admin\InvoiceController::class, 'pay']);
+        Route::post('invoices/{id}/email', [\App\Http\Controllers\Admin\InvoiceController::class, 'email']);
+        Route::post('invoices/{id}/revert-draft', [\App\Http\Controllers\Admin\InvoiceController::class, 'revertToDraft']);
 
         // Report Export Routes (Async)
         Route::get('reports/exports', [\App\Http\Controllers\Admin\ReportExportController::class, 'index']);
