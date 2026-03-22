@@ -57,6 +57,33 @@ class AdminReportService extends BaseReportService
     }
 
     /**
+     * Get Affiliate Postback Logs
+     */
+    public function getAffiliatePostbackLogs($request)
+    {
+        $query = DB::table('affiliate_postback_logs as apl')
+            ->select(
+                'apl.id',
+                'apl.conversion_id',
+                'apl.url_fired',
+                'apl.http_status',
+                'apl.response_body',
+                'apl.created_at',
+                'affis.name as affiliate_name'
+            )
+            ->join('users as affis', 'apl.affiliate_id', '=', 'affis.id');
+
+        // Can easily add filters here later if needed
+
+        $data = $query->orderBy('apl.id', 'desc')->paginate(50);
+
+        return [
+            'module_name' => "Affiliate Postback Logs",
+            'data' => $data
+        ];
+    }
+
+    /**
      * Get offers assigned to affiliate
      */
     public function getOffersAssignedToAffiliate($aid)
@@ -497,6 +524,10 @@ class AdminReportService extends BaseReportService
 
         $conversion->status = $status;
         $conversion->save();
+
+        if ($status === 'confirmed') {
+            \App\Jobs\FireAffiliatePostbackJob::dispatch($conversion->id);
+        }
 
         return ['success' => true, 'message' => 'Conversion status updated to ' . $status];
     }

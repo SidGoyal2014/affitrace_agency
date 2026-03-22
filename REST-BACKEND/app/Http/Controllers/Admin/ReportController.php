@@ -25,6 +25,11 @@ class ReportController extends Controller
 		return response()->json($this->reportService->listLogs());
 	}
 
+	public function postback_logs(Request $request)
+	{
+		return response()->json($this->reportService->getAffiliatePostbackLogs($request));
+	}
+
 	function all_offers()
 	{
 		// DB::enableQueryLog(); ... original had debug stuff mostly commented
