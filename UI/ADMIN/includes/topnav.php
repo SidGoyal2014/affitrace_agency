@@ -104,7 +104,8 @@ function url($path)
                 <a class="dropdown-item" href="<?php echo url('reports/clicks_report.php'); ?>">Clicks</a>
                 <a class="dropdown-item" href="<?php echo url('reports/conversions_report.php'); ?>">Conversions</a>
                 <a class="dropdown-item" href="<?php echo url('reports/payouts.php'); ?>">Payouts</a>
-                <a class="dropdown-item" href="<?php echo url('reports/logs.php'); ?>">Logs</a>
+                <a class="dropdown-item" href="<?php echo url('reports/logs.php'); ?>">System Logs</a>
+                <a class="dropdown-item" href="<?php echo url('reports/postback_logs.php'); ?>">Postback Logs</a>
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item" href="<?php echo url('reports/export_reports.php'); ?>">
                     <i class="fas fa-file-export mr-2"></i>Export Reports

@@ -1,9 +1,5 @@
-// Detect environment or use fixed XAMPP path
-const API_BASE_URL = 'http://localhost:8000/api'; // Laravel Serve
-
-// const API_BASE_URL = 'http://82.29.160.75:8000/api';
-
-// const API_BASE_URL = 'http://localhost/affitrace/affitrace_REST/1/REST-BACKEND/public/api'; // XAMPP
+// Dynamically set API_BASE_URL based on the current hostname
+const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:8000/api`;
 
 const API = {
     BASE_URL: API_BASE_URL,

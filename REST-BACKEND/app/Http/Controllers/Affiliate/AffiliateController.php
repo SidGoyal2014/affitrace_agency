@@ -34,6 +34,8 @@ class AffiliateController extends Controller
 			$result = $service->updatePostbackColumns($request->all(), Auth::id());
 			return response()->json($result);
 		} catch (\Exception $e) {
+			\Illuminate\Support\Facades\Log::error("Postback Update Error: " . $e->getMessage());
+			\Illuminate\Support\Facades\Log::error($e->getTraceAsString());
 			return response()->json(['error' => 'Postback columns could not be updated', 'details' => $e->getMessage()], 500);
 		}
 	}

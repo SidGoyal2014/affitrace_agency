@@ -139,6 +139,7 @@ function url($path)
                 <a class="collapse-item" href="<?php echo url('reports/conversions.php'); ?>">Conversions</a>
                 <a class="collapse-item" href="<?php echo url('reports/payouts.php'); ?>">Payouts</a>
                 <a class="collapse-item" href="<?php echo url('reports/logs.php'); ?>">System Logs</a>
+                <a class="collapse-item" href="<?php echo url('reports/postback_logs.php'); ?>">Postback Logs</a>
             </div>
         </div>
     </li>
