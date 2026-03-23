@@ -22,8 +22,33 @@ class AdvertiserReportService extends BaseReportService
             $filters = new ReportFilterDTO();
         }
 
-        // Use base class implementation with advertiser scoping
-        return parent::getSummaryReport($filters, $advertiser_id, 'advertiser');
+        $query = DB::table('offer_trackings')
+            ->select(
+                DB::raw('CAST(offer_trackings.created_at AS DATE) as date'),
+                DB::raw("COUNT(DISTINCT offer_trackings.id) as clicks"),
+                DB::raw("COUNT(conversions.id) as conversions"),
+                DB::raw('SUM(COALESCE(conversions.revenue_usd, 0)) as cost')
+            )
+            ->leftJoin('offers', 'offer_trackings.offer_id', '=', 'offers.id')
+            ->leftJoin('categories', 'offers.category_id', '=', 'categories.id')
+            ->leftJoin('devices', 'offer_trackings.device_id', '=', 'devices.id')
+            ->leftJoin('conversions', 'offer_trackings.tid', '=', 'conversions.tid')
+            ->where('offers.advertiser_id', $advertiser_id);
+
+        // Apply filters (uses offer_trackings.* references locally in BaseReportService)
+        $query = $this->applyFilters($query, $filters);
+
+        $stats = $query
+            ->groupBy(DB::raw('CAST(offer_trackings.created_at AS DATE)'))
+            ->orderBy('date', 'desc')
+            ->limit(30)
+            ->get();
+
+        return [
+            'module_name' => 'Summary Report',
+            'stats' => $stats,
+            'filters' => $filters->toArray()
+        ];
     }
 
     /**
@@ -35,8 +60,44 @@ class AdvertiserReportService extends BaseReportService
      */
     public function getClickConversionReportForAdvertiser($advertiser_id, ReportFilterDTO $filters): array
     {
-        // Use base class implementation with advertiser scoping
-        return parent::getClickConversionReport($filters, $advertiser_id, 'advertiser');
+        $query = DB::table('offer_trackings')
+            ->select(
+                'offer_trackings.*',
+                'offer_trackings.id as otid',
+                'offer_trackings.created_at as link_clicked_at',
+                'offer_trackings.country as ot_country',
+                'offer_trackings.os as ot_os',
+                'offer_trackings.browser as ot_browser',
+                'affis.id as aff_id',
+                'affis.name as aff_name',
+                'adverts.id as adv_id',
+                'adverts.name as advert_name',
+                'offers.id as offer_id',
+                'offers.offer_name',
+                'devices.device_name',
+                DB::raw("CASE WHEN conversions.id IS NOT NULL THEN 1 ELSE 0 END as is_conversion"),
+                'conversions.revenue_usd as revenue_usd',
+                'conversions.payout_usd as payout_usd',
+                'conversions.id as conversion_id'
+            )
+            ->leftJoin('offers', 'offer_trackings.offer_id', '=', 'offers.id')
+            ->leftJoin('categories', 'offers.category_id', '=', 'categories.id')
+            ->leftJoin('devices', 'offer_trackings.device_id', '=', 'devices.id')
+            ->leftJoin('users as affis', 'offer_trackings.aff_id', '=', 'affis.id')
+            ->leftJoin('users as adverts', 'offer_trackings.adv_id', '=', 'adverts.id')
+            ->leftJoin('conversions', 'offer_trackings.tid', '=', 'conversions.tid')
+            ->where('offers.advertiser_id', $advertiser_id);
+
+        $query = $this->applyFilters($query, $filters);
+        
+        $limit = $filters->limit ?? 50;
+        $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);
+
+        return [
+            'module_name' => 'Click & Conversion Report',
+            'data' => $results,
+            'filters' => $filters->toArray()
+        ];
     }
 
     /**

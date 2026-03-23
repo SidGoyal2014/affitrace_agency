@@ -64,7 +64,7 @@ class AdvertiserDashboardService
                     offers.offer_desc,
                     categories.category_name,
                     offers.id as oid,
-                    (SELECT COUNT(*) FROM offer_trackings WHERE offer_id = offers.id) as conversions
+                    (SELECT COUNT(*) FROM conversions WHERE offer_id = offers.id) as conversions
                 FROM 
                     offers 
                 LEFT JOIN 
@@ -86,9 +86,9 @@ class AdvertiserDashboardService
     {
         try {
             // Calculate total spend from offer_trackings for advertiser's offers
-            $sql = "SELECT SUM(COALESCE(ot.revenue_usd, 0)) as total_spend 
-                    FROM offer_trackings ot 
-                    INNER JOIN offers o ON ot.offer_id = o.id 
+            $sql = "SELECT SUM(COALESCE(c.revenue_usd, 0)) as total_spend 
+                    FROM conversions c 
+                    INNER JOIN offers o ON c.offer_id = o.id 
                     WHERE o.advertiser_id = " . $advertiser_id;
 
             $result = DB::select($sql);
@@ -103,8 +103,8 @@ class AdvertiserDashboardService
     {
         try {
             $sql = "SELECT COUNT(*) as conversions 
-                    FROM offer_trackings ot 
-                    INNER JOIN offers o ON ot.offer_id = o.id 
+                    FROM conversions c 
+                    INNER JOIN offers o ON c.offer_id = o.id 
                     WHERE o.advertiser_id = " . $advertiser_id;
 
             $result = DB::select($sql);
@@ -120,11 +120,11 @@ class AdvertiserDashboardService
         try {
             $arrSTR = array();
 
-            $sql = "SELECT sum(ot.revenue_usd) as spend, EXTRACT(MONTH FROM ot.created_at) as month 
-                    FROM offer_trackings ot 
-                    INNER JOIN offers o ON ot.offer_id = o.id 
+            $sql = "SELECT sum(c.revenue_usd) as spend, EXTRACT(MONTH FROM c.created_at) as month 
+                    FROM conversions c 
+                    INNER JOIN offers o ON c.offer_id = o.id 
                     WHERE o.advertiser_id = " . $advertiser_id . " 
-                    GROUP BY EXTRACT(MONTH FROM ot.created_at)";
+                    GROUP BY EXTRACT(MONTH FROM c.created_at)";
 
             $arr = DB::select($sql);
 
@@ -153,12 +153,12 @@ class AdvertiserDashboardService
             $sql = "SELECT 
                         o.id as offer_id, 
                         o.offer_name, 
-                        COUNT(ot.id) as conversions, 
+                        COUNT(c.id) as conversions, 
                         o.offer_status 
                     FROM 
                         offers o 
                     LEFT JOIN 
-                        offer_trackings ot ON o.id = ot.offer_id 
+                        conversions c ON o.id = c.offer_id 
                     WHERE 
                         o.advertiser_id = " . $advertiser_id . "
                     GROUP BY 
