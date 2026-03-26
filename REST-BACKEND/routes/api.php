@@ -212,8 +212,177 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Employee Routes
     Route::prefix('employee')->middleware(['employee'])->group(function () {
+        // ── Profile (no module gate) ──
         Route::get('profile', [App\Http\Controllers\Employee\EmployeeController::class, 'profile']);
         Route::post('update_profile', [App\Http\Controllers\Employee\EmployeeController::class, 'update_profile']);
+
+        // ── Dashboard ──
+        Route::get('dashboard', [App\Http\Controllers\Admin\AdminDashboardController::class, 'dashboard']);
+
+        // ── Affiliates ──
+        Route::middleware(['module.access:affiliates,can_view'])->group(function () {
+            Route::get('affiliates/list', [App\Http\Controllers\Admin\AdminController::class, 'list_affiliates']);
+            Route::get('affiliates/edit/{id}', [App\Http\Controllers\Admin\AdminController::class, 'edit_affiliate']);
+        });
+        Route::middleware(['module.access:affiliates,can_create'])->group(function () {
+            Route::get('affiliates/create', [App\Http\Controllers\Admin\AdminController::class, 'create_affiliate']);
+            Route::post('affiliates/save', [App\Http\Controllers\Admin\AdminController::class, 'save_affiliate']);
+        });
+        Route::middleware(['module.access:affiliates,can_edit'])->group(function () {
+            Route::post('affiliates/update', [App\Http\Controllers\Admin\AdminController::class, 'update_affiliate']);
+        });
+
+        // ── Advertisers ──
+        Route::middleware(['module.access:advertisers,can_view'])->group(function () {
+            Route::get('advertisers/list', [App\Http\Controllers\Admin\AdminController::class, 'list_advertisers']);
+            Route::get('advertisers/edit/{id}', [App\Http\Controllers\Admin\AdminController::class, 'edit_advertiser']);
+        });
+        Route::middleware(['module.access:advertisers,can_create'])->group(function () {
+            Route::get('advertisers/create', [App\Http\Controllers\Admin\AdminController::class, 'create_advertiser']);
+            Route::post('advertisers/save', [App\Http\Controllers\Admin\AdminController::class, 'save_advertiser']);
+        });
+        Route::middleware(['module.access:advertisers,can_edit'])->group(function () {
+            Route::post('advertisers/update', [App\Http\Controllers\Admin\AdminController::class, 'update_advertiser']);
+        });
+
+        // ── Employees ──
+        Route::middleware(['module.access:role_management,can_view'])->group(function () {
+            Route::get('employees/list', [App\Http\Controllers\Admin\AdminController::class, 'list_employees']);
+            Route::get('employees/edit/{id}', [App\Http\Controllers\Admin\AdminController::class, 'edit_employee']);
+        });
+        Route::middleware(['module.access:role_management,can_create'])->group(function () {
+            Route::get('employees/create', [App\Http\Controllers\Admin\AdminController::class, 'create_employee']);
+            Route::post('employees/save', [App\Http\Controllers\Admin\AdminController::class, 'save_employee']);
+        });
+        Route::middleware(['module.access:role_management,can_edit'])->group(function () {
+            Route::post('employees/update', [App\Http\Controllers\Admin\AdminController::class, 'update_employee']);
+        });
+
+        // ── Offers ──
+        Route::middleware(['module.access:offers,can_view'])->group(function () {
+            Route::get('offer/index', [App\Http\Controllers\Admin\OfferController::class, 'index']);
+            Route::get('offer/approved', [App\Http\Controllers\Admin\OfferController::class, 'offers_approved']);
+            Route::get('offer/pending', [App\Http\Controllers\Admin\OfferController::class, 'offers_pending']);
+            Route::get('offer/ended', [App\Http\Controllers\Admin\OfferController::class, 'offers_ended']);
+            Route::get('offer/edit/{id}', [App\Http\Controllers\Admin\OfferController::class, 'edit']);
+            Route::get('offer/create', [App\Http\Controllers\Admin\OfferController::class, 'create']);
+            Route::get('offer/show-events/{id}', [App\Http\Controllers\Admin\OfferController::class, 'show_events']);
+            Route::get('offer/get-event/{eid}', [App\Http\Controllers\Admin\OfferController::class, 'get_event']);
+            Route::get('offer/get-rule/{oid}/{eid}', [App\Http\Controllers\Admin\OfferController::class, 'get_rule']);
+        });
+        Route::middleware(['module.access:offers,can_create'])->group(function () {
+            Route::post('offer/save', [App\Http\Controllers\Admin\OfferController::class, 'save']);
+        });
+        Route::middleware(['module.access:offers,can_edit'])->group(function () {
+            Route::post('offer/update_offer', [App\Http\Controllers\Admin\OfferController::class, 'update_offer']);
+            Route::post('offer/update-mmp-details', [App\Http\Controllers\Admin\OfferController::class, 'update_mmp_details']);
+            Route::post('offer/update-targetting', [App\Http\Controllers\Admin\OfferController::class, 'update_targetting']);
+            Route::post('offer/save-payout-rules', [App\Http\Controllers\Admin\OfferController::class, 'save_payout_rules']);
+            Route::post('offer/stu', [App\Http\Controllers\Admin\OfferController::class, 'stu']);
+            Route::post('offer/save-event', [App\Http\Controllers\Admin\OfferController::class, 'save_event']);
+            Route::post('offer/update-event', [App\Http\Controllers\Admin\OfferController::class, 'update_event']);
+            Route::post('offer/update-event-postback', [App\Http\Controllers\Admin\OfferController::class, 'update_event_postback']);
+            Route::get('offer/assign/{oid}/{aid}', [App\Http\Controllers\Admin\OfferController::class, 'assign']);
+            Route::get('offer/reject/{oid}/{aid}', [App\Http\Controllers\Admin\OfferController::class, 'reject']);
+            Route::get('offer/unassign/{oid}/{aid}', [App\Http\Controllers\Admin\OfferController::class, 'unassign']);
+            Route::get('offer/remove-event/{oid}/{eid}', [App\Http\Controllers\Admin\OfferController::class, 'remove_event']);
+        });
+        Route::middleware(['module.access:offers,can_delete'])->group(function () {
+            Route::delete('offer/delete/{id}', [App\Http\Controllers\Admin\OfferController::class, 'delete_offer']);
+        });
+
+        // ── Reports ──
+        Route::middleware(['module.access:reports,can_view'])->group(function () {
+            Route::get('reports/all-offers', [App\Http\Controllers\Admin\ReportController::class, 'all_offers']);
+            Route::get('reports/offer-clicks/{offer_id}', [App\Http\Controllers\Admin\ReportController::class, 'offer_clicks']);
+            Route::post('reports/offer-clicks/search', [App\Http\Controllers\Admin\ReportController::class, 'search_offer_clicks']);
+            Route::get('reports/all-payouts', [App\Http\Controllers\Admin\ReportController::class, 'all_payouts']);
+            Route::post('reports/all-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_all_payouts']);
+            Route::get('reports/offer-payouts/{oid}', [App\Http\Controllers\Admin\ReportController::class, 'offer_payouts']);
+            Route::post('reports/offer-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_offer_payouts']);
+            Route::get('reports/affiliate-payouts/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'affiliate_payouts']);
+            Route::post('reports/affiliate-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_affiliate_payouts']);
+            Route::get('reports/offers-assigned/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'get_offers_assigned_to_affiliate']);
+            Route::post('reports/click-conversion-report', [App\Http\Controllers\Admin\ReportController::class, 'click_conversion_report']);
+            Route::post('reports/clicks', [App\Http\Controllers\Admin\ReportController::class, 'clicks_report']);
+            Route::post('reports/conversions', [App\Http\Controllers\Admin\ReportController::class, 'conversions_report']);
+            Route::post('reports/conversion/update-status', [App\Http\Controllers\Admin\ReportController::class, 'update_conversion_status']);
+            Route::get('reports/transactions', [App\Http\Controllers\Admin\ReportController::class, 'list_transactions']);
+            Route::get('reports/logs', [App\Http\Controllers\Admin\ReportController::class, 'logs']);
+            Route::get('reports/postback-logs', [App\Http\Controllers\Admin\ReportController::class, 'postback_logs']);
+            // Report Exports
+            Route::get('reports/exports', [\App\Http\Controllers\Admin\ReportExportController::class, 'index']);
+            Route::post('reports/export', [\App\Http\Controllers\Admin\ReportExportController::class, 'export']);
+            Route::get('reports/export/{id}/status', [\App\Http\Controllers\Admin\ReportExportController::class, 'status']);
+            Route::get('reports/export/{id}/download', [\App\Http\Controllers\Admin\ReportExportController::class, 'download']);
+        });
+
+        // ── Invoices ──
+        Route::middleware(['module.access:invoices,can_view'])->group(function () {
+            Route::get('invoices', [\App\Http\Controllers\Admin\InvoiceController::class, 'index']);
+            Route::get('invoices/stats', [\App\Http\Controllers\Admin\InvoiceController::class, 'stats']);
+            Route::get('invoices/{id}', [\App\Http\Controllers\Admin\InvoiceController::class, 'show']);
+            Route::get('invoices/{id}/download', [\App\Http\Controllers\Admin\InvoiceController::class, 'download']);
+        });
+        Route::middleware(['module.access:invoices,can_create'])->group(function () {
+            Route::post('invoices', [\App\Http\Controllers\Admin\InvoiceController::class, 'store']);
+        });
+        Route::middleware(['module.access:invoices,can_edit'])->group(function () {
+            Route::put('invoices/{id}', [\App\Http\Controllers\Admin\InvoiceController::class, 'update']);
+            Route::post('invoices/{id}/send', [\App\Http\Controllers\Admin\InvoiceController::class, 'send']);
+            Route::post('invoices/{id}/pay', [\App\Http\Controllers\Admin\InvoiceController::class, 'pay']);
+            Route::post('invoices/{id}/email', [\App\Http\Controllers\Admin\InvoiceController::class, 'email']);
+            Route::post('invoices/{id}/revert-draft', [\App\Http\Controllers\Admin\InvoiceController::class, 'revertToDraft']);
+        });
+
+        // ── Integrations ──
+        Route::middleware(['module.access:integrations,can_view'])->group(function () {
+            Route::get('integrations/config', [App\Http\Controllers\Admin\IntegrationController::class, 'get_config']);
+            Route::get('mmp/platforms', [App\Http\Controllers\Admin\MMPlatformsController::class, 'list_platforms']);
+            Route::get('mmp/setup/{id}', [App\Http\Controllers\Admin\MMPlatformsController::class, 'setup_platform']);
+        });
+        Route::middleware(['module.access:integrations,can_edit'])->group(function () {
+            Route::post('integrations/save', [App\Http\Controllers\Admin\IntegrationController::class, 'save_config']);
+            Route::post('integrations/sync', [App\Http\Controllers\Admin\IntegrationController::class, 'sync']);
+            Route::post('integrations/upload-csv', [App\Http\Controllers\Admin\IntegrationController::class, 'upload_csv']);
+        });
+
+        // ── Role Management ──
+        Route::middleware(['module.access:role_management,can_view'])->group(function () {
+            Route::get('roles', [App\Http\Controllers\Admin\RoleController::class, 'index']);
+            Route::get('roles/{id}', [App\Http\Controllers\Admin\RoleController::class, 'show']);
+            Route::get('designations', [App\Http\Controllers\Admin\DesignationController::class, 'index']);
+            Route::get('modules', [App\Http\Controllers\Admin\ModuleController::class, 'index']);
+        });
+        Route::middleware(['module.access:role_management,can_create'])->group(function () {
+            Route::post('roles', [App\Http\Controllers\Admin\RoleController::class, 'store']);
+            Route::post('designations', [App\Http\Controllers\Admin\DesignationController::class, 'store']);
+        });
+        Route::middleware(['module.access:role_management,can_edit'])->group(function () {
+            Route::put('roles/{id}', [App\Http\Controllers\Admin\RoleController::class, 'update']);
+            Route::put('designations/{id}', [App\Http\Controllers\Admin\DesignationController::class, 'update']);
+        });
+        Route::middleware(['module.access:role_management,can_delete'])->group(function () {
+            Route::delete('roles/{id}', [App\Http\Controllers\Admin\RoleController::class, 'destroy']);
+            Route::delete('designations/{id}', [App\Http\Controllers\Admin\DesignationController::class, 'destroy']);
+        });
+
+        // ── Impersonation ──
+        Route::middleware(['module.access:impersonation,can_view'])->group(function () {
+            Route::post('impersonate/{user_id}', [App\Http\Controllers\Admin\ImpersonationController::class, 'start']);
+            Route::get('impersonation-logs', [App\Http\Controllers\Admin\ImpersonationController::class, 'logs']);
+        });
+
+        // ── Payments ──
+        Route::middleware(['module.access:integrations,can_view'])->group(function () {
+            Route::get('payments/plan-details', [App\Http\Controllers\Admin\PaymentController::class, 'plan_details']);
+            Route::get('payments/show-subscriptions', [App\Http\Controllers\Admin\PaymentController::class, 'show_subscriptions']);
+        });
+
+        // ── Conversions ──
+        Route::middleware(['module.access:reports,can_edit'])->group(function () {
+            Route::post('reports/conversion/update-status', [App\Http\Controllers\Admin\ReportController::class, 'update_conversion_status']);
+        });
     });
 
     // Tracking (Server-to-Server)

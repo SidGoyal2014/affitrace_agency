@@ -143,8 +143,10 @@
                             window.location.href = 'AFFILIATE/dashboard.php';
                         } else if (data.user.user_type === 'advertiser') {
                             window.location.href = 'ADVERTISER/dashboard.php';
+                        } else if (data.user.user_type === 'employee') {
+                            window.location.href = 'EMPLOYEE/dashboard.php';
                         } else {
-                            // Admin and Employee both go to ADMIN panel
+                            // Admin goes to ADMIN panel
                             window.location.href = 'ADMIN/dashboard.php';
                         }
                     } else {
