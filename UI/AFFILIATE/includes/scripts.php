@@ -9,7 +9,7 @@
 <script src="<?php echo $pathPrefix; ?>/assets/js/sb-admin-2.min.js"></script>
 
 <!-- API Integration -->
-<script src="<?php echo $pathPrefix; ?>/assets/js/api.js"></script>
+<script src="<?php echo $pathPrefix; ?>/assets/js/api.js?v=<?php echo time(); ?>"></script>
 
 <!-- Toast Notifications -->
 <script src="<?php echo $pathPrefix; ?>/assets/js/toast.js"></script>

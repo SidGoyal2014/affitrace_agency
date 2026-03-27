@@ -47,7 +47,7 @@ include $pathPrefix . '/includes/head.php';
                                             <label>Status</label>
                                             <select name="status" class="form-control" id="status">
                                                 <option value="active">Active</option>
-                                                <option value="inactive">Inactive</option>
+                                                <option value="suspended">Inactive</option>
                                             </select>
                                         </div>
                                     </div>
@@ -120,7 +120,9 @@ include $pathPrefix . '/includes/head.php';
                     $('input[name="name"]').val(user.name);
                     $('input[name="email"]').val(user.email);
                     $('input[name="phone"]').val(user.phone);
-                    $('#status').val(user.status);
+                    let statusValue = (typeof user.status === 'object') ? user.status.value : user.status;
+                    if (statusValue === 'rejected') statusValue = 'suspended';
+                    $('#status').val(statusValue);
                     $('#role_id').val(user.role_id);
                     $('#designation_id').val(user.designation_id);
                 }

@@ -47,7 +47,7 @@ include $pathPrefix . '/includes/head.php';
                             </div>
                             <div class="custom-control custom-radio custom-control-inline">
                                 <input type="radio" id="statusInactive" name="status" class="custom-control-input"
-                                    value="inactive">
+                                    value="suspended">
                                 <label class="custom-control-label" for="statusInactive">Inactive</label>
                             </div>
                             <span style='color:#f00;'></span>
@@ -169,7 +169,9 @@ include $pathPrefix . '/includes/head.php';
 
                     // Set Status
                     if (data.status) {
-                        $(`input[name="status"][value="${data.status}"]`).prop('checked', true);
+                        let statusVal = (typeof data.status === 'object') ? data.status.value : data.status;
+                        if (statusVal === 'rejected') statusVal = 'suspended'; // Map rejected to suspended/inactive UI
+                        $(`input[name="status"][value="${statusVal}"]`).prop('checked', true);
                     } else {
                         $('#statusActive').prop('checked', true);
                     }
