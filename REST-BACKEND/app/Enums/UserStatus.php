@@ -6,6 +6,6 @@ enum UserStatus: string
 {
     case Active = 'active';
     case Pending = 'pending';
-    case Blocked = 'blocked';
-    case Inactive = 'inactive';
+    case Blocked = 'rejected';
+    case Inactive = 'suspended';
 }

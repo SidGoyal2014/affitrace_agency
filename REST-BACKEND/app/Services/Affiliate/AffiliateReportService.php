@@ -32,16 +32,16 @@ class AffiliateReportService extends BaseReportService
 				COUNT(DISTINCT(ot.tid)) as total_clicks
 			FROM 
 				offers 
-			LEFT JOIN 
-				offer_trackings as ot 
-			ON 
-				ot.offer_id = offers.id 
 			INNER JOIN
 				offer_affiliates
 			ON
 				offer_affiliates.offer_id  = offers.id 
+			LEFT JOIN 
+				offer_trackings as ot 
+			ON 
+				ot.offer_id = offers.id AND ot.aff_id = " . $aid . "
 			WHERE
-				ot.aff_id = " . $aid . " 
+				offer_affiliates.affiliate_id = " . $aid . " 
 			GROUP BY
 				offers.id, offers.offer_name
 			Order By 
@@ -51,13 +51,11 @@ class AffiliateReportService extends BaseReportService
         $sql_2 = "
 			SELECT 
 				offer_id,
-				COUNT(aff_click_id) as total_conversions
+				COUNT(*) as total_conversions
 			FROM
-				offer_trackings
+				conversions
 			WHERE
-				aff_click_id != '' 
-					AND
-				aff_id = " . $aid . " 
+				affiliate_id = " . $aid . " 
 			group by
 				offer_id;
 		";
@@ -75,7 +73,7 @@ class AffiliateReportService extends BaseReportService
 
         foreach ($data_1 as $item1) {
             $conversions = (isset($tempArr[$item1->id]) && $tempArr[$item1->id] > 0) ? $tempArr[$item1->id] : 0;
-            $data[] = (object) [
+            $data[] = (object)[
                 'id' => $item1->id,
                 'offer_name' => $item1->offer_name,
                 'total_clicks' => $item1->total_clicks,
@@ -112,17 +110,17 @@ class AffiliateReportService extends BaseReportService
     {
         $data = DB::table('offer_trackings')
             ->select(
-                '*',
-                'offer_trackings.id as otid',
-                'offer_trackings.created_at as link_clicked_at',
-                'affis.id as aff_id',
-                'affis.name as aff_name',
-                'adverts.id as adv_id',
-                'adverts.name as advert_name',
-                'offer_trackings.country as ot_country',
-                'offer_trackings.os as ot_os',
-                'offer_trackings.browser as ot_browser'
-            )
+            '*',
+            'offer_trackings.id as otid',
+            'offer_trackings.created_at as link_clicked_at',
+            'affis.id as aff_id',
+            'affis.name as aff_name',
+            'adverts.id as adv_id',
+            'adverts.name as advert_name',
+            'offer_trackings.country as ot_country',
+            'offer_trackings.os as ot_os',
+            'offer_trackings.browser as ot_browser'
+        )
             ->join('offers', 'offer_trackings.offer_id', '=', 'offers.id')
             ->join('categories', 'offers.category_id', '=', 'categories.id')
             ->join('devices', 'offer_trackings.device_id', '=', 'devices.id')
@@ -138,11 +136,11 @@ class AffiliateReportService extends BaseReportService
 
         return DataTables::of($data)
             ->addColumn('click_info', function ($row) {
-                return "Click Id: {$row->tid} | Aff Click Id: {$row->aff_click_id}";
-            })
+            return "Click Id: {$row->tid} | Aff Click Id: {$row->aff_click_id}";
+        })
             ->editColumn('link_clicked_at', function ($row) {
-                return date("d-m-Y H:i:s", strtotime($row->link_clicked_at));
-            })
+            return date("d-m-Y H:i:s", strtotime($row->link_clicked_at));
+        })
             ->make(true);
     }
 
@@ -153,17 +151,17 @@ class AffiliateReportService extends BaseReportService
     {
         $data = DB::table('offer_trackings')
             ->select(
-                '*',
-                'offer_trackings.id as otid',
-                'offer_trackings.created_at as link_clicked_at',
-                'affis.id as aff_id',
-                'affis.name as aff_name',
-                'adverts.id as adv_id',
-                'adverts.name as advert_name',
-                'offer_trackings.country as ot_country',
-                'offer_trackings.os as ot_os',
-                'offer_trackings.browser as ot_browser'
-            )
+            '*',
+            'offer_trackings.id as otid',
+            'offer_trackings.created_at as link_clicked_at',
+            'affis.id as aff_id',
+            'affis.name as aff_name',
+            'adverts.id as adv_id',
+            'adverts.name as advert_name',
+            'offer_trackings.country as ot_country',
+            'offer_trackings.os as ot_os',
+            'offer_trackings.browser as ot_browser'
+        )
             ->join('offers', 'offer_trackings.offer_id', '=', 'offers.id')
             ->join('categories', 'offers.category_id', '=', 'categories.id')
             ->join('devices', 'offer_trackings.device_id', '=', 'devices.id')
@@ -174,7 +172,8 @@ class AffiliateReportService extends BaseReportService
 
         if ($request->from != "" && $request->to != "" && $request->from == $request->to) {
             $data = $data->where('offer_trackings.created_at', $request->from);
-        } elseif ($request->from != "" && $request->to != "") {
+        }
+        elseif ($request->from != "" && $request->to != "") {
             $data = $data->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
         }
 
@@ -295,26 +294,22 @@ class AffiliateReportService extends BaseReportService
     public function getPayoutsForAffiliate($aid)
     {
         $sql = "SELECT 
-					OT.id as otid,
+					C.id as conv_id,
 					O.offer_name, 
 					M.name as model_name, 
-					OT.payout as price,
-					OT.currency as ot_currency,
-					OT.browser as ot_browser,
-					OT.updated_at as date_updated,
-					OT.*,
-					D.*,
-					E.event_name
+					C.payout as price,
+					C.currency as ot_currency,
+					C.browser as ot_browser,
+					C.created_at as date_updated,
+					C.*
 				FROM 
 					offers O 
 						LEFT JOIN ad_models M ON CAST(NULLIF(O.ad_model, '') AS BIGINT) = M.id
-						LEFT JOIN offer_trackings OT ON O.id = OT.offer_id
-						LEFT JOIN devices D ON OT.device_id = D.id
-						LEFT JOIN offer_events E ON OT.event_id = E.id
+						INNER JOIN conversions C ON O.id = C.offer_id
 				WHERE 
-				 	OT.aff_click_id = OT.tid
-				 	AND
-				 	OT.aff_id = " . $aid;
+				 	C.affiliate_id = " . $aid . "
+                ORDER BY
+                    C.id DESC";
 
         return DB::select($sql);
     }
@@ -359,16 +354,16 @@ class AffiliateReportService extends BaseReportService
     {
         $query = DB::table('offer_trackings')
             ->select(
-                'offer_trackings.*',
-                'offer_trackings.id as otid',
-                'offer_trackings.created_at as link_clicked_at',
-                'offer_trackings.country as ot_country',
-                'offer_trackings.os as ot_os',
-                'offer_trackings.browser as ot_browser',
-                'offers.id as offer_id',
-                'offers.offer_name',
-                'devices.device_name'
-            )
+            'offer_trackings.*',
+            'offer_trackings.id as otid',
+            'offer_trackings.created_at as link_clicked_at',
+            'offer_trackings.country as ot_country',
+            'offer_trackings.os as ot_os',
+            'offer_trackings.browser as ot_browser',
+            'offers.id as offer_id',
+            'offers.offer_name',
+            'devices.device_name'
+        )
             ->leftJoin('offers', 'offer_trackings.offer_id', '=', 'offers.id')
             ->leftJoin('devices', 'offer_trackings.device_id', '=', 'devices.id')
             ->where('offer_trackings.aff_id', $aid);
@@ -397,16 +392,16 @@ class AffiliateReportService extends BaseReportService
     {
         $query = DB::table('conversions')
             ->select(
-                'conversions.*',
-                'conversions.id as conv_id',
-                'conversions.created_at as conversion_time',
-                'conversions.country',
-                'conversions.device',
-                'conversions.event',
-                'conversions.payout',
-                'offers.id as offer_id',
-                'offers.offer_name'
-            )
+            'conversions.*',
+            'conversions.id as conv_id',
+            'conversions.created_at as conversion_time',
+            'conversions.country',
+            'conversions.device',
+            'conversions.event',
+            'conversions.payout',
+            'offers.id as offer_id',
+            'offers.offer_name'
+        )
             ->leftJoin('offers', 'conversions.offer_id', '=', 'offers.id')
             ->where('conversions.affiliate_id', $aid);
 

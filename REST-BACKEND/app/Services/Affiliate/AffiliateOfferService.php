@@ -15,9 +15,9 @@ class AffiliateOfferService
     public function getOffersApproved($affiliateId, $eai)
     {
         $offers = DB::table('offers')
-            ->join('ad_models', DB::raw("CAST(NULLIF(offers.ad_model, '') AS BIGINT)"), '=', 'ad_models.id')
+            ->leftJoin('ad_models', DB::raw("CAST(NULLIF(offers.ad_model, '') AS BIGINT)"), '=', 'ad_models.id')
             ->join('offer_affiliates', 'offers.id', '=', 'offer_affiliates.offer_id')
-            ->select('offers.*', 'ad_models.name')
+            ->select('offers.*', 'ad_models.name as model_name')
             ->where('offer_affiliates.affiliate_id', $affiliateId)
             ->get()->toArray();
 
@@ -40,10 +40,10 @@ class AffiliateOfferService
         $offerTokens = OfferToken::all();
 
         $offer = DB::table('offers')
-            ->join('ad_models', DB::raw("CAST(NULLIF(offers.ad_model, '') AS BIGINT)"), '=', 'ad_models.id')
+            ->leftJoin('ad_models', DB::raw("CAST(NULLIF(offers.ad_model, '') AS BIGINT)"), '=', 'ad_models.id')
             ->join('offer_affiliates', 'offers.id', '=', 'offer_affiliates.offer_id')
-            ->join('categories', 'categories.id', '=', 'offers.category_id')
-            ->select('offers.*', 'ad_models.name', 'offer_affiliates.tracking_url', 'category_name')
+            ->leftJoin('categories', 'categories.id', '=', 'offers.category_id')
+            ->select('offers.*', 'ad_models.name as model_name', 'offer_affiliates.tracking_url', 'category_name')
             ->where('offer_affiliates.affiliate_id', $affiliateId)
             ->where('offer_affiliates.offer_id', $offerId)
             ->get();
@@ -63,7 +63,7 @@ class AffiliateOfferService
                     OE.id = PR.event_id
 
                 WHERE 
-                    " . $affiliateId . " IN (PR.affiliate_id) 
+                    ('" . $affiliateId . "' = ANY(STRING_TO_ARRAY(PR.affiliate_id, ',')) OR PR.affiliate_id = '" . $affiliateId . "')
                 AND
                     PR.offer_id = " . $offerId;
 
