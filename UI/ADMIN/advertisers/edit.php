@@ -206,9 +206,7 @@ include $pathPrefix . '/includes/head.php';
                     <div class="form-card">
                         <div class="form-card-inner">
                             <div class="header-section">
-                                <span class="user-badge" id="userIdBadge">ID: --</span>
                                 <h1><i class="fas fa-user-edit mr-2" style="color: #667eea;"></i> Edit Advertiser</h1>
-                                <p>Update advertiser account details</p>
                             </div>
 
                             <div id="alert-container"></div>
@@ -244,12 +242,18 @@ include $pathPrefix . '/includes/head.php';
                                     <label for="country">Country</label>
                                 </div>
 
+                                <?php
+                                /*
                                 <div class="form-group mb-4">
-                                    <label class="text-muted" style="font-size: 14px; padding-left: 16px;">Role Assignment</label>
-                                    <select name="role_id" id="role_id" class="form-control" style="border-radius:12px; height:58px; padding-left:16px;">
+                                    <label class="text-muted" style="font-size: 14px; padding-left: 16px;">Role
+                                        Assignment</label>
+                                    <select name="role_id" id="role_id" class="form-control"
+                                        style="border-radius:12px; height:58px; padding-left:16px;">
                                         <option value="">Select Role (Optional)</option>
                                     </select>
                                 </div>
+                                */
+                                ?>
 
                                 <div class="divider"><span>Change Password (Optional)</span></div>
 
@@ -296,14 +300,14 @@ include $pathPrefix . '/includes/head.php';
 
             try {
                 const rolesRes = await API.fetchWithAuth('admin/roles');
-                if(rolesRes && rolesRes.length > 0) {
+                if (rolesRes && rolesRes.length > 0) {
                     rolesRes.forEach(r => {
-                        if(r.user_type === 'advertiser') {
+                        if (r.user_type === 'advertiser') {
                             $('#role_id').append(`<option value="${r.id}">${r.name}</option>`);
                         }
                     });
                 }
-            } catch(e) { console.error("Failed to load roles"); }
+            } catch (e) { console.error("Failed to load roles"); }
 
             // Get ID from URL
             const urlParams = new URLSearchParams(window.location.search);

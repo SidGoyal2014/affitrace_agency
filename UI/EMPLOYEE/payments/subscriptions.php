@@ -56,7 +56,7 @@ include $pathPrefix . '/includes/head.php';
             if (user) $('.user-name').text(user.name);
 
             try {
-                const response = await API.fetchWithAuth('employee/payments/subscriptions');
+                const response = await API.fetchWithAuth('employee/payments/show-subscriptions');
                 let subs = response.data || [];
                 const tbody = $('#tableBody');
                 tbody.empty();

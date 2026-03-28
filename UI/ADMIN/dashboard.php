@@ -17,9 +17,13 @@ include $pathPrefix . '/includes/head.php';
             <!-- Page Header -->
             <div class="page-header">
                 <h1>Dashboard</h1>
+                <?php
+                /*
                 <a href="#" class="btn btn-primary">
                     <i class="fas fa-download mr-2"></i> Generate Report
                 </a>
+                */
+                ?>
             </div>
 
             <!-- Click Limit Status -->

@@ -1,3 +1,8 @@
+<?php
+header("Location: ../login.php");
+exit();
+?>
+
 <?php $pathPrefix = '.'; ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,7 +67,8 @@
                                         </div>
                                         <div class="form-group">
                                             <input type="text" name="eai" class="form-control" id="exampleInputAgency"
-                                                placeholder="Enter Agency ID..." value="demo" autocomplete="off" data-lpignore="true">
+                                                placeholder="Enter Agency ID..." value="demo" autocomplete="off"
+                                                data-lpignore="true">
                                         </div>
                                         <div class="form-group">
                                             <input type="email" name="email" class="form-control" id="exampleInputEmail"

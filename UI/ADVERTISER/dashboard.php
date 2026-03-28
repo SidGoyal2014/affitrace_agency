@@ -98,7 +98,7 @@ include $pathPrefix . '/includes/head.php';
                 $('#total_offers').text(data.total_offers || 0);
                 $('#total_budget').text('$' + Number(data.total_budget || 0).toLocaleString());
                 $('#conversions').text(Number(data.conversions || 0).toLocaleString());
-                $('#pending_invoices').text(data.pending_invoices || 0);
+                $('#pending_invoices').text('$' + Number(data.pending_invoices || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 
             } catch (error) {
                 console.error('Dashboard load failed:', error);
