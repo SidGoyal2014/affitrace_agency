@@ -91,7 +91,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 
         // Payments
-        Route::get('payments/plan-details', [App\Http\Controllers\Admin\PaymentController::class, 'plan_details']);
+        Route::get('payments/plan-details', [App\Http\Controllers\Admin\PaymentController::class, 'get_plan_details']);
         Route::get('payments/show-subscriptions', [App\Http\Controllers\Admin\PaymentController::class, 'show_subscriptions']);
         Route::get('payments/pause-subscription/{id}', [App\Http\Controllers\Admin\PaymentController::class, 'pause_subscription']);
         Route::get('payments/resume-subscription/{id}', [App\Http\Controllers\Admin\PaymentController::class, 'resume_subscription']);
@@ -375,7 +375,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         // ── Payments ──
         Route::middleware(['module.access:integrations,can_view'])->group(function () {
-            Route::get('payments/plan-details', [App\Http\Controllers\Admin\PaymentController::class, 'plan_details']);
+            Route::get('payments/plan-details', [App\Http\Controllers\Admin\PaymentController::class, 'get_plan_details']);
             Route::get('payments/show-subscriptions', [App\Http\Controllers\Admin\PaymentController::class, 'show_subscriptions']);
         });
 

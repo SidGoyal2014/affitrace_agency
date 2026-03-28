@@ -49,7 +49,17 @@ class AdminPaymentService
                         ->whereRaw('ssd.id = (select max(id) from subscription_status_details where subscription_status_details.subscription_id = s.id)');
                 }
             )
-            ->select('s.*', 'ssd.*', 'ssd.id as ssdid');
+            ->select(
+                's.id',
+                's.plan_name',
+                's.stripe_plan_id as plan_id',
+                's.status',
+                's.subscription_end_date as expires_at',
+                's.created_at as subscription_created_at',
+                DB::raw("'Agency Admin' as user_name"),
+                DB::raw("'System' as user_id"),
+                'ssd.id as ssdid'
+            );
 
         if ($request->has('status') && $request->status != "") {
             $data = $data->where('s.status', $request->status);

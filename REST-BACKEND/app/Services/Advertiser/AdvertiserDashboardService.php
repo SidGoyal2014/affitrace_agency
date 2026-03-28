@@ -21,8 +21,8 @@ class AdvertiserDashboardService
             // Get conversions count
             $conversions = $this->get_conversions_count($advertiser_id);
 
-            // Get pending invoices (placeholder for now)
-            $pending_invoices = 0;
+            // Get pending invoices (SENT status only)
+            $pending_invoices = $this->get_pending_invoices_amount($advertiser_id);
 
             // Get monthly spend data
             $monthly_spend = $this->get_monthly_spend($advertiser_id);
@@ -64,7 +64,7 @@ class AdvertiserDashboardService
                     offers.offer_desc,
                     categories.category_name,
                     offers.id as oid,
-                    (SELECT COUNT(*) FROM conversions WHERE offer_id = offers.id) as conversions
+                    (SELECT COUNT(*) FROM conversions WHERE offer_id = offers.id AND status = 'APPROVED') as conversions
                 FROM 
                     offers 
                 LEFT JOIN 
@@ -89,7 +89,8 @@ class AdvertiserDashboardService
             $sql = "SELECT SUM(COALESCE(c.revenue_usd, 0)) as total_spend 
                     FROM conversions c 
                     INNER JOIN offers o ON c.offer_id = o.id 
-                    WHERE o.advertiser_id = " . $advertiser_id;
+                    WHERE o.advertiser_id = " . $advertiser_id . " 
+                    AND c.status = 'APPROVED'";
 
             $result = DB::select($sql);
 
@@ -105,7 +106,8 @@ class AdvertiserDashboardService
             $sql = "SELECT COUNT(*) as conversions 
                     FROM conversions c 
                     INNER JOIN offers o ON c.offer_id = o.id 
-                    WHERE o.advertiser_id = " . $advertiser_id;
+                    WHERE o.advertiser_id = " . $advertiser_id . " 
+                    AND c.status = 'APPROVED'";
 
             $result = DB::select($sql);
 
@@ -124,6 +126,7 @@ class AdvertiserDashboardService
                     FROM conversions c 
                     INNER JOIN offers o ON c.offer_id = o.id 
                     WHERE o.advertiser_id = " . $advertiser_id . " 
+                    AND c.status = 'APPROVED' 
                     GROUP BY EXTRACT(MONTH FROM c.created_at)";
 
             $arr = DB::select($sql);
@@ -160,7 +163,8 @@ class AdvertiserDashboardService
                     LEFT JOIN 
                         conversions c ON o.id = c.offer_id 
                     WHERE 
-                        o.advertiser_id = " . $advertiser_id . "
+                        o.advertiser_id = " . $advertiser_id . " 
+                        AND (c.status = 'APPROVED' OR c.id IS NULL)
                     GROUP BY 
                         o.id, o.offer_name, o.offer_status 
                     ORDER BY 
@@ -170,6 +174,23 @@ class AdvertiserDashboardService
             return DB::select($sql);
         } catch (\Exception $e) {
             return [];
+        }
+    }
+
+    private function get_pending_invoices_amount($advertiser_id)
+    {
+        try {
+            $sql = "SELECT SUM(total_amount) as pending_amount 
+                    FROM invoices 
+                    WHERE advertiser_id = " . $advertiser_id . " 
+                    AND status = 'SENT' 
+                    AND deleted_at IS NULL";
+
+            $result = DB::select($sql);
+
+            return isset($result[0]) ? floatval($result[0]->pending_amount ?? 0) : 0;
+        } catch (\Exception $e) {
+            return 0;
         }
     }
 }

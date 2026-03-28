@@ -66,7 +66,7 @@ class AdvertiserOfferService
                     offers.category_id = categories.id 
                 WHERE 
                     offers.advertiser_id = ?
-                    AND offers.offer_status = 'Approved'";
+                    AND offers.offer_status = 'approve'";
 
         try {
             $offers = DB::select($sql, [$advertiser_id]);
