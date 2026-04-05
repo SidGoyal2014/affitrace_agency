@@ -42,20 +42,23 @@ function url($path)
             await API.fetchWithAuth('admin/stop-impersonate', { method: 'POST' });
         } catch(e) { console.error(e); }
         
-        const adminToken = localStorage.getItem('admin_token');
+        const adminToken = localStorage.getItem('admin_access_token');
         const adminUser = localStorage.getItem('admin_user');
         
         localStorage.removeItem('is_impersonating');
         localStorage.removeItem('impersonator');
-        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_access_token');
         localStorage.removeItem('admin_user');
         
         if (adminToken && adminUser) {
-            localStorage.setItem('token', adminToken);
+            localStorage.setItem('access_token', adminToken);
             localStorage.setItem('user', adminUser);
-            window.location.href = '../ADMIN/dashboard.php';
+            
+            const parsedAdmin = JSON.parse(adminUser);
+            const targetDir = parsedAdmin.user_type === 'employee' ? 'EMPLOYEE' : 'ADMIN';
+            window.location.href = "<?php echo $pathPrefix; ?>/../" + targetDir + "/dashboard.php";
         } else {
-            window.location.href = '../login.php';
+            window.location.href = "<?php echo $pathPrefix; ?>/../login.php";
         }
     }
 </script>

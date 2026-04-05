@@ -123,11 +123,11 @@ include $pathPrefix . '/includes/head.php';
                 const res = await API.fetchWithAuth(`admin/impersonate/${id}`, { method: 'POST' });
                 
                 // Save admin state
-                localStorage.setItem('admin_token', localStorage.getItem('token'));
+                localStorage.setItem('admin_access_token', localStorage.getItem('access_token'));
                 localStorage.setItem('admin_user', localStorage.getItem('user'));
                 
                 // Set impersonated state
-                localStorage.setItem('token', res.token);
+                localStorage.setItem('access_token', res.token);
                 localStorage.setItem('user', JSON.stringify(res.user));
                 localStorage.setItem('is_impersonating', 'true');
                 localStorage.setItem('impersonator', JSON.stringify(res.impersonator));
