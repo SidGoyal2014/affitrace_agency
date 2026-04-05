@@ -76,6 +76,11 @@ include $pathPrefix . '/includes/head.php';
                 return;
             }
 
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user && user.name) {
+                $('.user-name').text(user.name);
+            }
+
             // Populate the timezone dropdown from the static list
             const $tzSelect = $('#timezone');
             $tzSelect.empty().append('<option value="">Select your timezone...</option>');
