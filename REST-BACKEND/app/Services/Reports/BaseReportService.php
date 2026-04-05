@@ -9,7 +9,7 @@ use App\Http\Traits\CommonFunctions;
 
 class BaseReportService
 {
-    use CommonFunctions;
+    use CommonFunctions, \App\Http\Traits\TimezoneHelper;
 
     /**
      * Apply filters to a query builder
@@ -22,11 +22,9 @@ class BaseReportService
     {
         // Date range filter
         if ($filters->from && $filters->to) {
-            if ($filters->from !== $filters->to) {
-                $query->whereBetween('offer_trackings.created_at', [$filters->from, $filters->to]);
-            } else {
-                $query->whereDate('offer_trackings.created_at', $filters->from);
-            }
+            $fromUtc = $this->getUtcStartOfDay($filters->from);
+            $toUtc   = $this->getUtcEndOfDay($filters->to);
+            $query->whereBetween('offer_trackings.created_at', [$fromUtc, $toUtc]);
         }
 
         // Offer filter
@@ -128,6 +126,12 @@ class BaseReportService
 
         // Paginate results
         $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($filters->limit);
+        
+        $results->getCollection()->transform(function ($row) {
+            if (isset($row->link_clicked_at)) $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
+            if (isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
+            return $row;
+        });
 
         return [
             'module_name' => 'Click & Conversion Report',
@@ -146,9 +150,12 @@ class BaseReportService
      */
     public function getSummaryReport(ReportFilterDTO $filters, ?int $scopeUserId = null, ?string $scopeType = null): array
     {
+        $tz = $this->getUserTimezone();
+        $tzStr = "AT TIME ZONE 'UTC' AT TIME ZONE '{$tz}'";
+        
         $query = DB::table('offer_trackings')
             ->select(
-                DB::raw('CAST(offer_trackings.created_at AS DATE) as date'),
+                DB::raw("CAST(offer_trackings.created_at {$tzStr} AS DATE) as date"),
                 DB::raw("COUNT(CASE WHEN offer_trackings.event = '" . \App\Enums\TrackingEventType::Click->value . "' THEN 1 END) as clicks"),
                 DB::raw("COUNT(CASE WHEN offer_trackings.event != '" . \App\Enums\TrackingEventType::Click->value . "' THEN 1 END) as conversions"),
                 DB::raw('SUM(COALESCE(offer_trackings.revenue_usd, 0)) as cost')
@@ -169,7 +176,7 @@ class BaseReportService
 
         // Group by date and order
         $stats = $query
-            ->groupBy(DB::raw('CAST(offer_trackings.created_at AS DATE)'))
+            ->groupBy(DB::raw("CAST(offer_trackings.created_at {$tzStr} AS DATE)"))
             ->orderBy('date', 'desc')
             ->limit(30)
             ->get();

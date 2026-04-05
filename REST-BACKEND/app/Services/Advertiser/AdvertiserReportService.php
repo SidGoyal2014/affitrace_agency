@@ -8,6 +8,7 @@ use App\DTOs\ReportFilterDTO;
 
 class AdvertiserReportService extends BaseReportService
 {
+    use \App\Http\Traits\TimezoneHelper;
     /**
      * Get summary report for advertiser (wrapper method for backward compatibility)
      * 
@@ -22,9 +23,12 @@ class AdvertiserReportService extends BaseReportService
             $filters = new ReportFilterDTO();
         }
 
+        $tz = $this->getUserTimezone();
+        $tzStr = "AT TIME ZONE 'UTC' AT TIME ZONE '{$tz}'";
+
         $query = DB::table('offer_trackings')
             ->select(
-                DB::raw('CAST(offer_trackings.created_at AS DATE) as date'),
+                DB::raw("CAST(offer_trackings.created_at {$tzStr} AS DATE) as date"),
                 DB::raw("COUNT(DISTINCT offer_trackings.id) as clicks"),
                 DB::raw("COUNT(conversions.id) as conversions"),
                 DB::raw('SUM(COALESCE(conversions.revenue_usd, 0)) as cost')
@@ -39,7 +43,7 @@ class AdvertiserReportService extends BaseReportService
         $query = $this->applyFilters($query, $filters);
 
         $stats = $query
-            ->groupBy(DB::raw('CAST(offer_trackings.created_at AS DATE)'))
+            ->groupBy(DB::raw("CAST(offer_trackings.created_at {$tzStr} AS DATE)"))
             ->orderBy('date', 'desc')
             ->limit(30)
             ->get();
@@ -145,7 +149,10 @@ class AdvertiserReportService extends BaseReportService
             ->where('offers.advertiser_id', $advertiser_id);
 
         if ($request->from && $request->to) {
-            $query->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
+            $query->whereBetween('offer_trackings.created_at', [
+                $this->getUtcStartOfDay($request->from), 
+                $this->getUtcEndOfDay($request->to)
+            ]);
         }
         if ($request->offer_id) {
             $query->where('offers.id', $request->offer_id);
@@ -153,6 +160,12 @@ class AdvertiserReportService extends BaseReportService
 
         $limit = $request->limit ?? 50;
         $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);
+
+        $results->getCollection()->transform(function ($row) {
+            if(isset($row->link_clicked_at)) $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
+            if(isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
+            return $row;
+        });
 
         return [
             'module_name' => 'Clicks Report',
@@ -185,7 +198,10 @@ class AdvertiserReportService extends BaseReportService
             ->where('conversions.advertiser_id', $advertiser_id);
 
         if ($request->from && $request->to) {
-            $query->whereBetween('conversions.created_at', [$request->from, $request->to]);
+            $query->whereBetween('conversions.created_at', [
+                $this->getUtcStartOfDay($request->from), 
+                $this->getUtcEndOfDay($request->to)
+            ]);
         }
         if ($request->offer_id) {
             $query->where('conversions.offer_id', $request->offer_id);
@@ -193,6 +209,12 @@ class AdvertiserReportService extends BaseReportService
 
         $limit = $request->limit ?? 50;
         $results = $query->orderBy('conversions.id', 'desc')->paginate($limit);
+
+        $results->getCollection()->transform(function ($row) {
+            if(isset($row->conversion_time)) $row->conversion_time = $this->formatUtcToLocal($row->conversion_time);
+            if(isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
+            return $row;
+        });
 
         return [
             'module_name' => 'Conversions Report',

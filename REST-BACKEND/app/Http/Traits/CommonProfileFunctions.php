@@ -61,6 +61,9 @@ trait CommonProfileFunctions
                 $user->role_id = $request->filled('role_id') ? $request->role_id : null;
             }
 
+            if ($request->has('timezone')) $user->timezone = $request->timezone;
+            elseif ($request->has('time_zone')) $user->timezone = $request->time_zone;
+
             $user->save();
 
             $adud = AdvertiserUserDetail::firstOrNew(['user_id' => $uid]);
@@ -160,6 +163,9 @@ trait CommonProfileFunctions
                 $user->role_id = $request->filled('role_id') ? $request->role_id : null;
             }
 
+            if ($request->has('timezone')) $user->timezone = $request->timezone;
+            elseif ($request->has('time_zone')) $user->timezone = $request->time_zone;
+
             $user->save();
 
             $aud = AffiliateUserDetail::firstOrNew(['user_id' => $uid]);
@@ -196,10 +202,10 @@ trait CommonProfileFunctions
             ]);
             return response()->json(['status' => 0, 'error' => $e->getMessage()], 500);
         }
+    } // End update_affiliate_profile
 
-
-        function update_employee_profile(Request $request)
-        {
+    function update_employee_profile(Request $request)
+    {
             try {
                 $validator = Validator::make(request()->all(), [
                     'name' => 'required|string|min:5',
@@ -224,6 +230,9 @@ trait CommonProfileFunctions
                     $user->designation_id = $request->filled('designation_id') ? $request->designation_id : null;
                 }
 
+                if ($request->has('timezone')) $user->timezone = $request->timezone;
+                elseif ($request->has('time_zone')) $user->timezone = $request->time_zone;
+
                 if (strlen(trim($request->password)) > 0) {
                     $user->password = Hash::make($request->password);
                 }
@@ -237,9 +246,6 @@ trait CommonProfileFunctions
             } catch (\Exception $e) {
                 return response()->json(['status' => 0, 'error' => $e->getMessage()], 500);
             }
-        }
-
-
     }
 
 } // CommonProfileFunctions

@@ -88,6 +88,10 @@ class AdminService
         $user->name = $request->name;
         $user->email = $request->email;
         $user->phone = $request->phone;
+        
+        if ($request->has('timezone')) {
+            $user->timezone = $request->timezone;
+        }
 
         if (strlen($request->password) > 0) {
             $user->password = Hash::make($request->password);

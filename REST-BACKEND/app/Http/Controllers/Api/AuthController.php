@@ -174,4 +174,71 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
+
+    /**
+     * Update Timezone
+     *
+     * Modifies the timezone for the currently authenticated user.
+     *
+     * @bodyParam timezone string required The timezone to set (e.g. America/New_York)
+     *
+     * @response 200 {
+     *   "message": "Timezone updated successfully",
+     *   "timezone": "America/New_York"
+     * }
+     */
+    public function updateTimezone(Request $request)
+    {
+        $user = $request->user();
+
+        Log::info('Timezone update requested', [
+            'user_id'   => $user->id,
+            'user_type' => $user->user_type,
+            'email'     => $user->email,
+            'requested_timezone' => $request->timezone,
+            'ip' => $request->ip(),
+        ]);
+
+        $validator = Validator::make($request->all(), [
+            'timezone' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            Log::warning('Timezone update validation failed', [
+                'user_id' => $user->id,
+                'errors'  => $validator->errors()->toArray(),
+            ]);
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $oldTimezone = $user->timezone;
+        $user->timezone = $request->timezone;
+
+        try {
+            $user->save();
+
+            Log::info('Timezone updated successfully', [
+                'user_id'      => $user->id,
+                'user_type'    => $user->user_type,
+                'email'        => $user->email,
+                'old_timezone' => $oldTimezone,
+                'new_timezone' => $user->timezone,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Timezone update failed', [
+                'user_id'   => $user->id,
+                'error'     => $e->getMessage(),
+                'trace'     => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to update timezone',
+            ], 500);
+        }
+
+        return response()->json([
+            'message' => 'Timezone updated successfully',
+            'timezone' => $user->timezone
+        ]);
+    }
 }

@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 
 class AffiliateReportService extends BaseReportService
 {
-    use CommonOfferFunctions;
+    use CommonOfferFunctions, \App\Http\Traits\TimezoneHelper;
 
     /**
      * Get summary data for affiliate
@@ -127,7 +127,10 @@ class AffiliateReportService extends BaseReportService
             ->join('users as affis', 'offer_trackings.aff_id', '=', 'affis.id')
             ->join('users as adverts', 'offer_trackings.adv_id', '=', 'adverts.id')
             ->where('offers.id', $offer_id)
-            ->where('offer_trackings.created_at', date('Y-m-d'))
+            ->whereBetween('offer_trackings.created_at', [
+                $this->getUtcStartOfDay(\Carbon\Carbon::now($this->getUserTimezone())->format('Y-m-d')),
+                $this->getUtcEndOfDay(\Carbon\Carbon::now($this->getUserTimezone())->format('Y-m-d'))
+            ])
             ->where('offer_trackings.aff_id', $aid);
 
         if ($get_conversions == "Y") {
@@ -139,7 +142,7 @@ class AffiliateReportService extends BaseReportService
             return "Click Id: {$row->tid} | Aff Click Id: {$row->aff_click_id}";
         })
             ->editColumn('link_clicked_at', function ($row) {
-            return date("d-m-Y H:i:s", strtotime($row->link_clicked_at));
+            return $this->formatUtcToLocal($row->link_clicked_at);
         })
             ->make(true);
     }
@@ -171,10 +174,10 @@ class AffiliateReportService extends BaseReportService
             ->where('offer_trackings.aff_id', $aid);
 
         if ($request->from != "" && $request->to != "" && $request->from == $request->to) {
-            $data = $data->where('offer_trackings.created_at', $request->from);
+            $data = $data->whereBetween('offer_trackings.created_at', [$this->getUtcStartOfDay($request->from), $this->getUtcEndOfDay($request->to)]);
         }
         elseif ($request->from != "" && $request->to != "") {
-            $data = $data->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
+            $data = $data->whereBetween('offer_trackings.created_at', [$this->getUtcStartOfDay($request->from), $this->getUtcEndOfDay($request->to)]);
         }
 
         $arrC = $this->getCountry();
@@ -195,6 +198,9 @@ class AffiliateReportService extends BaseReportService
         }
 
         $data = $data->orderBy('offer_trackings.id', 'desc')->get();
+        foreach($data as $row) {
+            $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
+        }
         $offer_data = DB::table('offers')->where('id', $request->offer_id)->first();
 
         return [
@@ -311,7 +317,13 @@ class AffiliateReportService extends BaseReportService
                 ORDER BY
                     C.id DESC";
 
-        return DB::select($sql);
+        $results = DB::select($sql);
+        foreach ($results as $row) {
+            $row->date_updated = $this->formatUtcToLocal($row->date_updated);
+            $row->created_at = $this->formatUtcToLocal($row->created_at);
+            $row->updated_at = $this->formatUtcToLocal($row->updated_at);
+        }
+        return $results;
     }
 
     /**
@@ -369,7 +381,10 @@ class AffiliateReportService extends BaseReportService
             ->where('offer_trackings.aff_id', $aid);
 
         if ($request->from && $request->to) {
-            $query->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
+            $query->whereBetween('offer_trackings.created_at', [
+                $this->getUtcStartOfDay($request->from), 
+                $this->getUtcEndOfDay($request->to)
+            ]);
         }
         if ($request->offer_id) {
             $query->where('offers.id', $request->offer_id);
@@ -377,6 +392,12 @@ class AffiliateReportService extends BaseReportService
 
         $limit = $request->limit ?? 50;
         $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);
+        
+        $results->getCollection()->transform(function ($row) {
+            $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
+            $row->created_at = $this->formatUtcToLocal($row->created_at);
+            return $row;
+        });
 
         return [
             'module_name' => 'Clicks Report',
@@ -406,7 +427,10 @@ class AffiliateReportService extends BaseReportService
             ->where('conversions.affiliate_id', $aid);
 
         if ($request->from && $request->to) {
-            $query->whereBetween('conversions.created_at', [$request->from, $request->to]);
+            $query->whereBetween('conversions.created_at', [
+                $this->getUtcStartOfDay($request->from), 
+                $this->getUtcEndOfDay($request->to)
+            ]);
         }
         if ($request->offer_id) {
             $query->where('conversions.offer_id', $request->offer_id);
@@ -414,6 +438,12 @@ class AffiliateReportService extends BaseReportService
 
         $limit = $request->limit ?? 50;
         $results = $query->orderBy('conversions.id', 'desc')->paginate($limit);
+
+        $results->getCollection()->transform(function ($row) {
+            $row->conversion_time = $this->formatUtcToLocal($row->conversion_time);
+            $row->created_at = $this->formatUtcToLocal($row->created_at);
+            return $row;
+        });
 
         return [
             'module_name' => 'Conversions Report',

@@ -24,6 +24,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('logout', [App\Http\Controllers\Api\AuthController::class, 'logout']);
     Route::post('refresh-token', [App\Http\Controllers\Api\AuthController::class, 'refreshToken']);
     Route::get('me', [App\Http\Controllers\Api\AuthController::class, 'me']);
+    Route::post('update-timezone', [App\Http\Controllers\Api\AuthController::class, 'updateTimezone']);
 
     // Impersonation Exit (Must be outside 'admin' middleware so impersonated users can call it)
     Route::post('admin/stop-impersonate', [App\Http\Controllers\Admin\ImpersonationController::class, 'stop']);

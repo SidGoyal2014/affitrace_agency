@@ -466,7 +466,9 @@ class AdminReportService extends BaseReportService
 
         // Apply filters
         if ($request->from && $request->to) {
-            $query->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
+            $fromUtc = $this->getUtcStartOfDay($request->from);
+            $toUtc   = $this->getUtcEndOfDay($request->to);
+            $query->whereBetween('offer_trackings.created_at', [$fromUtc, $toUtc]);
         }
         if ($request->offer_id) {
             $query->where('offers.id', $request->offer_id);
@@ -480,6 +482,13 @@ class AdminReportService extends BaseReportService
 
         $limit = $request->limit ?? 50;
         $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);
+
+        // Convert UTC timestamps to user's configured timezone
+        $results->getCollection()->transform(function ($row) {
+            if (isset($row->link_clicked_at)) $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
+            if (isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
+            return $row;
+        });
 
         return [
             'module_name' => 'Clicks Report',
@@ -517,7 +526,9 @@ class AdminReportService extends BaseReportService
 
         // Apply filters
         if ($request->from && $request->to) {
-            $query->whereBetween('conversions.created_at', [$request->from, $request->to]);
+            $fromUtc = $this->getUtcStartOfDay($request->from);
+            $toUtc   = $this->getUtcEndOfDay($request->to);
+            $query->whereBetween('conversions.created_at', [$fromUtc, $toUtc]);
         }
         if ($request->offer_id) {
             $query->where('conversions.offer_id', $request->offer_id);
@@ -534,6 +545,13 @@ class AdminReportService extends BaseReportService
 
         $limit = $request->limit ?? 50;
         $results = $query->orderBy('conversions.id', 'desc')->paginate($limit);
+
+        // Convert UTC timestamps to user's configured timezone
+        $results->getCollection()->transform(function ($row) {
+            if (isset($row->conversion_time)) $row->conversion_time = $this->formatUtcToLocal($row->conversion_time);
+            if (isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
+            return $row;
+        });
 
         return [
             'module_name' => 'Conversions Report',

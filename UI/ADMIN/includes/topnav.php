@@ -174,7 +174,7 @@ function url($path)
                 <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/profile.php">
                     <i class="fas fa-user fa-sm fa-fw mr-2"></i> Profile
                 </a>
-                <a class="dropdown-item" href="#">
+                <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/settings.php">
                     <i class="fas fa-cogs fa-sm fa-fw mr-2"></i> Settings
                 </a>
                 <div class="dropdown-divider"></div>

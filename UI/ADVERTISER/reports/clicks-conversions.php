@@ -182,7 +182,7 @@ include $pathPrefix . '/includes/head.php';
                             : '<span class="badge badge-info">Click</span>';
                         
                         html += `<tr>
-                            <td>${new Date(row.link_clicked_at).toLocaleString()}</td>
+                            <td>${row.link_clicked_at || '-'}</td>
                             <td>${row.offer_name || 'N/A'}</td>
                             <td>${row.aff_name || 'N/A'}</td>
                             <td><small>${row.tid || 'N/A'}</small></td>
