@@ -25,11 +25,10 @@ include $pathPrefix . '/includes/head.php';
                         <table class="table table-flush mb-0" id="dataTable">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>User</th>
                                     <th>Plan</th>
-                                    <th>Status</th>
-                                    <th>Expires</th>
+                                    <th>Subscription</th>
+                                    <th>Subscription Details</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
@@ -62,13 +61,44 @@ include $pathPrefix . '/includes/head.php';
 
                 if (subs.length > 0) {
                     subs.forEach(s => {
+
+
+                        const actionHtml = (obj) => {
+                        if (obj.status === "Deleted") {
+                            return `<span class="btn btn-danger">Deleted</span>`;
+                        }
+
+                        let buttons = '';
+
+                        if (obj.status === "Created" || obj.status === "Resumed") {
+                            buttons += `<a href="/admin/payments/pause_subscription/${obj.ssdid}" class="btn btn-outline-warning">Pause</a> `;
+                        } else if (obj.status === "Paused") {
+                            buttons += `<a href="/admin/payments/resume_subscription/${obj.ssdid}" class="btn btn-primary">Resume</a> `;
+                        }
+
+                        buttons += `<a href="/admin/payments/delete_subscription/${obj.ssdid}" class="btn btn-outline-danger">Delete</a>`;
+
+                        return buttons;
+                        };
+
+
+
                         tbody.append(`
                             <tr>
-                                <td>${s.id}</td>
-                                <td>${s.user_name || s.user_id}</td>
-                                <td>${s.plan_name || s.plan_id}</td>
-                                <td><span class="badge badge-${s.status === 'active' ? 'success' : 'secondary'}">${s.status}</span></td>
-                                <td>${s.expires_at || '-'}</td>
+                                <td>
+                                    <strong>Stripe PlanId:</strong><br />${s.stripe_plan_id}}<br />
+                                    <strong>Plan Name:</strong>${s.plan_name}
+                                </td>
+                                <td>
+                                    <strong>Customer Id:</strong><br />${s.pg_customer_id}<br /><br />
+                                    <strong>Subscription Id:</strong><br />${s.stripe_subscription_id}
+                                </td>
+                                <td>
+                                    <strong>Amount:</strong>${s.subscription_amount}<br />
+                                    <strong>Start date:</strong>${s.subscription_start_date }<br />
+                                    <strong>End date:</strong>${s.expires_at }
+                                </td>
+                                <td width="20%">${actionHtml(s)}</td>
                             </tr>
                         `);
                     });

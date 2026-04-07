@@ -53,11 +53,11 @@ class AdminPaymentService
                 's.id',
                 's.plan_name',
                 's.stripe_plan_id as plan_id',
+                's.subscription_amount',
                 's.status',
                 's.subscription_end_date as expires_at',
                 's.created_at as subscription_created_at',
-                DB::raw("'Agency Admin' as user_name"),
-                DB::raw("'System' as user_id"),
+                'ssd.*',
                 'ssd.id as ssdid'
             );
 

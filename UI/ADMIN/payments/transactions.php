@@ -25,12 +25,10 @@ include $pathPrefix . '/includes/head.php';
                         <table class="table table-flush mb-0" id="dataTable">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>User</th>
-                                    <th>Amount</th>
-                                    <th>Type</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
+                                    <th>Plan</th>
+                                    <th>Agency</th>
+                                    <th>Billing</th>
+                                    <th>Transaction</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
@@ -58,21 +56,37 @@ include $pathPrefix . '/includes/head.php';
             if (user) $('.user-name').text(user.name);
 
             try {
-                const response = await API.fetchWithAuth('admin/payments/transactions');
+                const response = await API.fetchWithAuth('admin/reports/transactions');
                 let txns = response.data || [];
                 const tbody = $('#tableBody');
                 tbody.empty();
+
+                console.log(txns);
+
 
                 if (txns.length > 0) {
                     txns.forEach(t => {
                         tbody.append(`
                             <tr>
-                                <td>${t.id}</td>
-                                <td>${t.user_name || t.user_id}</td>
-                                <td><strong>$${formatDecimal(t.amount)}</strong></td>
-                                <td><span class="badge badge-info">${t.type || '-'}</span></td>
-                                <td><span class="badge badge-${t.status === 'completed' ? 'success' : 'warning'}">${t.status}</span></td>
-                                <td>${t.created_at || '-'}</td>
+
+
+                                <td>
+                                    <strong>Plan: </strong>${ t.plan_name } <br> 
+                                    <strong>Type: </strong>${ t.plan_type } <br> 
+                                    <strong>Cost: </strong>${t.subscription_amount }
+                                </td>
+                                <td>
+                                    <strong>Agency Code </strong><br />${t.pg_customer_id }
+                                </td>
+                                <td>
+                                    <strong>Billing: </strong>${t.billing } <br> 
+                                    <strong>Reason: </strong>${t.billing_reason } <br> 
+                                    <strong>Charge: </strong>${t.billing_charge }
+                                </td>
+                                <td>
+                                    <strong>Trans Date: </strong>${t.transaction_date } <br>
+                                    <strong>Activity: </strong>${t.activity }
+                                </td>                                
                             </tr>
                         `);
                     });

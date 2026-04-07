@@ -1505,7 +1505,7 @@ pre code {
 }
 
 .table thead th {
-  padding: 0.50rem !important;
+  /*padding: 0.50rem !important;*/
   vertical-align: bottom;
   border-bottom: 2px solid #e3e6f0;
   background-color: #0ecf9f;

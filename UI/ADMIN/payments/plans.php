@@ -13,34 +13,63 @@ include $pathPrefix . '/includes/head.php';
         <div class="container-fluid">
 
             <div class="page-header">
-                <h1>Payment Plans</h1>
+                <h1>Plan Details</h1>
             </div>
 
-            <div class="card-modern">
-                <div class="card-header">
-                    <h6 class="m-0 font-weight-bold">Available Plans</h6>
+            <div class="row mb-4">
+                <div class="col-6">
+                    <div class="card-modern">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-flush mb-0" id="dataTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Attribute</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableBodyPlanDetails">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">Loading...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                            </div>
+                        </div>
+                    </div>                        
+                    
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-flush mb-0" id="dataTable">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Plan Name</th>
-                                    <th>Price</th>
-                                    <th>Duration</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tableBody">
-                                <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">Loading...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="col-6">
+                    <div class="card-modern">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-flush mb-0" id="dataTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Plan name</th>
+                                            <th>Price</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableBody">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">Loading...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                            </div>
+                        </div>
+                    </div>    
+
+                
                 </div>
+
             </div>
+
+
+
         </div>
     </main>
 
@@ -57,22 +86,59 @@ include $pathPrefix . '/includes/head.php';
             if (user) $('.user-name').text(user.name);
 
             try {
-                const response = await API.fetchWithAuth('admin/payments/plans');
-                let plans = response.data || [];
+                const response = await API.fetchWithAuth('admin/payments/plan-details');
+                let plan_details = response.settings || [];
+                let plans = response.dataPlans || [];
+                
+                const tbodyPlanDetails = $('#tableBodyPlanDetails');
+                tbodyPlanDetails.empty();
+
                 const tbody = $('#tableBody');
                 tbody.empty();
 
+
+
+                tbodyPlanDetails.append(`
+                    <tr>
+                        <td><strong>Allowed Affiliates:</strong></td>
+                        <td>${plan_details.num_affiliates}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Allowed Offers:</strong></td>
+                        <td>${plan_details.num_offers}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Allowed Clicks (Per month):</strong></td>
+                        <td>${plan_details.num_clicks}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Allowed Conversion (Per month):</strong></td>
+                        <td>${plan_details.num_conversions}</td>
+                    </tr>                    
+                `);
+
+
                 if (plans.length > 0) {
                     plans.forEach(p => {
+
+                        let actionHtml = '';
+
+                        if (p.id == plan_details.current_plan_id) {
+                            actionHtml = `<span class="btn btn-outline-primary">Current Plan</span>`;
+                        } else {
+                            if (p.price > plan_details.current_plan_price) {
+                                actionHtml = `<a href="#" class="btn btn-outline-warning">Upgrade</a>`;
+                            }
+                        }
+
+
                         tbody.append(`
                             <tr>
-                                <td>${p.id}</td>
-                                <td><strong>${p.name}</strong></td>
+                                <td><strong>${p.plan_name}</strong></td>
                                 <td>$${formatDecimal(p.price)}</td>
-                                <td>${p.duration} days</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
-                                </td>
+                                    ${actionHtml}
+                                </td>                                
                             </tr>
                         `);
                     });
