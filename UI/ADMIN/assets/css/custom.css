@@ -189,3 +189,24 @@
   display: flex !important;
   align-items: center !important;
 }
+
+/* Select2 Dropdown Positioning Fixes */
+.select2-container--bootstrap4 .select2-dropdown {
+    z-index: 1050 !important;
+    position: absolute !important;
+}
+
+.select2-container--open {
+    z-index: 1051 !important;
+}
+
+.select2-dropdown--below {
+    top: 100% !important;
+    margin-top: 4px;
+}
+
+.select2-dropdown--above {
+    top: auto !important;
+    bottom: 100% !important;
+    margin-bottom: 4px;
+}

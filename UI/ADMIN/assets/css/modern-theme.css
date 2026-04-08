@@ -330,7 +330,7 @@ nav.navbar.navbar-expand.topbar {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-card);
     transition: box-shadow 0.2s ease;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .card:hover,

@@ -531,7 +531,8 @@ include $pathPrefix . '/includes/head.php';
                         theme: 'bootstrap4',
                         width: '100%',
                         allowClear: true,
-                        dropdownParent: $el.closest('.card-body')
+                        //dropdownParent: $el.closest('.card-body')
+                        dropdownParent: $(document.body)
                     };
 
                     const firstOpt = $el.find('option[value=""]');
