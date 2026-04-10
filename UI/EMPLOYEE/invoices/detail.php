@@ -225,30 +225,7 @@ include $pathPrefix . '/includes/head.php';
         </div>
     </div>
 
-    <!-- Mark as Paid Modal -->
-    <div class="modal fade" id="markPaidModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content border-left-success">
-                <div class="modal-header">
-                    <h5 class="modal-title font-weight-bold text-success">Confirm Payment</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>Confirm payment received?</p>
-                    <p>This will mark the invoice as <span class="badge badge-success">PAID</span>.</p>
-                    <p class="font-weight-bold mb-0">This action is final.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success" id="confirmPayBtn">
-                        <i class="fas fa-check-circle mr-2"></i> Mark as Paid
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Preview PDF Modal -->
     <div class="modal fade" id="previewPdfModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -337,6 +314,7 @@ include $pathPrefix . '/includes/head.php';
                 return;
             }
             if (!PermissionGuard.check('invoices', 'can_view')) return;
+            const canEditInvoices = PermissionGuard.has('invoices', 'can_edit');
 
             const urlParams = new URLSearchParams(window.location.search);
             const invoiceId = urlParams.get('id');
@@ -348,11 +326,16 @@ include $pathPrefix . '/includes/head.php';
             }
 
             let recipientEmail = '';
+            let currentNetTotal = 0;
 
             loadInvoice(invoiceId);
 
             // Send Handler
             $('#confirmSendBtn').click(async function () {
+                if (!canEditInvoices) {
+                    Toast.error('Access Denied', 'You do not have permission to send invoices.');
+                    return;
+                }
                 try {
                     const btn = $(this);
                     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
@@ -371,24 +354,19 @@ include $pathPrefix . '/includes/head.php';
                 }
             });
 
-            // Pay Handler
-            $('#confirmPayBtn').click(async function () {
-                try {
-                    const btn = $(this);
-                    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
-
-                    const response = await API.fetchWithAuth(`employee/invoices/${invoiceId}/pay`, { method: 'POST' });
-
-                    if (response.success) {
-                        $('#markPaidModal').modal('hide');
-                        location.reload();
-                    } else {
-                        throw new Error(response.message || 'Error marking paid');
-                    }
-                } catch (err) {
-                    Toast.error('Payment Failed', err.message);
-                    $('#confirmPayBtn').prop('disabled', false).html('<i class="fas fa-check-circle mr-2"></i> Mark as Paid');
+            // Pay Handler (delegated — #btnMarkPaid rendered dynamically by renderActions)
+            $(document).on('click', '#btnMarkPaid', function () {
+                if (!canEditInvoices) {
+                    Toast.error('Access Denied', 'You do not have permission to mark invoices as paid.');
+                    return;
                 }
+                MarkPaidPlugin.open({
+                    endpoint: `employee/invoices/${invoiceId}/pay`,
+                    amount: currentNetTotal,
+                    paymentFrom: 'Advertiser',
+                    paymentTo: 'Agency',
+                    onSuccess: function () { location.reload(); }
+                });
             });
 
             // Delete Handler
@@ -473,6 +451,10 @@ include $pathPrefix . '/includes/head.php';
 
             // Revert to Draft Handler
             $('#confirmRevertBtn').click(async function () {
+                if (!canEditInvoices) {
+                    Toast.error('Access Denied', 'You do not have permission to modify invoices.');
+                    return;
+                }
                 try {
                     const btn = $(this);
                     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
@@ -556,6 +538,7 @@ include $pathPrefix . '/includes/head.php';
                     $('#detailDiscount').text('-$' + parseFloat(inv.discount_amount || 0).toFixed(2));
                     const netTotal = parseFloat(inv.net_total || inv.total_amount || 0).toFixed(2);
                     $('#detailNetTotal').text('$' + netTotal);
+                    currentNetTotal = netTotal;
 
                     // Payment Method
                     if (inv.payment_method) {
@@ -603,29 +586,39 @@ include $pathPrefix . '/includes/head.php';
                 const help = $('#actionHelpText');
                 container.empty();
 
+                const viewOnlyHelp = 'You have view-only access. Editable actions are hidden.';
+
                 if (status === 'DRAFT') {
-                    help.text('Invoice is in Draft mode. You can send or delete it.');
+                    if (canEditInvoices) {
+                        help.text('Invoice is in Draft mode. You can send or delete it.');
 
-                    container.append(`
-                        <button class="btn btn-warning btn-block mb-3" data-toggle="modal" data-target="#sendInvoiceModal">
-                            <i class="fas fa-paper-plane mr-2"></i> Send Invoice
-                        </button>
-                    `);
+                        container.append(`
+                            <button class="btn btn-warning btn-block mb-3" data-toggle="modal" data-target="#sendInvoiceModal">
+                                <i class="fas fa-paper-plane mr-2"></i> Send Invoice
+                            </button>
+                        `);
 
-                    container.append(`
-                        <a href="edit.php?id=${invoiceId}" class="btn btn-info btn-block mb-3">
-                            <i class="fas fa-edit mr-2"></i> Edit Invoice
-                        </a>
-                    `);
+                        container.append(`
+                            <a href="edit.php?id=${invoiceId}" class="btn btn-info btn-block mb-3">
+                                <i class="fas fa-edit mr-2"></i> Edit Invoice
+                            </a>
+                        `);
 
-                    container.append(`
-                        <button class="btn btn-danger btn-block" id="btnDelete">
-                            <i class="fas fa-trash-alt mr-2"></i> Delete Invoice
-                        </button>
-                    `);
+                        container.append(`
+                            <button class="btn btn-danger btn-block" id="btnDelete">
+                                <i class="fas fa-trash-alt mr-2"></i> Delete Invoice
+                            </button>
+                        `);
+                    } else {
+                        help.text(`Invoice is in Draft mode. ${viewOnlyHelp}`);
+                    }
                 }
                 else if (status === 'SENT') {
-                    help.text('Invoice has been sent. You can preview, download, email, revert to draft, or mark as paid.');
+                    if (canEditInvoices) {
+                        help.text('Invoice has been sent. You can preview, download, email, revert to draft, or mark as paid.');
+                    } else {
+                        help.text(`Invoice has been sent. ${viewOnlyHelp}`);
+                    }
 
                     container.append(`
                         <button class="btn btn-secondary btn-block mb-3" onclick="previewPdf()">
@@ -639,23 +632,25 @@ include $pathPrefix . '/includes/head.php';
                         </button>
                     `);
 
-                    container.append(`
-                        <button class="btn btn-primary btn-block mb-3" data-toggle="modal" data-target="#sendEmailModal">
-                            <i class="fas fa-envelope mr-2"></i> Send Via Email
-                        </button>
-                    `);
+                    if (canEditInvoices) {
+                        container.append(`
+                            <button class="btn btn-primary btn-block mb-3" data-toggle="modal" data-target="#sendEmailModal">
+                                <i class="fas fa-envelope mr-2"></i> Send Via Email
+                            </button>
+                        `);
 
-                    container.append(`
-                        <button class="btn btn-outline-secondary btn-block mb-3" data-toggle="modal" data-target="#revertDraftModal">
-                            <i class="fas fa-undo mr-2"></i> Save as Draft
-                        </button>
-                    `);
+                        container.append(`
+                            <button class="btn btn-outline-secondary btn-block mb-3" data-toggle="modal" data-target="#revertDraftModal">
+                                <i class="fas fa-undo mr-2"></i> Save as Draft
+                            </button>
+                        `);
 
-                    container.append(`
-                        <button class="btn btn-success btn-block" data-toggle="modal" data-target="#markPaidModal">
-                            <i class="fas fa-check-circle mr-2"></i> Mark as Paid
-                        </button>
-                    `);
+                        container.append(`
+                            <button class="btn btn-success btn-block" id="btnMarkPaid">
+                                <i class="fas fa-check-circle mr-2"></i> Mark as Paid
+                            </button>
+                        `);
+                    }
                 }
                 else if (status === 'PAID') {
                     help.text('Invoice is fully paid. You can preview, download, or email the invoice.');

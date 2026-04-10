@@ -320,26 +320,55 @@ class InvoiceService
     }
 
     /**
-     * Mark invoice as paid
+     * Mark invoice as paid and record payment receipt in transactions table.
+     *
+     * @param  int   $invoiceId
+     * @param  array $payload   Validated fields from MarkInvoicePaidRequest
+     * @param  int   $actorId   Authenticated user ID (logged_in_user)
+     * @return array{invoice: Invoice, transaction: \App\Models\Transaction}
      */
-    public function markAsPaid(int $invoiceId): Invoice
+    public function markAsPaid(int $invoiceId, array $payload, int $actorId): array
     {
         $invoice = Invoice::findOrFail($invoiceId);
 
+        // Idempotency guard — already paid, return existing state without side-effects
         if ($invoice->is_paid) {
-            return $invoice;
+            return ['invoice' => $invoice, 'transaction' => null];
         }
 
         if (!$invoice->is_sent) {
             throw new Exception("Invoice must be SENT before being marked as PAID.");
         }
 
-        $invoice->update([
-            'status' => \App\Enums\InvoiceStatus::Paid->value,
-            'paid_at' => now(),
-        ]);
+        $transaction = null;
 
-        return $invoice;
+        DB::transaction(function () use ($invoice, $payload, $actorId, &$transaction) {
+            // 1. Create transaction receipt row
+            $transaction = \App\Models\Transaction::create([
+                'invoice_id'          => $invoice->id,
+                'payment_type'        => 'Receipt',
+                'payment_mode'        => $payload['payment_mode'],
+                'payment_from'        => $payload['payment_from'],
+                'payment_to'          => $payload['payment_to'],
+                'transaction_amount'  => $payload['transaction_amount'],
+                'activity_date'       => $payload['activity_date'] ?? now(),
+                'transaction_code'    => $payload['transaction_code']    ?? null,
+                'manual_invoice_no'   => $payload['manual_invoice_no']   ?? null,
+                'transaction_details' => $payload['transaction_details'] ?? '',
+                'subscription_id'     => 0,
+                'logged_in_user'      => $actorId,
+                'advertiser_id'       => $invoice->advertiser_id,
+                'affiliate_id'        => null, // Not applicable for Advertiser → Agency invoice receipts
+            ]);
+
+            // 2. Mark invoice as paid
+            $invoice->update([
+                'status'  => \App\Enums\InvoiceStatus::Paid->value,
+                'paid_at' => now(),
+            ]);
+        });
+
+        return ['invoice' => $invoice->fresh(), 'transaction' => $transaction];
     }
 
     /**

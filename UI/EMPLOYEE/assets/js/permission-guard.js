@@ -5,6 +5,23 @@
  */
 const PermissionGuard = {
     /**
+     * Check permission without altering page content.
+     * Useful for conditionally showing/hiding UI controls.
+     *
+     * @param {string} moduleSlug
+     * @param {string} action
+     * @returns {boolean}
+     */
+    has(moduleSlug, action = 'can_view') {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (user.user_type === 'admin') return true;
+
+        const perms = JSON.parse(localStorage.getItem('permissions') || '{}');
+        return !!(perms[moduleSlug] && perms[moduleSlug][action]);
+    },
+
+    /**
      * @param {string} moduleSlug - e.g. 'advertisers', 'offers', 'reports'
      * @param {string} action - e.g. 'can_view', 'can_edit', 'can_create' (default: 'can_view')
      * @returns {boolean} true if permitted, false if blocked

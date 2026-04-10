@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\MarkInvoicePaidRequest;
 use App\Models\Invoice;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
@@ -205,13 +206,22 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Mark invoice as paid
+     * Mark invoice as paid and record payment receipt transaction.
      */
-    public function pay($id)
+    public function pay(MarkInvoicePaidRequest $request, $id)
     {
         try {
-            $this->invoiceService->markAsPaid($id);
-            return response()->json(['success' => true]);
+            $result = $this->invoiceService->markAsPaid(
+                (int) $id,
+                $request->validated(),
+                $request->user()->id
+            );
+
+            return response()->json([
+                'success'        => true,
+                'invoice_id'     => $result['invoice']->id,
+                'transaction_id' => $result['transaction'] ? $result['transaction']->id : null,
+            ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }

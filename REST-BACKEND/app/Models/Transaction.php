@@ -9,6 +9,26 @@ class Transaction extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        // Payment receipt fields (from 2026_04_10 migration)
+        'payment_type',
+        'payment_mode',
+        'logged_in_user',
+        'payment_from',
+        'payment_to',
+        'advertiser_id',
+        'affiliate_id',
+        'transaction_code',
+        'manual_invoice_no',
+        // Fields from 2024_06_20 migration
+        'transaction_amount',
+        'transaction_details',
+        'activity_date',
+        'subscription_id',
+        // Invoice linkage (2025_12_26 migration)
+        'invoice_id',
+    ];
+
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);

@@ -225,30 +225,7 @@ include $pathPrefix . '/includes/head.php';
         </div>
     </div>
 
-    <!-- Mark as Paid Modal -->
-    <div class="modal fade" id="markPaidModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content border-left-success">
-                <div class="modal-header">
-                    <h5 class="modal-title font-weight-bold text-success">Confirm Payment</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>Confirm payment received?</p>
-                    <p>This will mark the invoice as <span class="badge badge-success">PAID</span>.</p>
-                    <p class="font-weight-bold mb-0">This action is final.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success" id="confirmPayBtn">
-                        <i class="fas fa-check-circle mr-2"></i> Mark as Paid
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Preview PDF Modal -->
     <div class="modal fade" id="previewPdfModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -347,6 +324,7 @@ include $pathPrefix . '/includes/head.php';
             }
 
             let recipientEmail = '';
+            let currentNetTotal = 0;
 
             loadInvoice(invoiceId);
 
@@ -370,24 +348,15 @@ include $pathPrefix . '/includes/head.php';
                 }
             });
 
-            // Pay Handler
-            $('#confirmPayBtn').click(async function () {
-                try {
-                    const btn = $(this);
-                    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
-
-                    const response = await API.fetchWithAuth(`admin/invoices/${invoiceId}/pay`, { method: 'POST' });
-
-                    if (response.success) {
-                        $('#markPaidModal').modal('hide');
-                        location.reload();
-                    } else {
-                        throw new Error(response.message || 'Error marking paid');
-                    }
-                } catch (err) {
-                    Toast.error('Payment Failed', err.message);
-                    $('#confirmPayBtn').prop('disabled', false).html('<i class="fas fa-check-circle mr-2"></i> Mark as Paid');
-                }
+            // Pay Handler (delegated — #btnMarkPaid rendered dynamically by renderActions)
+            $(document).on('click', '#btnMarkPaid', function () {
+                MarkPaidPlugin.open({
+                    endpoint: `admin/invoices/${invoiceId}/pay`,
+                    amount: currentNetTotal,
+                    paymentFrom: 'Advertiser',
+                    paymentTo: 'Agency',
+                    onSuccess: function () { location.reload(); }
+                });
             });
 
             // Delete Handler
@@ -555,6 +524,7 @@ include $pathPrefix . '/includes/head.php';
                     $('#detailDiscount').text('-$' + parseFloat(inv.discount_amount || 0).toFixed(2));
                     const netTotal = parseFloat(inv.net_total || inv.total_amount || 0).toFixed(2);
                     $('#detailNetTotal').text('$' + netTotal);
+                    currentNetTotal = netTotal;
 
                     // Payment Method
                     if (inv.payment_method) {
@@ -651,7 +621,7 @@ include $pathPrefix . '/includes/head.php';
                     `);
 
                     container.append(`
-                        <button class="btn btn-success btn-block" data-toggle="modal" data-target="#markPaidModal">
+                        <button class="btn btn-success btn-block" id="btnMarkPaid">
                             <i class="fas fa-check-circle mr-2"></i> Mark as Paid
                         </button>
                     `);

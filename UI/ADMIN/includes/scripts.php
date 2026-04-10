@@ -19,3 +19,6 @@
 
 <!-- Toast Notifications -->
 <script src="<?php echo $pathPrefix; ?>/assets/js/toast.js"></script>
+
+<!-- Reusable Plugins -->
+<script src="<?php echo $pathPrefix; ?>/assets/js/mark-paid-modal.js"></script>
