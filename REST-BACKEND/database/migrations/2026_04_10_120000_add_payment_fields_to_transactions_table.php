@@ -33,14 +33,14 @@ return new class extends Migration
             }
 
             if (!Schema::hasColumn('transactions', 'payment_from')) {
-                $table->enum('payment_from', ['Advertiser', 'Agency'])
+                $table->enum('payment_from', ['Advertiser', 'Affiliate', 'Agency', 'Custom'])
                     ->default(null)
                     ->nullable()                    
                     ->after('logged_in_user');
             }
 
             if (!Schema::hasColumn('transactions', 'payment_to')) {
-                $table->enum('payment_to', ['Agency', 'Affiliate'])
+                $table->enum('payment_to', ['Advertiser', 'Affiliate', 'Agency', 'Custom'])
                     ->default(null)
                     ->nullable()                    
                     ->after('payment_from');

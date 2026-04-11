@@ -597,31 +597,31 @@ include $pathPrefix . '/includes/head.php';
                     help.text('Invoice has been sent. You can preview, download, email, revert to draft, or mark as paid.');
 
                     container.append(`
-                        <button class="btn btn-secondary btn-block mb-3" onclick="previewPdf()">
+                        <button class="btn btn-outline-secondary btn-block mb-3" onclick="previewPdf()">
                             <i class="fas fa-eye mr-2"></i> Preview PDF
                         </button>
                     `);
 
                     container.append(`
-                        <button class="btn btn-info btn-block mb-3" onclick="downloadPdf()">
+                        <button class="btn btn-outline-info btn-block mb-3" onclick="downloadPdf()">
                             <i class="fas fa-download mr-2"></i> Download PDF
                         </button>
                     `);
 
                     container.append(`
-                        <button class="btn btn-primary btn-block mb-3" data-toggle="modal" data-target="#sendEmailModal">
+                        <button class="btn btn-outline-primary btn-block mb-3" data-toggle="modal" data-target="#sendEmailModal">
                             <i class="fas fa-envelope mr-2"></i> Send Via Email
                         </button>
                     `);
 
                     container.append(`
-                        <button class="btn btn-outline-secondary btn-block mb-3" data-toggle="modal" data-target="#revertDraftModal">
+                        <button class="btn btn-outline-warning btn-block mb-3" data-toggle="modal" data-target="#revertDraftModal">
                             <i class="fas fa-undo mr-2"></i> Save as Draft
                         </button>
                     `);
 
                     container.append(`
-                        <button class="btn btn-success btn-block" id="btnMarkPaid">
+                        <button class="btn btn-outline-success btn-block" id="btnMarkPaid">
                             <i class="fas fa-check-circle mr-2"></i> Mark as Paid
                         </button>
                     `);

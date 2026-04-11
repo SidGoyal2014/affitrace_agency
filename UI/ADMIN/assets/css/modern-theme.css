@@ -451,6 +451,51 @@ nav.navbar.navbar-expand.topbar {
     color: #fff;
 }
 
+.btn-outline-secondary {
+background: transparent;
+border: 1px solid var(--text-secondary);
+color: var(--text-secondary);
+}
+
+.btn-outline-secondary:hover {
+background: var(--text-secondary);
+color: #fff;
+}
+
+.btn-outline-info {
+background: transparent;
+border: 1px solid var(--info-main);
+color: var(--info-main);
+}
+
+.btn-outline-info:hover {
+background: var(--info-main);
+color: #fff;
+}
+
+.btn-outline-success {
+background: transparent;
+border: 1px solid var(--success-main);
+color: var(--success-main);
+}
+
+.btn-outline-success:hover {
+background: var(--success-main);
+color: #fff;
+}
+
+.btn-outline-warning {
+    background: transparent;
+    border: 1px solid var(--warning-main);
+    color: var(--warning-main);
+}
+
+.btn-outline-warning:hover {
+    background: var(--warning-main);
+    color: #fff;
+}
+
+
 .btn-sm {
     padding: 0.375rem 0.75rem;
     font-size: 0.8125rem;

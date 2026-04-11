@@ -74,7 +74,9 @@ const MarkPaidPlugin = (function ($) {
               <select class="form-control" id="mpPaymentFrom">
                 <option value="">-- Select --</option>
                 <option value="Advertiser">Advertiser</option>
+                <option value="Affiliate">Affiliate</option>
                 <option value="Agency">Agency</option>
+                <option value="Custom">Custom</option>
               </select>
             </div>
             <div class="col-md-6 form-group mb-3">
@@ -83,8 +85,10 @@ const MarkPaidPlugin = (function ($) {
               </label>
               <select class="form-control" id="mpPaymentTo">
                 <option value="">-- Select --</option>
-                <option value="Agency">Agency</option>
+                <option value="Advertiser">Advertiser</option>
                 <option value="Affiliate">Affiliate</option>
+                <option value="Agency">Agency</option>
+                <option value="Custom">Custom</option>
               </select>
             </div>
           </div>
@@ -129,11 +133,7 @@ const MarkPaidPlugin = (function ($) {
               <input type="text" class="form-control" id="mpTransactionCode"
                      placeholder="e.g. TXN-2026-001" maxlength="100">
             </div>
-            <div class="col-md-6 form-group mb-3">
-              <label>Manual Invoice No.</label>
-              <input type="text" class="form-control" id="mpManualInvoiceNo"
-                     placeholder="e.g. INV/2026/004" maxlength="100">
-            </div>
+
           </div>
 
           <!-- Notes -->
@@ -183,7 +183,6 @@ const MarkPaidPlugin = (function ($) {
         _el('mpAmount').value             = opts.amount       || '';
         _el('mpActivityDate').value       = _today();
         _el('mpTransactionCode').value    = '';
-        _el('mpManualInvoiceNo').value    = '';
         _el('mpTransactionDetails').value = '';
         _el(MSG_ID).classList.add('d-none');
         _resetBtn();
@@ -221,7 +220,6 @@ const MarkPaidPlugin = (function ($) {
             transaction_amount:  parseFloat(_el('mpAmount').value),
             activity_date:       _el('mpActivityDate').value  || null,
             transaction_code:    _el('mpTransactionCode').value.trim()    || null,
-            manual_invoice_no:   _el('mpManualInvoiceNo').value.trim()    || null,
             transaction_details: _el('mpTransactionDetails').value.trim() || null,
         };
     }
