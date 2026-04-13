@@ -27,11 +27,17 @@ class Transaction extends Model
         'subscription_id',
         // Invoice linkage (2025_12_26 migration)
         'invoice_id',
+        'weekly_payout_id',
     ];
 
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function weeklyPayout()
+    {
+        return $this->belongsTo(AffiliateWeeklyPayout::class, 'weekly_payout_id');
     }
 
     protected static function boot()

@@ -109,6 +109,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('reports/all-payouts', [App\Http\Controllers\Admin\ReportController::class, 'all_payouts']);
         Route::post('reports/all-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_all_payouts']);
 
+        Route::get('reports/weekly-payouts/feature-status', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts_feature_status']);
+        Route::get('reports/weekly-payouts', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts']);
+        Route::get('reports/weekly-payouts/stats', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts_stats']);
+        Route::post('reports/weekly-payouts/pay', [App\Http\Controllers\Admin\ReportController::class, 'pay_weekly_payouts']);
+        Route::post('reports/weekly-payouts/reject', [App\Http\Controllers\Admin\ReportController::class, 'reject_weekly_payout']);
+        Route::post('reports/weekly-payouts/manual', [App\Http\Controllers\Admin\ReportController::class, 'create_manual_weekly_payout']);
+
         Route::get('reports/offer-payouts/{oid}', [App\Http\Controllers\Admin\ReportController::class, 'offer_payouts']);
         Route::post('reports/offer-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_offer_payouts']);
 
@@ -307,7 +314,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('reports/click-conversion-report', [App\Http\Controllers\Admin\ReportController::class, 'click_conversion_report']);
             Route::post('reports/clicks', [App\Http\Controllers\Admin\ReportController::class, 'clicks_report']);
             Route::post('reports/conversions', [App\Http\Controllers\Admin\ReportController::class, 'conversions_report']);
-            Route::post('reports/conversion/update-status', [App\Http\Controllers\Admin\ReportController::class, 'update_conversion_status']);
             Route::get('reports/transactions', [App\Http\Controllers\Admin\ReportController::class, 'list_transactions']);
             Route::get('reports/logs', [App\Http\Controllers\Admin\ReportController::class, 'logs']);
             Route::get('reports/postback-logs', [App\Http\Controllers\Admin\ReportController::class, 'postback_logs']);

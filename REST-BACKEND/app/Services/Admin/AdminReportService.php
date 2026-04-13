@@ -247,22 +247,22 @@ class AdminReportService extends BaseReportService
      */
     public function allPayouts()
     {
-        $sql = "SELECT 
-                    C.id,
-                    C.affiliate_id as aid,
-                    U.name as affiliate_name,
-                    C.offer_id as oid,
-                    O.offer_name,
-                    C.payout as amount,
-                    C.currency,
-                    C.created_at
-                FROM 
-                    conversions C 
-                LEFT JOIN offers O ON C.offer_id = O.id
-                LEFT JOIN users U ON C.affiliate_id = U.id
-                ORDER BY C.created_at DESC";
-
-        $data = DB::select($sql);
+        $data = DB::table('conversions as C')
+            ->leftJoin('offers as O', 'C.offer_id', '=', 'O.id')
+            ->leftJoin('users as U', 'C.affiliate_id', '=', 'U.id')
+            ->select(
+                'C.id',
+                'C.affiliate_id as aid',
+                'U.name as affiliate_name',
+                'C.offer_id as oid',
+                'O.offer_name',
+                'C.payout as amount',
+                'C.status',
+                'C.currency',
+                'C.created_at'
+            )
+            ->orderBy('C.created_at', 'desc')
+            ->get();
 
         return [
             'module_name' => "Payouts Report",
@@ -275,28 +275,27 @@ class AdminReportService extends BaseReportService
      */
     public function searchAllPayouts($request)
     {
-        $str = "";
-        if ($request->from != "" && $request->to != "") {
-            $str = " AND C.created_at BETWEEN '" . $request->from . "' AND '" . $request->to . "'";
+        $query = DB::table('conversions as C')
+            ->leftJoin('offers as O', 'C.offer_id', '=', 'O.id')
+            ->leftJoin('users as U', 'C.affiliate_id', '=', 'U.id')
+            ->select(
+                'C.id',
+                'C.affiliate_id as aid',
+                'U.name as affiliate_name',
+                'C.offer_id as oid',
+                'O.offer_name',
+                'C.payout as amount',
+                'C.currency',
+                'C.created_at'
+            );
+
+        if ($request->from && $request->to) {
+            $fromUtc = $this->getUtcStartOfDay($request->from);
+            $toUtc   = $this->getUtcEndOfDay($request->to);
+            $query->whereBetween('C.created_at', [$fromUtc, $toUtc]);
         }
 
-        $sql = "SELECT 
-                    C.id,
-                    C.affiliate_id as aid,
-                    U.name as affiliate_name,
-                    C.offer_id as oid,
-                    O.offer_name,
-                    C.payout as amount,
-                    C.currency,
-                    C.created_at
-                FROM 
-                    conversions C 
-                LEFT JOIN offers O ON C.offer_id = O.id
-                LEFT JOIN users U ON C.affiliate_id = U.id
-                WHERE 1=1 " . $str . "
-                ORDER BY C.created_at DESC";
-
-        $data = DB::select($sql);
+        $data = $query->orderBy('C.created_at', 'desc')->get();
 
         return [
             'module_name' => "All Payouts",

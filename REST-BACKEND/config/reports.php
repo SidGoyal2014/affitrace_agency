@@ -21,6 +21,9 @@ return [
     // Temporary storage path for generated reports
     'temp_path' => storage_path('app/tmp/reports'),
 
+    // Temporary rollout switch for the new weekly payouts management flow.
+    'weekly_payouts_management_enabled' => env('WEEKLY_PAYOUTS_MANAGEMENT_ENABLED', true),
+
     // Supported report types and their query builders
     'types' => [
         'clicks' => \App\Models\OfferTracking::class,
