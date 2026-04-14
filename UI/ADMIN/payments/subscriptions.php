@@ -77,7 +77,7 @@ include $pathPrefix . '/includes/head.php';
                         }
 
                         buttons += `<a href="/admin/payments/delete_subscription/${obj.ssdid}" class="btn btn-outline-danger">Delete</a>`;
-
+                        buttons += ` <button onclick="togglePaymentDetails('${obj.sub_id}')" class="btn btn-outline-info">Payment Details</button>`;
                         return buttons;
                         };
 
@@ -86,7 +86,7 @@ include $pathPrefix . '/includes/head.php';
                         tbody.append(`
                             <tr>
                                 <td>
-                                    <strong>Stripe PlanId:</strong><br />${s.stripe_plan_id}}<br />
+                                    <strong>Stripe PlanId:</strong><br />${s.stripe_plan_id}<br />
                                     <strong>Plan Name:</strong>${s.plan_name}
                                 </td>
                                 <td>
@@ -101,6 +101,11 @@ include $pathPrefix . '/includes/head.php';
                                 <td width="20%">${actionHtml(s)}</td>
                             </tr>
                         `);
+                        tbody.append(`
+                            <tr id="pmt-row-${s.sub_id}" class="d-none">
+                                <td colspan="4" id="pmt-details-${s.sub_id}"><em>Loading...</em></td>
+                            </tr>
+                        `);
                     });
                 } else {
                     tbody.html('<tr><td colspan="5" class="text-center py-4 text-muted">No subscriptions found</td></tr>');
@@ -110,6 +115,58 @@ include $pathPrefix . '/includes/head.php';
                 $('#tableBody').html('<tr><td colspan="5" class="text-center py-4 text-danger">Failed to load</td></tr>');
             }
         });
+
+        async function togglePaymentDetails(sub_id) {
+            const row = $(`#pmt-row-${sub_id}`);
+            const cell = $(`#pmt-details-${sub_id}`);
+
+            if (!row.hasClass('d-none')) {
+                row.addClass('d-none');
+                return;
+            }
+
+            row.removeClass('d-none');
+
+            if (cell.data('loaded')) return; // already fetched
+
+            try {
+                const res = await API.fetchWithAuth('admin/reports/subPmtDetails/' + sub_id);
+                const pmts = res.data || [];
+
+                if (pmts.length === 0) {
+                    cell.html('<em class="text-muted">No payment records found.</em>');
+                } else {
+                    const rows = pmts.map(p => `
+                        <tr>
+                            <td>
+                                <strong>Plan: </strong>${p.plan_name || 'N/A'} <br> 
+                                <strong>Type: </strong>${p.plan_type || p.activity || 'N/A'} <br> 
+                                <strong>Cost: </strong>${p.subscription_amount || p.transaction_amount || 'N/A'}
+                            </td>
+                            <td>
+                                <strong>Billing: </strong>${p.billing || 'N/A'} <br> 
+                                <strong>Reason: </strong>${p.billing_reason || 'N/A'} <br> 
+                                <strong>Charge: </strong>${p.billing_charge || 'N/A'}
+                            </td>
+                            <td>
+                                <strong>Trans Date: </strong>${p.transaction_date || p.activity_date || 'N/A'} <br>
+                                <strong>Activity: </strong>${p.activity || 'N/A'}
+                            </td>
+                        </tr>
+                    `).join('');
+                    cell.html(`<table class="table table-sm table-bordered mb-0"><tbody>${rows}</tbody></table>`);
+                }
+
+                
+
+
+                
+                cell.data('loaded', true);
+            } catch (e) {
+                cell.html('<span class="text-danger">Failed to load payment details.</span>');
+            }
+        }
+
     </script>
 </body>
 

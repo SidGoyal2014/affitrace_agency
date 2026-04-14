@@ -31,6 +31,27 @@ class AdminReportService extends BaseReportService
     }
 
     /**
+     * Get subscription payment details
+    */
+    public function getSubscriptionPaymentDetails($sub_id)
+    {
+        $data = DB::table('subscriptions')
+            ->join('transactions', 'subscriptions.id', '=', 'transactions.subscription_id')
+            ->select('*')
+            ->where('subscriptions.id', '=', $sub_id)
+            ->get()->toArray();
+
+        return [
+            'module_name' => "",
+            'data' => $data
+        ];
+    }
+
+
+
+
+
+    /**
      * List logs
      */
     public function listLogs()

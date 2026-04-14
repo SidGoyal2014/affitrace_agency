@@ -26,6 +26,11 @@ class ReportController extends Controller
 		return response()->json($this->reportService->listTransactions());
 	}
 
+	public function sub_pmt_details($sub_id)
+	{
+		return response()->json($this->reportService->getSubscriptionPaymentDetails($sub_id));
+	}
+
 	function logs()
 	{
 		return response()->json($this->reportService->listLogs());

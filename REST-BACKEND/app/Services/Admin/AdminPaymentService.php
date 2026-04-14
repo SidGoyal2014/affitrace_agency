@@ -50,7 +50,7 @@ class AdminPaymentService
                 }
             )
             ->select(
-                's.id',
+                's.id as sub_id',
                 's.plan_name',
                 's.stripe_plan_id as plan_id',
                 's.subscription_amount',

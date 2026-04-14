@@ -100,6 +100,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         // Reports
         Route::get('reports/transactions', [App\Http\Controllers\Admin\ReportController::class, 'list_transactions']);
+        Route::get('reports/subPmtDetails/{sub_id}', [App\Http\Controllers\Admin\ReportController::class, 'sub_pmt_details']);
         Route::get('reports/logs', [App\Http\Controllers\Admin\ReportController::class, 'logs']);
         Route::get('reports/postback-logs', [App\Http\Controllers\Admin\ReportController::class, 'postback_logs']);
         Route::get('reports/all-offers', [App\Http\Controllers\Admin\ReportController::class, 'all_offers']);
