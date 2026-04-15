@@ -17,23 +17,19 @@ include $pathPrefix . '/includes/head.php';
             </div>
 
             <div class="card-modern">
-                <div class="card-header">
-                    <h6 class="m-0 font-weight-bold">All Transactions</h6>
-                </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-flush mb-0" id="dataTable">
                             <thead>
                                 <tr>
-                                    <th>Plan</th>
-                                    <th>Agency</th>
-                                    <th>Billing</th>
-                                    <th>Transaction</th>
+                                    <th>Type</th>
+                                    <th>From - To</th>
+                                    <th>Code</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
                                 <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">Loading...</td>
+                                    <td colspan="3" class="text-center py-4 text-muted">Loading...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -57,6 +53,7 @@ include $pathPrefix . '/includes/head.php';
 
             try {
                 const response = await API.fetchWithAuth('admin/reports/transactions');
+                console.log(response);
                 let txns = response.data || [];
                 const tbody = $('#tableBody');
                 tbody.empty();
@@ -68,24 +65,18 @@ include $pathPrefix . '/includes/head.php';
                     txns.forEach(t => {
                         tbody.append(`
                             <tr>
-
-
                                 <td>
-                                    <strong>Plan: </strong>${ t.plan_name } <br> 
-                                    <strong>Type: </strong>${ t.plan_type } <br> 
-                                    <strong>Cost: </strong>${t.subscription_amount }
+                                    <strong>Type: </strong>${ t.payment_type } <br> 
+                                    <strong>Mode: </strong>${ t.payment_mode } <br>                                     
                                 </td>
                                 <td>
-                                    <strong>Agency Code </strong><br />${t.pg_customer_id }
+                                    <strong>From: </strong>${t.payment_from } <br> 
+                                    <strong>To: </strong>${t.payment_to } <br> 
+                                    <strong>Amount: </strong>${t.transaction_amount }
                                 </td>
                                 <td>
-                                    <strong>Billing: </strong>${t.billing } <br> 
-                                    <strong>Reason: </strong>${t.billing_reason } <br> 
-                                    <strong>Charge: </strong>${t.billing_charge }
-                                </td>
-                                <td>
-                                    <strong>Trans Date: </strong>${t.transaction_date } <br>
-                                    <strong>Activity: </strong>${t.activity }
+                                    <strong>Transaction Code: </strong>${t.transaction_code } <br>
+                                    <strong>Manual Invoice No: </strong>${t.manual_invoice_no }
                                 </td>                                
                             </tr>
                         `);

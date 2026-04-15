@@ -48,11 +48,7 @@ include $pathPrefix . '/includes/head.php';
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
 
     <script>
-        $(document).ready(async function () {
-            if (!API.isAuthenticated()) { window.location.href = '../login.php'; return; }
-            const user = JSON.parse(localStorage.getItem('user'));
-            if (user) $('.user-name').text(user.name);
-
+        async function loadSubscriptions() {
             try {
                 const response = await API.fetchWithAuth('admin/payments/show-subscriptions');
                 let subs = response.data || [];
@@ -61,27 +57,24 @@ include $pathPrefix . '/includes/head.php';
 
                 if (subs.length > 0) {
                     subs.forEach(s => {
-
-
                         const actionHtml = (obj) => {
-                        if (obj.status === "Deleted") {
-                            return `<span class="btn btn-danger">Deleted</span>`;
-                        }
+                            if (obj.status === "Deleted") {
+                                return `<span class="btn btn-danger">Deleted</span><div>&nbsp;</div> <button onclick="togglePaymentDetails('${obj.sub_id}')" class="btn btn-outline-info">Payment Details</button>`;
+                            }
 
-                        let buttons = '';
+                            let buttons = '';
 
-                        if (obj.status === "Created" || obj.status === "Resumed") {
-                            buttons += `<a href="/admin/payments/pause_subscription/${obj.ssdid}" class="btn btn-outline-warning">Pause</a> `;
-                        } else if (obj.status === "Paused") {
-                            buttons += `<a href="/admin/payments/resume_subscription/${obj.ssdid}" class="btn btn-primary">Resume</a> `;
-                        }
+                            if (obj.status === "Created" || obj.status === "Resumed") {
+                                buttons += `<button type="button" class="btn btn-outline-warning subscription-action" data-action="pause" data-id="${obj.sub_id}">Pause</button> `;
+                            } else if (obj.status === "Paused") {
+                                buttons += `<button type="button" class="btn btn-primary subscription-action" data-action="resume" data-id="${obj.sub_id}">Resume</button> `;
+                            }
 
-                        buttons += `<a href="/admin/payments/delete_subscription/${obj.ssdid}" class="btn btn-outline-danger">Delete</a>`;
-                        buttons += ` <button onclick="togglePaymentDetails('${obj.sub_id}')" class="btn btn-outline-info">Payment Details</button>`;
-                        return buttons;
+                            buttons += `<button type="button" class="btn btn-outline-danger subscription-action" data-action="delete" data-id="${obj.sub_id}">Delete</button>`;
+                            buttons += `<div>&nbsp;</div>`;
+                            buttons += ` <button onclick="togglePaymentDetails('${obj.sub_id}')" class="btn btn-outline-info">Payment Details</button>`;
+                            return buttons;
                         };
-
-
 
                         tbody.append(`
                             <tr>
@@ -95,8 +88,8 @@ include $pathPrefix . '/includes/head.php';
                                 </td>
                                 <td>
                                     <strong>Amount:</strong>${s.subscription_amount}<br />
-                                    <strong>Start date:</strong>${s.subscription_start_date }<br />
-                                    <strong>End date:</strong>${s.expires_at }
+                                    <strong>Start date:</strong>${s.subscription_start_date}<br />
+                                    <strong>End date:</strong>${s.expires_at}
                                 </td>
                                 <td width="20%">${actionHtml(s)}</td>
                             </tr>
@@ -113,6 +106,54 @@ include $pathPrefix . '/includes/head.php';
             } catch (error) {
                 console.error(error);
                 $('#tableBody').html('<tr><td colspan="5" class="text-center py-4 text-danger">Failed to load</td></tr>');
+            }
+        }
+
+        $(document).ready(async function () {
+            if (!API.isAuthenticated()) { window.location.href = '../login.php'; return; }
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) $('.user-name').text(user.name);
+
+            await loadSubscriptions();
+        });
+
+        $(document).on('click', '.subscription-action', async function () {
+            const $btn = $(this);
+            const action = $btn.data('action');
+            const id = $btn.data('id');
+
+            if (!action || !id) {
+                return;
+            }
+
+            if (action === 'delete' && !window.confirm('Are you sure you want to delete this subscription?')) {
+                return;
+            }
+
+            let endpoint = '';
+            if (action === 'pause') {
+                endpoint = 'admin/payments/pause-subscription/' + id;
+            } else if (action === 'resume') {
+                endpoint = 'admin/payments/resume-subscription/' + id;
+            } else if (action === 'delete') {
+                endpoint = 'admin/payments/delete-subscription/' + id;
+            } else {
+                return;
+            }
+
+            const originalText = $btn.text();
+            $btn.prop('disabled', true).text('Please wait...');
+
+            try {
+                const res = await API.fetchWithAuth(endpoint);
+                const successMsg = (res && (res.message || res.msg)) ? (res.message || res.msg) : 'Subscription updated successfully';
+                window.alert(successMsg);
+                await loadSubscriptions();
+            } catch (error) {
+                console.error(error);
+                window.alert(error?.message || 'Action failed. Please try again.');
+            } finally {
+                $btn.prop('disabled', false).text(originalText);
             }
         });
 

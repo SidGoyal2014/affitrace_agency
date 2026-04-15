@@ -19,13 +19,20 @@ class AdminReportService extends BaseReportService
      */
     public function listTransactions()
     {
+        /*
         $data = DB::table('subscriptions')
             ->join('transactions', 'subscriptions.id', '=', 'transactions.subscription_id')
             ->select('*')
             ->get()->toArray();
+        */
+
+        $data = DB::table('transactions')
+            ->select('*')
+            ->where('subscription_id', '=', 0)
+            ->get()->toArray();
 
         return [
-            'module_name' => "Payment Transactions",
+            'module_name' => "Transactions",
             'data' => $data
         ];
     }
