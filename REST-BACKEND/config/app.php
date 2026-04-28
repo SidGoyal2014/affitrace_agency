@@ -188,4 +188,8 @@ return [
         'DataTables' => Yajra\DataTables\Facades\DataTables::class,
     ])->toArray(),
 
+
+    
+    'notification_trigger_secret' => env('NOTIFICATION_TRIGGER_SECRET'),
+
 ];

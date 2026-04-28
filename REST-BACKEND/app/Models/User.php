@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -147,5 +148,10 @@ class User extends Authenticatable
                 'can_delete' => (bool) $module->pivot->can_delete,
             ]];
         })->toArray();
+    }
+
+    public function receivedNotifications(): HasMany
+    {
+        return $this->hasMany(AgencyNotificationRecipient::class, 'recipient_id');
     }
 }

@@ -163,8 +163,23 @@ function url($path)
         });
     </script>
 
-    <!-- Right Side - User Menu -->
-    <div class="navbar-right">
+    <!-- Right Side - Notifications Bell + User Menu -->
+    <div class="navbar-right d-flex align-items-center">
+
+        <!-- Notifications Bell -->
+        <div class="nav-item mr-2">
+            <a class="nav-link position-relative" href="<?php echo $pathPrefix; ?>/notifications/inbox.php"
+               title="Notifications" id="notif-bell-link">
+                <i class="fas fa-bell fa-fw"></i>
+                <span id="notif-nav-badge"
+                      style="display:none; position:absolute; top:2px; right:0;
+                             background:#e74a3b; color:#fff; border-radius:50%;
+                             width:18px; height:18px; font-size:0.65rem;
+                             line-height:18px; text-align:center; font-weight:700;">
+                </span>
+            </a>
+        </div>
+
         <div class="nav-item">
             <a class="user-menu nav-link" href="#" data-toggle="dropdown" id="userDropdown">
                 <span class="user-name d-none d-md-inline">Admin</span>
@@ -174,8 +189,9 @@ function url($path)
                 <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/profile.php">
                     <i class="fas fa-user fa-sm fa-fw mr-2"></i> Profile
                 </a>
-                <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/news-notifications.php">
+                <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/notifications/inbox.php">
                     <i class="fas fa-bell fa-sm fa-fw mr-2"></i> Notifications
+                    <span id="notif-dropdown-badge" class="badge badge-danger ml-1" style="display:none;"></span>
                 </a>
                 <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/settings.php">
                     <i class="fas fa-cogs fa-sm fa-fw mr-2"></i> Settings
@@ -188,3 +204,44 @@ function url($path)
         </div>
     </div>
 </nav>
+
+<script>
+/* ---- Notifications unread-count badge (topnav global) ----
+   Polls every 60 s. Requires API.js to be loaded first.
+   Skipped on the login page where API is not initialised.    */
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof API === 'undefined' || !API.isAuthenticated()) return;
+
+    function applyCount(count) {
+        var bellBadge     = document.getElementById('notif-nav-badge');
+        var dropdownBadge = document.getElementById('notif-dropdown-badge');
+        if (!bellBadge) return;
+        if (count > 0) {
+            var label = count > 99 ? '99+' : String(count);
+            bellBadge.textContent     = label;
+            bellBadge.style.display   = '';
+            if (dropdownBadge) {
+                dropdownBadge.textContent   = label;
+                dropdownBadge.style.display = '';
+            }
+        } else {
+            bellBadge.style.display = 'none';
+            if (dropdownBadge) dropdownBadge.style.display = 'none';
+        }
+    }
+
+    async function fetchUnreadCount() {
+        try {
+            // TODO: Confirm endpoint: v1/notifications/unread-count
+            var res = await API.fetchWithAuth('v1/notifications/unread-count');
+            //applyCount(res.count || 0);
+            applyCount((res.data && res.data.unread_count) || 0);
+        } catch (e) {
+            // Non-critical — silently ignore
+        }
+    }
+
+    fetchUnreadCount();
+    setInterval(fetchUnreadCount, 60000);
+});
+</script>

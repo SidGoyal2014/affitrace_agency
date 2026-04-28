@@ -236,6 +236,36 @@ function url($path)
     </li>
 
     <!-- Divider -->
+    <hr class="sidebar-divider">
+
+    <!-- Heading -->
+    <div class="sidebar-heading">
+        Communications
+    </div>
+
+    <!-- Nav Item - Notifications -->
+    <li class="nav-item <?php echo isActive('notifications', $activePage); ?>">
+        <a class="nav-link <?php echo getLinkClass('notifications', $activePage); ?>" href="#"
+           data-toggle="collapse" data-target="#collapseNotifications"
+           aria-expanded="<?php echo isExpanded('notifications', $activePage); ?>"
+           aria-controls="collapseNotifications">
+            <i class="fas fa-bell"></i>
+            <span>
+                Notifications
+                <span id="sidebar-notif-badge" class="badge badge-danger badge-counter ml-1"
+                      style="display:none; font-size:0.65rem;"></span>
+            </span>
+        </a>
+        <div id="collapseNotifications" class="collapse <?php echo getCollapseClass('notifications', $activePage); ?>"
+             data-parent="#accordionSidebar">
+            <div class="collapse-inner rounded">
+                <a class="collapse-item" href="<?php echo url('notifications/inbox.php'); ?>">Inbox</a>
+                <a class="collapse-item" href="<?php echo url('notifications/send.php'); ?>">Send Notification</a>
+            </div>
+        </div>
+    </li>
+
+    <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">
 
     <!-- Sidebar Toggler (Sidebar) -->
@@ -261,5 +291,28 @@ document.addEventListener('DOMContentLoaded', function() {
             item.style.display = 'none';
         }
     });
+});
+</script>
+
+<script>
+/* ---- Sync sidebar notifications badge from topnav badge ----
+   MutationObserver mirrors the topnav bell badge into the sidebar. */
+document.addEventListener('DOMContentLoaded', function () {
+    var topBadge     = document.getElementById('notif-nav-badge');
+    var sidebarBadge = document.getElementById('sidebar-notif-badge');
+    if (!topBadge || !sidebarBadge) return;
+
+    function syncBadge() {
+        if (topBadge.style.display === 'none' || !topBadge.textContent.trim()) {
+            sidebarBadge.style.display = 'none';
+        } else {
+            sidebarBadge.textContent   = topBadge.textContent;
+            sidebarBadge.style.display = '';
+        }
+    }
+
+    var obs = new MutationObserver(syncBadge);
+    obs.observe(topBadge, { childList: true, attributes: true, attributeFilter: ['style'] });
+    syncBadge();
 });
 </script>

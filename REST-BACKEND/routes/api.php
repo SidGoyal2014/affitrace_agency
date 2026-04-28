@@ -26,6 +26,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('me', [App\Http\Controllers\Api\AuthController::class, 'me']);
     Route::post('update-timezone', [App\Http\Controllers\Api\AuthController::class, 'updateTimezone']);
 
+    // ─── Notifications: Inbox (all authenticated users) ───────────────────────
+    Route::prefix('v1/notifications')->group(function () {
+        Route::get('inbox',              [App\Http\Controllers\Api\V1\NotificationController::class, 'inbox']);
+        Route::post('inbox/read-all',   [App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead']);
+        Route::get('inbox/{id}',         [App\Http\Controllers\Api\V1\NotificationController::class, 'inboxShow']);
+        Route::patch('inbox/{id}/read', [App\Http\Controllers\Api\V1\NotificationController::class, 'markRead']);
+        Route::get('unread-count',      [App\Http\Controllers\Api\V1\NotificationController::class, 'unreadCount']);
+        Route::post('send',              [App\Http\Controllers\Api\V1\NotificationController::class, 'send']);
+    });
+
     // Impersonation Exit (Must be outside 'admin' middleware so impersonated users can call it)
     Route::post('admin/stop-impersonate', [App\Http\Controllers\Admin\ImpersonationController::class, 'stop']);
 
@@ -169,6 +179,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // ─── Impersonation ────────────────────────────────
         Route::post('impersonate/{user_id}', [App\Http\Controllers\Admin\ImpersonationController::class, 'start']);
         Route::get('impersonation-logs', [App\Http\Controllers\Admin\ImpersonationController::class, 'logs']);
+
+        // ─── Notifications: Sent management (admin only) ──
+        Route::prefix('v1/notifications')->group(function () {
+            Route::post('',            [App\Http\Controllers\Api\V1\NotificationController::class, 'send']);
+            Route::get('sent',         [App\Http\Controllers\Api\V1\NotificationController::class, 'sentIndex']);
+            Route::get('sent/{id}',    [App\Http\Controllers\Api\V1\NotificationController::class, 'sentShow']);
+            Route::put('sent/{id}',    [App\Http\Controllers\Api\V1\NotificationController::class, 'sentUpdate']);
+            Route::delete('sent/{id}', [App\Http\Controllers\Api\V1\NotificationController::class, 'sentDestroy']);
+        });
     });
 
     // Affiliate Routes
@@ -395,6 +414,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Tracking (Server-to-Server)
 
+    // ─── Notifications: System triggers (protected by X-Notification-Secret header) ─
+    // The controller's authoriseTrigger() validates the header value against
+    // NOTIFICATION_TRIGGER_SECRET in .env. No additional role middleware is needed.
+    Route::prefix('v1/notifications/triggers')->group(function () {
+        Route::post('subscription-expiry', [App\Http\Controllers\Api\V1\NotificationController::class, 'triggerSubscriptionExpiry']);
+        Route::post('payment-reminder',    [App\Http\Controllers\Api\V1\NotificationController::class, 'triggerPaymentReminder']);
+        Route::post('custom',              [App\Http\Controllers\Api\V1\NotificationController::class, 'triggerCustom']);
+    });
 
 });
 
