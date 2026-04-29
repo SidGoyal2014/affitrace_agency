@@ -63,15 +63,6 @@ return [
             'after_commit' => false,
         ],
 
-        'redis' => [
-            'driver' => 'redis',
-            'connection' => 'default',
-            'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => 90,
-            'block_for' => null,
-            'after_commit' => false,
-        ],
-
         // Dedicated queue for long-running report exports
         'reports' => [
             'driver' => 'database',
@@ -96,7 +87,7 @@ return [
     */
 
     'batching' => [
-        'database' => env('DB_CONNECTION', 'mysql'),
+        'database' => env('DB_CONNECTION', 'pgsql'),
         'table' => 'job_batches',
     ],
 
@@ -113,7 +104,7 @@ return [
 
     'failed' => [
         'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),
-        'database' => env('DB_CONNECTION', 'mysql'),
+        'database' => env('DB_CONNECTION', 'pgsql'),
         'table' => 'failed_jobs',
     ],
 
