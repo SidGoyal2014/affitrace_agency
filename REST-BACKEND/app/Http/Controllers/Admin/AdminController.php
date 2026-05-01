@@ -30,6 +30,21 @@ class AdminController extends Controller
 		return response()->json($this->adminService->listEmployees());
 	}
 
+	public function search_users(Request $request)
+	{
+		$request->validate([
+			'q'     => 'required|string|min:2|max:100',
+			'limit' => 'sometimes|integer|min:1|max:50',
+		]);
+
+		$result = $this->adminService->searchUsers(
+			$request->q,
+			(int) $request->input('limit', 20)
+		);
+
+		return response()->json($result);
+	}
+		
 	public function profile(Request $request)
 	{
 		// Auth check handled by middleware

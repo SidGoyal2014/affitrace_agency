@@ -60,6 +60,24 @@ class AdminService
         ];
     }
 
+    public function searchUsers(string $q, int $limit = 20)
+    {
+        $limit = min($limit, 50);
+        $like  = '%' . $q . '%';
+
+        $data = DB::table('users')
+            ->select('id', 'name', 'email', 'user_type')
+            ->where('user_type', '!=', \App\Enums\UserType::Admin->value)
+            ->where(function ($query) use ($like) {
+                $query->where('name', 'LIKE', $like)
+                    ->orWhere('email', 'LIKE', $like);
+            })
+            ->limit($limit)
+            ->get();
+
+        return ['data' => $data];
+    }
+
     public function getProfileData($user)
     {
         $logged_in_user_type = $user->user_type;

@@ -276,7 +276,7 @@ include $pathPrefix . '/includes/head.php';
                     li.dataset.id       = n.id;
                     li.dataset.read     = n.is_read ? '1' : '0';
                     li.dataset.title    = n.notification?.title || '';
-                    li.dataset.body     = n.notification?.body  || '';
+                    li.dataset.body     = n.notification?.body || '';
                     li.dataset.type     = n.notification?.type  || '';
                     li.dataset.category = n.notification?.category || '';
                     li.dataset.priority = n.notification?.priority || '';
@@ -336,8 +336,7 @@ include $pathPrefix . '/includes/head.php';
 
             if (wasUnread) {
                 try {
-                    // TODO: Confirm endpoint: v1/notifications/{id}/read
-                    await API.fetchWithAuth(`v1/notifications/${id}/read`, { method: 'PATCH' });
+                    await API.fetchWithAuth(`v1/notifications/inbox/${id}/read`, { method: 'PATCH' });
                     li.classList.replace('unread', 'read');
                     li.dataset.read = '1';
                     const dot = li.querySelector('.unread-dot');
@@ -354,7 +353,7 @@ include $pathPrefix . '/includes/head.php';
             if (!confirm('Mark all visible notifications as read?')) return;
             try {
 
-                await API.fetchWithAuth('v1/notifications/inbox/read-all', { method: 'POST' });
+                await API.fetchWithAuth('v1/notifications/inbox/read-all', { method: 'PATCH' });
                 document.querySelectorAll('.notif-item.unread').forEach(el => {
                     el.classList.replace('unread', 'read');
                     el.dataset.read = '1';

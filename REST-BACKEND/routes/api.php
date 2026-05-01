@@ -60,6 +60,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('affiliates/update', [App\Http\Controllers\Admin\AdminController::class, 'update_affiliate']);
 
         Route::get('employees/list', [App\Http\Controllers\Admin\AdminController::class, 'list_employees']);
+        Route::get('users/search', [App\Http\Controllers\Admin\AdminController::class, 'search_users']);
         Route::get('employees/create', [App\Http\Controllers\Admin\AdminController::class, 'create_employee']);
         Route::post('employees/save', [App\Http\Controllers\Admin\AdminController::class, 'save_employee']);
         Route::get('employees/edit/{id}', [App\Http\Controllers\Admin\AdminController::class, 'edit_employee']);

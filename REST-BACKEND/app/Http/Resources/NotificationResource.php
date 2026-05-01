@@ -25,10 +25,8 @@ class NotificationResource extends JsonResource
             'agency_id'     => $this->agency_id,
 
             // ── Content ──────────────────────────────────────────────────────
-            'title'   => $this->title,
-            // TODO: 'body' is the migration column name; 'message' is what the model
-            //       fillable declares. The value is mapped here using the model attribute.
-            'message' => $this->message,
+            'title' => $this->title,
+            'body'  => $this->body,
 
             // ── Enum fields ───────────────────────────────────────────────────
             'type'        => $this->type,
