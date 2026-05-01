@@ -7,6 +7,7 @@ use App\Models\OfferMmpDetail;
 use App\Models\MmPlatform;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use App\Models\User;
 use App\Models\Offer;
 use App\Models\AdModel;
@@ -346,10 +347,23 @@ class AdminOfferService
 
     public function saveEvent($request)
     {
+        $multiConv = $request->input('multi_conv', 'allow');
+        $multiConvIp = $request->input('multi_conv_ip', 'allow');
+        $approval = $request->input('approval', 'allow');
+
         $validator = Validator::make($request->all(), [
-            'event_name' => 'required',
-            'event_token' => 'required',
-            'event_id' => 'required|integer',
+            'offer_id' => 'required|integer|exists:offers,id',
+            'event_name' => 'required|string',
+            'event_token' => [
+                'required',
+                'string',
+                'regex:/^[A-Za-z0-9_]+$/',
+                Rule::unique('offer_events', 'event_token')->where(function ($q) use ($request) {
+                    return $q->where('offer_id', $request->offer_id);
+                }),
+            ],
+            'revenue' => 'nullable|numeric|min:0',
+            'payout' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -360,9 +374,11 @@ class AdminOfferService
         $oe->offer_id = $request->offer_id;
         $oe->event_name = $request->event_name;
         $oe->event_token = $request->event_token;
-        $oe->multi_conv = $request->multi_conv;
-        $oe->multi_conv_ip = $request->multi_conv_ip;
-        $oe->approval = $request->approval;
+        $oe->revenue = $request->revenue;
+        $oe->payout = $request->payout;
+        $oe->multi_conv = $multiConv;
+        $oe->multi_conv_ip = $multiConvIp;
+        $oe->approval = $approval;
         $oe->save();
 
         return ['status' => 1, 'msg' => 'A new event has been created', 'code' => 200];
@@ -370,23 +386,52 @@ class AdminOfferService
 
     public function updateEvent($request)
     {
+        $eventId = $request->input('event_id', $request->input('id'));
+        $multiConv = $request->input('multi_conv', 'allow');
+        $multiConvIp = $request->input('multi_conv_ip', 'allow');
+        $approval = $request->input('approval', 'pending');
+
+        $event = OfferEvent::find($eventId);
+
+        if (!$event) {
+            return ['status' => 0, 'error' => ['event_id' => ['Event not found']], 'code' => 404];
+        }
+
         $validator = Validator::make($request->all(), [
-            'event_name' => 'required',
-            'event_token' => 'required',
+            'event_name' => 'required|string',
+            'event_token' => [
+                'required',
+                'string',
+                'regex:/^[A-Za-z0-9_]+$/',
+                Rule::unique('offer_events', 'event_token')
+                    ->ignore($event->id)
+                    ->where(function ($q) use ($event) {
+                        return $q->where('offer_id', $event->offer_id);
+                    }),
+            ],
+            'revenue' => 'nullable|numeric|min:0',
+            'payout' => 'nullable|numeric|min:0',
         ]);
+
+        $validator->after(function ($validator) use ($eventId) {
+            if (!$eventId || !filter_var($eventId, FILTER_VALIDATE_INT)) {
+                $validator->errors()->add('event_id', 'The event id field is required.');
+            }
+        });
 
         if ($validator->fails()) {
             return ['status' => 0, 'error' => $validator->errors()->toArray(), 'code' => 422];
         }
 
-        OfferEvent::where('id', $request->event_id)
-            ->update([
-                'event_name' => $request->event_name,
-                'event_token' => $request->event_token,
-                'multi_conv' => $request->multi_conv,
-                'multi_conv_ip' => $request->multi_conv_ip,
-                'approval' => $request->approval
-            ]);
+        $event->update([
+            'event_name' => $request->event_name,
+            'event_token' => $request->event_token,
+            'revenue' => $request->revenue,
+            'payout' => $request->payout,
+            'multi_conv' => $multiConv,
+            'multi_conv_ip' => $multiConvIp,
+            'approval' => $approval,
+        ]);
 
         return ['status' => 1, 'msg' => 'Event updated successfully', 'code' => 200];
     }

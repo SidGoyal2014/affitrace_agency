@@ -479,12 +479,14 @@ include $pathPrefix . '/includes/head.php';
                                         <tr>
                                             <th>Event Name</th>
                                             <th>Token</th>
+                                            <th>Revenue</th>
+                                            <th>Payout</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="idListEvents">
                                         <tr>
-                                            <td colspan="3" class="text-center py-4 text-muted">Loading...</td>
+                                            <td colspan="5" class="text-center py-4 text-muted">Loading...</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -802,10 +804,14 @@ include $pathPrefix . '/includes/head.php';
         function loadEvents(events) {
             const tbody = $('#idListEvents').empty();
             events.forEach(evt => {
+                const rev = (evt.revenue !== null && evt.revenue !== undefined && evt.revenue !== '') ? parseFloat(evt.revenue).toFixed(2) : '<span class="text-muted">—</span>';
+                const pay = (evt.payout !== null && evt.payout !== undefined && evt.payout !== '') ? parseFloat(evt.payout).toFixed(2) : '<span class="text-muted">—</span>';
                 tbody.append(`
                     <tr>
                         <td>${evt.event_name}</td>
                         <td><code>${evt.event_token}</code></td>
+                        <td>${rev}</td>
+                        <td>${pay}</td>
                         <td>
                             <button onclick="editEvent(${evt.id})" class="btn btn-sm btn-outline-primary mr-1">Edit</button>
                             <button onclick="deleteEvent(${evt.id})" class="btn btn-sm btn-outline-danger">Delete</button>
@@ -815,7 +821,7 @@ include $pathPrefix . '/includes/head.php';
             });
 
             if (events.length === 0) {
-                tbody.html('<tr><td colspan="3" class="text-center py-4 text-muted">No events configured</td></tr>');
+                tbody.html('<tr><td colspan="5" class="text-center py-4 text-muted">No events configured</td></tr>');
             }
         }
 
@@ -1045,26 +1051,83 @@ include $pathPrefix . '/includes/head.php';
         }
 
         function createNewOfferEvent() {
-            const name = prompt("Event Name:");
-            if (!name) return;
-            const token = prompt("Event Token:");
-            if (!token) return;
+            openEventModal(null);
+        }
 
-            API.fetchWithAuth('admin/offer/save-event', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ offer_id: offerId, event_name: name, event_token: token })
-            }).then(async res => {
-                if (res.status === 1) {
-                    Toast.success('Success', 'Event created successfully');
-                    await loadOfferData();
+        function openEventModal(eid) {
+            $('#eventModalForm')[0].reset();
+            $('#eventModalEventId').val('');
+            $('#eventModalError').hide().text('');
+
+            if (eid) {
+                $('#eventModalTitle').text('Edit Event');
+                $('#eventModalSaveBtn').text('Update Event');
+                API.fetchWithAuth(`admin/offer/get-event/${eid}`).then(res => {
+                    if (!res || !res.event) {
+                        Toast.error('Error', 'Failed to load event data');
+                        return;
+                    }
+                    const e = res.event;
+                    $('#eventModalEventId').val(e.id);
+                    $('#eventModalName').val(e.event_name);
+                    $('#eventModalToken').val(e.event_token);
+                    $('#eventModalRevenue').val(e.revenue !== null ? e.revenue : '');
+                    $('#eventModalPayout').val(e.payout !== null ? e.payout : '');
+                    $('#eventModal').modal('show');
+                }).catch(() => Toast.error('Error', 'Failed to load event data'));
+            } else {
+                $('#eventModalTitle').text('Create Event');
+                $('#eventModalSaveBtn').text('Create Event');
+                $('#eventModal').modal('show');
+            }
+        }
+
+        async function saveEventModal() {
+            const eid = $('#eventModalEventId').val();
+            const name = $('#eventModalName').val().trim();
+            const token = $('#eventModalToken').val().trim();
+            const revenue = $('#eventModalRevenue').val().trim();
+            const payout = $('#eventModalPayout').val().trim();
+
+            if (!name) { $('#eventModalError').text('Event name is required.').show(); return; }
+            if (!token) { $('#eventModalError').text('Event token is required.').show(); return; }
+            if (!/^[A-Za-z0-9_]+$/.test(token)) { $('#eventModalError').text('Token may only contain letters, numbers, and underscores.').show(); return; }
+
+            $('#eventModalSaveBtn').prop('disabled', true).text('Saving...');
+            $('#eventModalError').hide();
+
+            try {
+                let res;
+                if (eid) {
+                    res = await API.fetchWithAuth('admin/offer/update-event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: eid, offer_id: offerId, event_name: name, event_token: token, revenue: revenue || null, payout: payout || null })
+                    });
+                } else {
+                    res = await API.fetchWithAuth('admin/offer/save-event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ offer_id: offerId, event_name: name, event_token: token, revenue: revenue || null, payout: payout || null })
+                    });
                 }
-                else Toast.error('Save Failed', res.error || 'Failed to create event');
-            });
+
+                if (res.status === 1) {
+                    $('#eventModal').modal('hide');
+                    Toast.success('Success', eid ? 'Event updated successfully' : 'Event created successfully');
+                    await loadOfferData();
+                } else {
+                    $('#eventModalError').text(res.error || 'Failed to save event.').show();
+                }
+            } catch (err) {
+                $('#eventModalError').text(err.message || 'An error occurred.').show();
+            } finally {
+                $('#eventModalSaveBtn').prop('disabled', false).text(eid ? 'Update Event' : 'Create Event');
+            }
         }
 
         function editEvent(eid) {
-            Toast.info('Coming Soon', 'Edit event feature is under development');
+            openEventModal(eid);
         }
 
         function deleteEvent(eid) {
@@ -1080,4 +1143,55 @@ include $pathPrefix . '/includes/head.php';
     </script>
 </body>
 
+<!-- Event Create/Edit Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalTitle">Create Event</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="eventModalForm" autocomplete="off">
+                    <input type="hidden" id="eventModalEventId">
+                    <div class="alert alert-danger" id="eventModalError" style="display:none;"></div>
+
+                    <div class="form-group">
+                        <label>Event Name <span class="text-danger">*</span></label>
+                        <input type="text" id="eventModalName" class="form-control" placeholder="e.g. Purchase, Registration">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Event Token <span class="text-danger">*</span></label>
+                        <input type="text" id="eventModalToken" class="form-control" placeholder="e.g. purchase or reg_complete">
+                        <small class="text-muted">Only letters, numbers, and underscores. Used in postback URL as <code>event_id=purchase</code>.</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Revenue <small class="text-muted">(optional)</small></label>
+                                <input type="number" id="eventModalRevenue" class="form-control" step="0.01" min="0" placeholder="Override offer revenue">
+                                <small class="text-muted">Leave blank to use offer default.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Payout <small class="text-muted">(optional)</small></label>
+                                <input type="number" id="eventModalPayout" class="form-control" step="0.01" min="0" placeholder="Override affiliate payout">
+                                <small class="text-muted">Leave blank to use offer default.</small>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="eventModalSaveBtn" onclick="saveEventModal()">Create Event</button>
+            </div>
+        </div>
+    </div>
+</div>
 </html>

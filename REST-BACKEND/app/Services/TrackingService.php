@@ -120,17 +120,31 @@ class TrackingService
         $arrBrowserData = $this->getBrowswerData();
         $device_type = ucfirst($arrBrowserData['device_type']);
 
-        // Check for payout rules if event_id provided
-        $payoutRule = [];
-        if (isset($request->event_id) && $request->event_id > 0) {
+        // Validate event_id token when provided and resolve against this offer.
+        $eventToken = $request->event_id;
+        $offerEvent = null;
+
+        if (isset($eventToken) && $eventToken !== '') {
+            if (!is_string($eventToken) || !preg_match('/^[A-Za-z0-9_]+$/', $eventToken)) {
+                $resp['message'] = 'Invalid event_id format. Only letters, numbers, and underscore are allowed.';
+                return $resp;
+            }
+
             $arr_valid_offer_events = $this->get_valid_offer_events($click->offer_id);
 
-            if (!in_array($request->event_id, $arr_valid_offer_events)) {
+            if (!in_array($eventToken, $arr_valid_offer_events, true)) {
                 $resp['message'] = 'This event is not allowed for this offer';
                 return $resp;
             }
 
-            $payoutRule = $this->get_payout_rule($click->offer_id, $request->event_id);
+            $offerEvent = $this->get_offer_event_by_token($click->offer_id, $eventToken);
+
+            // Deduplicate: reject if this (tid, event_id) pair has already been recorded
+            if (Conversion::where('tid', $request->aff_click_id)
+                         ->where('event_id', $eventToken)
+                         ->exists()) {
+                return ['success' => 'Y', 'message' => 'already_recorded'];
+            }
         }
 
         // Create conversion record with all available data
@@ -164,14 +178,17 @@ class TrackingService
         $conv->unique_clicks = $request->unique_clicks ?? 0;
 
         // === Pricing ===
-        if (count($payoutRule) > 0) {
-            $conv->revenue = $payoutRule[0]['revenue_pricing'];
-            $conv->payout = $payoutRule[0]['payout_pricing'];
-            $conv->advertiser_price = $payoutRule[0]['revenue_pricing'];
-            $conv->affiliate_price = $payoutRule[0]['payout_pricing'];
-            $conv->currency = $payoutRule[0]['currency'];
-            $conv->revenue_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($payoutRule[0]['revenue_pricing'], $payoutRule[0]['currency']);
-            $conv->payout_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($payoutRule[0]['payout_pricing'], $payoutRule[0]['currency']);
+        if ($offerEvent) {
+            $eventRevenue = $offerEvent->revenue;
+            $eventPayout = $offerEvent->payout;
+
+            $conv->revenue = ($eventRevenue !== null && $eventRevenue !== '') ? $eventRevenue : ($click->revenue ?? 0);
+            $conv->payout = ($eventPayout !== null && $eventPayout !== '') ? $eventPayout : ($click->payout ?? 0);
+            $conv->advertiser_price = $conv->revenue;
+            $conv->affiliate_price = $conv->payout;
+            $conv->currency = $click->currency ?? 'USD';
+            $conv->revenue_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($conv->revenue, $conv->currency);
+            $conv->payout_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($conv->payout, $conv->currency);
         } else {
             $conv->revenue = $request->revenue ?? $click->revenue ?? 0;
             $conv->payout = $request->payout ?? $click->payout ?? 0;
@@ -187,8 +204,8 @@ class TrackingService
         $conv->profit = ($conv->revenue ?? 0) - ($conv->payout ?? 0);
 
         // === Event Data ===
-        $conv->event_id = $request->event_id ?? null;
-        $conv->event = $request->event ?? 'default';
+        $conv->event_id = $eventToken ?? null;
+        $conv->event = $request->event ?? ($offerEvent?->event_name ?? 'default');
         $conv->status = 'pending';
         $conv->status_type = $request->status_type ?? null;
         $conv->filter_log = $request->filter_log ?? null;
@@ -426,13 +443,18 @@ class TrackingService
 
     public function get_valid_offer_events($offer_id)
     {
-        $arrEvents = array();
-        $events = OfferEvent::select('id')->where('offer_id', $offer_id)->get()->toArray();
+        return OfferEvent::where('offer_id', $offer_id)
+            ->pluck('event_token')
+            ->filter()
+            ->values()
+            ->toArray();
+    }
 
-        foreach ($events as $e) {
-            $arrEvents[] = $e['id'];
-        }
-        return $arrEvents;
+    public function get_offer_event_by_token($offer_id, $eventToken)
+    {
+        return OfferEvent::where('offer_id', $offer_id)
+            ->where('event_token', $eventToken)
+            ->first();
     }
 
     public function get_payout_rule($offer_id, $event_id)
