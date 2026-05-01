@@ -357,7 +357,7 @@ include $pathPrefix . '/includes/head.php';
                                         <div class="text-right">
                                             ${data.arr_affiliate_offers.includes(offer.id.toString()) ?
                                 '<span class="badge badge-success">Assigned</span>' :
-                                `<button class="btn btn-sm btn-primary" onclick="Toast.info('Coming Soon', 'Request feature is under development'); return false;">Apply for Approval</button>`
+                                `<button class="btn btn-sm btn-primary" onclick="requestOfferAccess(${offer.id})">Request Access</button>`
                             }
                                         </div>
                                     </div>
@@ -376,6 +376,16 @@ include $pathPrefix . '/includes/head.php';
                 $('#offers_list').html(`<tr><td class="text-center text-danger">Failed to load data: ${error.message}</td></tr>`);
             }
         });
+
+        async function requestOfferAccess(offerId) {
+            try {
+                const res = await API.fetchWithAuth(`affiliate/offers/request/${offerId}`, { method: 'POST' });
+                Toast.success('Request Sent', res.message || 'Offer access request sent successfully');
+                window.location.reload();
+            } catch (error) {
+                Toast.error('Request Failed', error.message || 'Could not submit access request');
+            }
+        }
     </script>
 </body>
 

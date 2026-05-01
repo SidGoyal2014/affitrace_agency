@@ -209,6 +209,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 
         // Offers
+        Route::get('offers/browse', [App\Http\Controllers\Affiliate\AffiliateOfferController::class, 'browse']);
+        Route::post('offers/request/{oid}', [App\Http\Controllers\Affiliate\AffiliateOfferController::class, 'request_access']);
         Route::get('offers/approved', [App\Http\Controllers\Affiliate\AffiliateOfferController::class, 'offers_approved']);
         Route::get('offers/tracking-url/{oid}', [App\Http\Controllers\Affiliate\AffiliateOfferController::class, 'tracking_url']);
 
@@ -431,6 +433,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 // Admin Dashboard Extra
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::get('admin/approve-assign-request/{oaid}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'approve_offer_assign_requests']);
     Route::get('admin/reject-assign-request/{oaid}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'reject_offer_assign_requests']);
     Route::get('admin/reports/top-offers/{dod}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'top_offers']);
     Route::get('admin/reports/top-affiliates/{dod}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'top_affiliates']);

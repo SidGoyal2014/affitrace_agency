@@ -329,7 +329,7 @@ include $pathPrefix . '/includes/head.php';
                                         </div>
                                         <div class="text-right">
                                             <button class="btn btn-sm btn-outline-danger mr-1" onclick="rejectRequest(${req.oaid})">Reject</button>
-                                            <button class="btn btn-sm btn-primary" onclick="assignRequest(${req.oaid})">Assign</button>
+                                            <button class="btn btn-sm btn-primary" onclick="approveRequest(${req.oaid})">Approve</button>
                                         </div>
                                     </div>
                                 </td>
@@ -357,15 +357,31 @@ include $pathPrefix . '/includes/head.php';
             }
         });
 
-        function rejectRequest(id) {
-            if (confirm("Reject this request?")) {
-                console.log("Rejecting:", id);
+        async function rejectRequest(id) {
+            if (!confirm("Reject this request?")) {
+                return;
+            }
+
+            try {
+                const response = await API.fetchWithAuth(`admin/reject-assign-request/${id}`);
+                Toast.success('Request Rejected', response.message || 'Offer request rejected successfully');
+                window.location.reload();
+            } catch (error) {
+                Toast.error('Action Failed', error.message || 'Could not reject request');
             }
         }
 
-        function assignRequest(id) {
-            if (confirm("Assign this request?")) {
-                console.log("Assigning:", id);
+        async function approveRequest(oaid) {
+            if (!confirm("Approve this request?")) {
+                return;
+            }
+
+            try {
+                const response = await API.fetchWithAuth(`admin/approve-assign-request/${oaid}`);
+                Toast.success('Request Approved', response.message || 'Offer assigned successfully');
+                window.location.reload();
+            } catch (error) {
+                Toast.error('Action Failed', error.message || 'Could not approve request');
             }
         }
     </script>

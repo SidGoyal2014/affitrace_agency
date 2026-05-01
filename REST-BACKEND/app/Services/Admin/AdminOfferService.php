@@ -314,7 +314,7 @@ class AdminOfferService
         $query = OfferAffiliate::where('offer_id', $oid)->where('affiliate_id', $aid);
 
         if ($query->exists()) {
-            $query->update(['request_status' => 'Accepted', 'tracking_url' => $turl]);
+            $query->update(['request_status' => 'Accepted', 'request_made' => 'N', 'tracking_url' => $turl]);
         } else {
             $oa = new OfferAffiliate();
             $oa->offer_id = $oid;

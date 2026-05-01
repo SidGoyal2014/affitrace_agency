@@ -93,6 +93,7 @@ function url($path)
                 <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
             </a>
             <div class="dropdown-menu">
+                <a class="dropdown-item" href="<?php echo url('offers/browse.php'); ?>">Browse Offers</a>
                 <a class="dropdown-item" href="<?php echo url('offers/offers_approved.php'); ?>">My Offers
                     (Approved)</a>
             </div>
