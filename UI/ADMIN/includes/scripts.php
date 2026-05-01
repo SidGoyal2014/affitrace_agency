@@ -20,5 +20,8 @@
 <!-- Toast Notifications -->
 <script src="<?php echo $pathPrefix; ?>/assets/js/toast.js"></script>
 
+<!-- Report Filters -->
+<script src="<?php echo $pathPrefix; ?>/../common/js/report-date-presets.js"></script>
+
 <!-- Reusable Plugins -->
 <script src="<?php echo $pathPrefix; ?>/../common/js/mark-paid-modal.js"></script>

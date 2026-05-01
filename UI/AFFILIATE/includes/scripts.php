@@ -14,6 +14,9 @@
 <!-- Toast Notifications -->
 <script src="<?php echo $pathPrefix; ?>/assets/js/toast.js"></script>
 
+<!-- Report Filters -->
+<script src="<?php echo $pathPrefix; ?>/../common/js/report-date-presets.js"></script>
+
 <script>
     // Check auth for affiliate pages
     $(document).ready(function () {
