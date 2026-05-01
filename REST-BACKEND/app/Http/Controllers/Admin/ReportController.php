@@ -217,7 +217,7 @@ class ReportController extends Controller
 		]);
 
 		$request->validate([
-			'id' => 'required|text',
+			'id' => 'required|integer|min:1',
 			'status' => 'required|in:confirmed,declined',
 		]);
 
