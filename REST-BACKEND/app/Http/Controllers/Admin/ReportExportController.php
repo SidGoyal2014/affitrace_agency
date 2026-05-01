@@ -117,7 +117,7 @@ class ReportExportController extends Controller
     {
         $export = ReportExport::find($id);
 
-        \Log::info('Export ID: ' . $id . ' Export Format: ' . $export->format);
+        Log::info('Export ID: ' . $id . ' Export Format: ' . $export->format);
 
         if (!$export) {
             return response()->json([
@@ -159,7 +159,7 @@ class ReportExportController extends Controller
         // Get temp file path
         $filePath = $this->service->getExistingTempFile($export);
 
-        \Log::info("filePath : " . $filePath);
+        Log::info("filePath : " . $filePath);
 
         if (!$filePath || !file_exists($filePath)) {
             return response()->json([

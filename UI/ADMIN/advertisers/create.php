@@ -208,12 +208,12 @@ include $pathPrefix . '/includes/head.php';
                                     </div>
                                 </div>
 
-                                <div class="form-group mb-4">
+                                <!-- <div class="form-group mb-4">
                                     <label class="text-muted" style="font-size: 14px; padding-left: 16px;">Role Assignment</label>
                                     <select name="role_id" id="role_id" class="form-control" style="border-radius:12px; height:58px; padding-left:16px;">
                                         <option value="">Select Role (Optional)</option>
                                     </select>
-                                </div>
+                                </div> -->
 
                                 <div class="divider"><span>Security</span></div>
 
@@ -257,18 +257,19 @@ include $pathPrefix . '/includes/head.php';
             const user = JSON.parse(localStorage.getItem('user'));
             if (user) $('.user-name').text(user.name);
 
-            try {
-                const rolesRes = await API.fetchWithAuth('admin/roles');
-                if(rolesRes && rolesRes.length > 0) {
-                    rolesRes.forEach(r => {
-                        if(r.user_type === 'advertiser') {
-                            $('#role_id').append(`<option value="${r.id}">${r.name}</option>`);
-                        }
-                    });
-                }
-            } catch(e) { console.error("Failed to load roles"); }
+            // try {
+            //     const rolesRes = await API.fetchWithAuth('admin/roles');
+            //     if(rolesRes && rolesRes.length > 0) {
+            //         rolesRes.forEach(r => {
+            //             if(r.user_type === 'advertiser') {
+            //                 $('#role_id').append(`<option value="${r.id}">${r.name}</option>`);
+            //             }
+            //         });
+            //     }
+            // } catch(e) { console.error("Failed to load roles"); }
 
             $('#createForm').on('submit', async function (e) {
+                console.log("Helllllllooooooooooooo");
                 e.preventDefault();
                 $('#alert-container').empty();
 

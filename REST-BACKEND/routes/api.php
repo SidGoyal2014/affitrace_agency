@@ -137,7 +137,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('reports/click-conversion-report', [App\Http\Controllers\Admin\ReportController::class, 'click_conversion_report']);
         Route::post('reports/clicks', [App\Http\Controllers\Admin\ReportController::class, 'clicks_report']);
         Route::post('reports/conversions', [App\Http\Controllers\Admin\ReportController::class, 'conversions_report']);
+        Route::get('reports/conversion/bulk-template', [App\Http\Controllers\Admin\ReportController::class, 'download_bulk_conversion_template']);
         Route::post('reports/conversion/update-status', [App\Http\Controllers\Admin\ReportController::class, 'update_conversion_status']);
+        Route::post('reports/conversion/bulk-update-status', [App\Http\Controllers\Admin\ReportController::class, 'bulk_update_conversion_status']);
 
         // Integrations
         Route::get('integrations/config', [App\Http\Controllers\Admin\IntegrationController::class, 'get_config']);
@@ -334,6 +336,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('reports/click-conversion-report', [App\Http\Controllers\Admin\ReportController::class, 'click_conversion_report']);
             Route::post('reports/clicks', [App\Http\Controllers\Admin\ReportController::class, 'clicks_report']);
             Route::post('reports/conversions', [App\Http\Controllers\Admin\ReportController::class, 'conversions_report']);
+            Route::get('reports/conversion/bulk-template', [App\Http\Controllers\Admin\ReportController::class, 'download_bulk_conversion_template']);
             Route::get('reports/transactions', [App\Http\Controllers\Admin\ReportController::class, 'list_transactions']);
             Route::get('reports/logs', [App\Http\Controllers\Admin\ReportController::class, 'logs']);
             Route::get('reports/postback-logs', [App\Http\Controllers\Admin\ReportController::class, 'postback_logs']);
@@ -409,6 +412,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // ── Conversions ──
         Route::middleware(['module.access:reports,can_edit'])->group(function () {
             Route::post('reports/conversion/update-status', [App\Http\Controllers\Admin\ReportController::class, 'update_conversion_status']);
+            Route::post('reports/conversion/bulk-update-status', [App\Http\Controllers\Admin\ReportController::class, 'bulk_update_conversion_status']);
         });
     });
 

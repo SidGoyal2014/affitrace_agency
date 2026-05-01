@@ -7,8 +7,11 @@ use App\Http\Requests\CreateManualWeeklyPayoutRequest;
 use App\Http\Requests\PayWeeklyPayoutRequest;
 use App\Http\Requests\RejectWeeklyPayoutRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use App\Services\Admin\AdminReportService;
 use App\Services\Admin\WeeklyPayoutService;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
@@ -209,13 +212,381 @@ class ReportController extends Controller
 
 	public function update_conversion_status(Request $request)
 	{
+		Log::info('update_conversion_status request payload', [
+			'request' => $request->all(),
+		]);
+
 		$request->validate([
-			'id' => 'required|integer',
+			'id' => 'required|text',
 			'status' => 'required|in:confirmed,declined',
 		]);
 
 		$result = $this->reportService->updateConversionStatus($request->id, $request->status);
 
 		return response()->json($result, $result['success'] ? 200 : 404);
+	}
+
+	public function bulk_update_conversion_status(Request $request)
+	{
+		$request->validate([
+			'file' => 'required|file|mimes:csv,txt,xlsx|max:10240',
+			'status' => 'nullable|string|in:confirmed,declined,approve,approved,reject,rejected',
+		]);
+
+		try {
+			$rows = $this->extractConversionRowsFromUploadedFile($request->file('file'));
+		} catch (\Throwable $e) {
+			return response()->json([
+				'success' => false,
+				'message' => $e->getMessage(),
+				'summary' => [
+					'total_rows' => 0,
+					'processed' => 0,
+					'updated' => 0,
+					'failed' => 0,
+				],
+				'rows' => [],
+			], 422);
+		}
+
+		foreach($rows as $row){
+			Log::info('Row parsed for bulk conversion status update.', ['row' => $row]);
+		}
+
+		$forcedStatus = $request->input('status');
+		$result = $this->reportService->bulkUpdateConversionStatuses($rows, $forcedStatus);
+
+		$statusCode = ($result['summary']['processed'] ?? 0) > 0 ? 200 : 422;
+
+		return response()->json($result, $statusCode);
+	}
+
+	public function download_bulk_conversion_template(Request $request): BinaryFileResponse
+	{
+		$format = strtolower((string) $request->query('format', 'csv'));
+
+		if (!in_array($format, ['csv', 'xlsx'], true)) {
+			$format = 'csv';
+		}
+
+		if ($format === 'xlsx') {
+			$filePath = $this->buildBulkConversionTemplateXlsx();
+			$fileName = 'bulk-conversion-status-template.xlsx';
+			$contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+		} else {
+			$filePath = $this->buildBulkConversionTemplateCsv();
+			$fileName = 'bulk-conversion-status-template.csv';
+			$contentType = 'text/csv';
+		}
+
+		return response()->download($filePath, $fileName, [
+			'Content-Type' => $contentType,
+		])->deleteFileAfterSend(true);
+	}
+
+	private function extractConversionRowsFromUploadedFile($file): array
+	{
+		$extension = strtolower($file->getClientOriginalExtension());
+
+		if ($extension === 'csv' || $extension === 'txt') {
+			return $this->extractRowsFromCsv($file->getRealPath());
+		}
+
+		if ($extension === 'xlsx') {
+			return $this->extractRowsFromXlsx($file->getRealPath());
+		}
+
+		throw new \RuntimeException('Unsupported file type. Only CSV and XLSX are supported.');
+	}
+
+	private function extractRowsFromCsv(string $path): array
+	{
+		$handle = fopen($path, 'r');
+		if ($handle === false) {
+			throw new \RuntimeException('Unable to read uploaded CSV file.');
+		}
+
+		$header = fgetcsv($handle);
+		if (!$header || count($header) === 0) {
+			fclose($handle);
+			throw new \RuntimeException('CSV is empty or missing a header row.');
+		}
+
+		$rows = [];
+		$headerMap = $this->buildHeaderIndexMap($header);
+		[$idIndex, $statusIndex] = $this->resolveRequiredColumnIndexes($headerMap);
+
+		$rowNumber = 1;
+		while (($data = fgetcsv($handle)) !== false) {
+			$rowNumber++;
+
+			$conversionId = isset($data[$idIndex]) ? trim((string) $data[$idIndex]) : '';
+			$status = ($statusIndex !== null && isset($data[$statusIndex])) ? trim((string) $data[$statusIndex]) : null;
+
+			if ($conversionId === '' && ($status === null || $status === '')) {
+				continue;
+			}
+
+			$rows[] = [
+				'row_number' => $rowNumber,
+				'conversion_id' => $conversionId,
+				'status' => $status,
+			];
+		}
+
+		fclose($handle);
+
+		return $rows;
+	}
+
+	private function extractRowsFromXlsx(string $path): array
+	{
+		$zip = new \ZipArchive();
+		if ($zip->open($path) !== true) {
+			throw new \RuntimeException('Unable to open uploaded XLSX file.');
+		}
+
+		$worksheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
+		if ($worksheetXml === false) {
+			$zip->close();
+			throw new \RuntimeException('XLSX file is missing the first worksheet.');
+		}
+
+		$sharedStrings = [];
+		$sharedStringsXml = $zip->getFromName('xl/sharedStrings.xml');
+		if ($sharedStringsXml !== false) {
+			$sharedStringsDoc = simplexml_load_string($sharedStringsXml);
+			if ($sharedStringsDoc) {
+				foreach ($sharedStringsDoc->si as $item) {
+					$value = '';
+					if (isset($item->t)) {
+						$value = (string) $item->t;
+					} elseif (isset($item->r)) {
+						foreach ($item->r as $run) {
+							$value .= (string) $run->t;
+						}
+					}
+					$sharedStrings[] = $value;
+				}
+			}
+		}
+
+		$sheet = simplexml_load_string($worksheetXml);
+		$zip->close();
+
+		if (!$sheet || !isset($sheet->sheetData)) {
+			throw new \RuntimeException('XLSX worksheet could not be parsed.');
+		}
+
+		$rawRows = [];
+		foreach ($sheet->sheetData->row as $row) {
+			$rowValues = [];
+			foreach ($row->c as $cell) {
+				$cellRef = (string) $cell['r'];
+				preg_match('/^[A-Z]+/', $cellRef, $matches);
+				$columnLetters = $matches[0] ?? 'A';
+				$columnIndex = $this->columnLettersToIndex($columnLetters);
+
+				$type = (string) $cell['t'];
+				$value = '';
+				if ($type === 's') {
+					$sharedStringIndex = (int) $cell->v;
+					$value = $sharedStrings[$sharedStringIndex] ?? '';
+				} elseif ($type === 'inlineStr' && isset($cell->is->t)) {
+					$value = (string) $cell->is->t;
+				} else {
+					$value = isset($cell->v) ? (string) $cell->v : '';
+				}
+
+				$rowValues[$columnIndex] = trim($value);
+			}
+
+			ksort($rowValues);
+			$rawRows[] = $rowValues;
+		}
+
+		if (count($rawRows) === 0) {
+			throw new \RuntimeException('XLSX is empty or missing a header row.');
+		}
+
+		$header = $rawRows[0];
+		$headerMap = $this->buildHeaderIndexMap($header);
+		[$idIndex, $statusIndex] = $this->resolveRequiredColumnIndexes($headerMap);
+
+		$rows = [];
+		for ($i = 1; $i < count($rawRows); $i++) {
+			$rowNumber = $i + 1;
+			$currentRow = $rawRows[$i];
+
+			$conversionId = isset($currentRow[$idIndex]) ? trim((string) $currentRow[$idIndex]) : '';
+			$status = ($statusIndex !== null && isset($currentRow[$statusIndex])) ? trim((string) $currentRow[$statusIndex]) : null;
+
+			if ($conversionId === '' && ($status === null || $status === '')) {
+				continue;
+			}
+
+			$rows[] = [
+				'row_number' => $rowNumber,
+				'conversion_id' => $conversionId,
+				'status' => $status,
+			];
+		}
+
+		return $rows;
+	}
+
+	private function buildHeaderIndexMap(array $header): array
+	{
+		$headerMap = [];
+		foreach ($header as $index => $value) {
+			$key = Str::of((string) $value)->lower()->trim()->replace([' ', '-'], '_')->value();
+			if ($key !== '') {
+				$headerMap[$key] = (int) $index;
+			}
+		}
+
+		return $headerMap;
+	}
+
+	private function resolveRequiredColumnIndexes(array $headerMap): array
+	{
+		$idAliases = ['conversion_id', 'id', 'conv_id'];
+		$statusAliases = ['status', 'conversion_status', 'action'];
+
+		$idIndex = null;
+		foreach ($idAliases as $alias) {
+			if (array_key_exists($alias, $headerMap)) {
+				$idIndex = $headerMap[$alias];
+				break;
+			}
+		}
+
+		if ($idIndex === null) {
+			throw new \RuntimeException('Missing required column. Please include conversion_id or id.');
+		}
+
+		$statusIndex = null;
+		foreach ($statusAliases as $alias) {
+			if (array_key_exists($alias, $headerMap)) {
+				$statusIndex = $headerMap[$alias];
+				break;
+			}
+		}
+
+		return [$idIndex, $statusIndex];
+	}
+
+	private function columnLettersToIndex(string $letters): int
+	{
+		$letters = strtoupper($letters);
+		$index = 0;
+
+		for ($i = 0; $i < strlen($letters); $i++) {
+			$index = $index * 26 + (ord($letters[$i]) - ord('A') + 1);
+		}
+
+		return $index - 1;
+	}
+
+	private function buildBulkConversionTemplateCsv(): string
+	{
+		$path = tempnam(sys_get_temp_dir(), 'bulk_conv_tpl_');
+		if ($path === false) {
+			throw new \RuntimeException('Unable to generate CSV template file.');
+		}
+
+		$handle = fopen($path, 'w');
+		if ($handle === false) {
+			@unlink($path);
+			throw new \RuntimeException('Unable to write CSV template file.');
+		}
+
+		fputcsv($handle, ['conversion_id', 'status']);
+		fputcsv($handle, ['101', 'confirmed']);
+		fputcsv($handle, ['102', 'declined']);
+		fputcsv($handle, ['103', 'approved']);
+		fputcsv($handle, ['104', 'rejected']);
+
+		fclose($handle);
+
+		return $path;
+	}
+
+	private function buildBulkConversionTemplateXlsx(): string
+	{
+		$path = tempnam(sys_get_temp_dir(), 'bulk_conv_tpl_');
+		if ($path === false) {
+			throw new \RuntimeException('Unable to generate XLSX template file.');
+		}
+
+		$zip = new \ZipArchive();
+		if ($zip->open($path, \ZipArchive::OVERWRITE) !== true) {
+			@unlink($path);
+			throw new \RuntimeException('Unable to create XLSX archive.');
+		}
+
+		$sharedStrings = [
+			'conversion_id',
+			'status',
+			'confirmed',
+			'declined',
+			'approved',
+			'rejected',
+		];
+
+		$contentTypes = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+			. '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+			. '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+			. '<Default Extension="xml" ContentType="application/xml"/>'
+			. '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+			. '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+			. '<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>'
+			. '</Types>';
+
+		$rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+			. '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+			. '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+			. '</Relationships>';
+
+		$workbook = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+			. '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+			. '<sheets><sheet name="Template" sheetId="1" r:id="rId1"/></sheets>'
+			. '</workbook>';
+
+		$workbookRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+			. '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+			. '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+			. '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>'
+			. '</Relationships>';
+
+		$sheet = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+			. '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+			. '<sheetData>'
+			. '<row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c></row>'
+			. '<row r="2"><c r="A2"><v>101</v></c><c r="B2" t="s"><v>2</v></c></row>'
+			. '<row r="3"><c r="A3"><v>102</v></c><c r="B3" t="s"><v>3</v></c></row>'
+			. '<row r="4"><c r="A4"><v>103</v></c><c r="B4" t="s"><v>4</v></c></row>'
+			. '<row r="5"><c r="A5"><v>104</v></c><c r="B5" t="s"><v>5</v></c></row>'
+			. '</sheetData>'
+			. '</worksheet>';
+
+		$sharedStringsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+			. '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="' . count($sharedStrings) . '" uniqueCount="' . count($sharedStrings) . '">';
+		foreach ($sharedStrings as $text) {
+			$escaped = htmlspecialchars($text, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+			$sharedStringsXml .= '<si><t>' . $escaped . '</t></si>';
+		}
+		$sharedStringsXml .= '</sst>';
+
+		$zip->addFromString('[Content_Types].xml', $contentTypes);
+		$zip->addFromString('_rels/.rels', $rels);
+		$zip->addFromString('xl/workbook.xml', $workbook);
+		$zip->addFromString('xl/_rels/workbook.xml.rels', $workbookRels);
+		$zip->addFromString('xl/worksheets/sheet1.xml', $sheet);
+		$zip->addFromString('xl/sharedStrings.xml', $sharedStringsXml);
+
+		$zip->close();
+
+		return $path;
 	}
 }

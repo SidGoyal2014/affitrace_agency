@@ -7,6 +7,7 @@ use Yajra\DataTables\Facades\DataTables;
 use App\Services\Reports\BaseReportService;
 use App\DTOs\ReportFilterDTO;
 use App\Http\Traits\CommonOfferFunctions;
+use Illuminate\Support\Facades\Log;
 
 class AdminReportService extends BaseReportService
 {
@@ -606,6 +607,147 @@ class AdminReportService extends BaseReportService
         }
 
         return ['success' => true, 'message' => 'Conversion status updated to ' . $status];
+    }
+
+
+    /**
+     * Update conversion status (confirm or decline)
+     */
+    public function updateConversionStatusUsingTid($tid, $status): array
+    {
+        $conversion = \App\Models\Conversion::where('tid', $tid)->first();
+
+        if (!$conversion) {
+            return ['success' => false, 'message' => 'Conversion not found'];
+        }
+
+        $conversion->status = $status;
+        $conversion->save();
+
+        if ($status === 'confirmed') {
+            \App\Jobs\FireAffiliatePostbackJob::dispatch($conversion->id);
+        }
+
+        return ['success' => true, 'message' => 'Conversion status updated to ' . $status];
+    }
+
+    /**
+     * Bulk update conversion statuses using parsed rows from a CSV/XLSX file.
+     *
+     * Each row accepts:
+     * - conversion_id (or id)
+     * - status (optional if $forcedStatus is provided)
+     */
+    public function bulkUpdateConversionStatuses(array $rows, ?string $forcedStatus = null): array
+    {
+        $normalizeStatus = function (?string $status): ?string {
+            if ($status === null) {
+                return null;
+            }
+
+            $status = strtolower(trim($status));
+            $map = [
+                'approve' => 'confirmed',
+                'approved' => 'confirmed',
+                'confirm' => 'confirmed',
+                'confirmed' => 'confirmed',
+                'reject' => 'declined',
+                'rejected' => 'declined',
+                'decline' => 'declined',
+                'declined' => 'declined',
+            ];
+
+            return $map[$status] ?? null;
+        };
+
+        $normalizedForcedStatus = $normalizeStatus($forcedStatus);
+        if ($forcedStatus !== null && $normalizedForcedStatus === null) {
+            return [
+                'success' => false,
+                'message' => 'Invalid forced status. Use confirmed/declined (or approve/reject aliases).',
+                'summary' => [
+                    'total_rows' => count($rows),
+                    'processed' => 0,
+                    'updated' => 0,
+                    'failed' => count($rows),
+                ],
+                'rows' => [],
+            ];
+        }
+
+        $results = [];
+        $updated = 0;
+        $failed = 0;
+
+        foreach ($rows as $row) {
+            $rowNumber = (int) ($row['row_number'] ?? 0);
+            $conversionIdRaw = trim((string) ($row['conversion_id'] ?? ''));
+            $rowStatusRaw = $row['status'] ?? null;
+
+            Log::info("RowNumber : ".$rowNumber);
+            Log::info("conversion Id : " .$conversionIdRaw);
+            Log::info("Row Status : " .$rowStatusRaw);
+
+            $requestedStatus = $normalizedForcedStatus ?? $normalizeStatus(is_string($rowStatusRaw) ? $rowStatusRaw : null);
+
+            if ($conversionIdRaw === '') {
+                $failed++;
+                $results[] = [
+                    'row' => $rowNumber,
+                    'conversion_id' => $conversionIdRaw,
+                    'requested_status' => $requestedStatus,
+                    'success' => false,
+                    'message' => 'Invalid conversion_id.',
+                ];
+                continue;
+            }
+
+            if (!$requestedStatus) {
+                $failed++;
+                $results[] = [
+                    'row' => $rowNumber,
+                    'conversion_id' => (int) $conversionIdRaw,
+                    'requested_status' => $rowStatusRaw,
+                    'success' => false,
+                    'message' => 'Missing or invalid status. Provide status column or send request status parameter.',
+                ];
+                continue;
+            }
+
+            Log::info("conversion Id : " .$conversionIdRaw);
+            Log::info("Row Status : " .$rowStatusRaw);
+
+            $response = $this->updateConversionStatusUsingTid($conversionIdRaw, $requestedStatus);
+            if (!($response['success'] ?? false)) {
+                $failed++;
+            } else {
+                $updated++;
+            }
+
+            $results[] = [
+                'row' => $rowNumber,
+                'conversion_id' => $conversionIdRaw,
+                'requested_status' => $requestedStatus,
+                'success' => (bool) ($response['success'] ?? false),
+                'message' => $response['message'] ?? 'Processed',
+            ];
+        }
+
+        $processed = count($results);
+
+        return [
+            'success' => $processed > 0 && $failed === 0,
+            'message' => $processed === 0
+                ? 'No data rows found in uploaded file.'
+                : "Processed {$processed} rows.",
+            'summary' => [
+                'total_rows' => count($rows),
+                'processed' => $processed,
+                'updated' => $updated,
+                'failed' => $failed,
+            ],
+            'rows' => $results,
+        ];
     }
 }
 

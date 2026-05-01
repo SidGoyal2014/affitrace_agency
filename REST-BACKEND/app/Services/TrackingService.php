@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use App\Models\Offer;
 use App\Models\OfferTracking;
 use App\Models\Conversion;
@@ -41,27 +42,27 @@ class TrackingService
 
         $offer = $offers[0];
 
-        \Log::info("Offer: " . json_encode($offer));
+        Log::info("Offer: " . json_encode($offer));
 
         // User Data
         $arrBrowserData = $this->getBrowswerData();
         $client_ip = $this->get_client_ip(TRUE);
         $arrLocation = $this->ip_info("location", $client_ip);
 
-        \Log::info("Location: " . json_encode($arrLocation));
+        Log::info("Location: " . json_encode($arrLocation));
 
         // Get user country
         $visitor_country = strtoupper($arrLocation['country']);
 
         // Check Click Limit
         if ($this->get_total_clicks() >= $this->get_settings("num_clicks")) {
-            \Log::info("Clicks not saved as maximum allowed limit as per purchased plan already reached");
+            Log::info("Clicks not saved as maximum allowed limit as per purchased plan already reached");
             return ['type' => 'redirect', 'url' => 'verify'];
         }
 
         $response = $this->is_matching_target($offer, $payoutRule, $arrBrowserData, $arrLocation);
 
-        \Log::info('' . json_encode($response));
+        Log::info('' . json_encode($response));
 
         if ($response) {
 
@@ -107,6 +108,8 @@ class TrackingService
 
         // Find the original click
         $click = OfferTracking::where('tid', $request->aff_click_id)->first();
+
+        Log::info("Click : ".$click);
 
         if (!$click) {
             $resp['message'] = 'Click not found for: ' . $request->aff_click_id;
