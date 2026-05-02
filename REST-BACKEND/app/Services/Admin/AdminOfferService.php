@@ -60,7 +60,9 @@ class AdminOfferService
             'ad_model' => 'required|string',
             'currency' => 'required|string',
             'aff_model' => 'required|string',
-            'conversion_tracking_method' => 'in:s2s,image_pixel,iframe_pixel,script_pixel'
+            'conversion_tracking_method' => 'in:s2s,image_pixel,iframe_pixel,script_pixel',
+            'clicks_cap' => 'nullable|integer|min:0',
+            'conversions_cap' => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -92,6 +94,8 @@ class AdminOfferService
         $offer->private_note = $request->private_note;
         $offer->offer_terms = $request->offer_terms;
         $offer->conversion_tracking_method = $request->conversion_tracking_method ?? 's2s';
+        $offer->clicks_cap = isset($request->clicks_cap) && $request->clicks_cap !== '' ? (int)$request->clicks_cap : null;
+        $offer->conversions_cap = isset($request->conversions_cap) && $request->conversions_cap !== '' ? (int)$request->conversions_cap : null;
 
         $offer->save();
 
@@ -164,7 +168,9 @@ class AdminOfferService
             'ad_model' => 'required|string',
             'currency' => 'required|string',
             'aff_model' => 'required|string',
-            'conversion_tracking_method' => 'in:s2s,image_pixel,iframe_pixel,script_pixel'
+            'conversion_tracking_method' => 'in:s2s,image_pixel,iframe_pixel,script_pixel',
+            'clicks_cap' => 'nullable|integer|min:0',
+            'conversions_cap' => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -198,6 +204,8 @@ class AdminOfferService
         $offer->private_note = $request->private_note;
         $offer->offer_terms = $request->offer_terms;
         $offer->conversion_tracking_method = $request->conversion_tracking_method ?? 's2s';
+        $offer->clicks_cap = isset($request->clicks_cap) && $request->clicks_cap !== '' ? (int)$request->clicks_cap : null;
+        $offer->conversions_cap = isset($request->conversions_cap) && $request->conversions_cap !== '' ? (int)$request->conversions_cap : null;
 
         $offer->save();
 

@@ -202,11 +202,21 @@ include $pathPrefix . '/includes/head.php';
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label><i class="fas fa-mouse-pointer mr-1 text-warning"></i> Clicks Cap <small class="text-muted">(blank = unlimited)</small></label>
+                                                <input type="number" name="clicks_cap" class="form-control" min="0" placeholder="Unlimited">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label><i class="fas fa-check-circle mr-1 text-success"></i> Conversions Cap <small class="text-muted">(blank = unlimited)</small></label>
+                                                <input type="number" name="conversions_cap" class="form-control" min="0" placeholder="Unlimited">
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-
-                                <hr class="form-divider">
-
-                                <!-- Conversion Tracking -->
                                 <div class="offer-form-section">
                                     <div class="section-title">
                                         <div class="section-icon"><i class="fas fa-exchange-alt"></i></div>
@@ -710,6 +720,8 @@ include $pathPrefix . '/includes/head.php';
                     offer_status: $('select[name="offer_status"]').val(),
                     campaign_start_date: $('input[name="campaign_start_date"]').val(),
                     campaign_end_date: $('input[name="campaign_end_date"]').val(),
+                    clicks_cap: $('input[name="clicks_cap"]').val() !== '' ? parseInt($('input[name="clicks_cap"]').val()) : null,
+                    conversions_cap: $('input[name="conversions_cap"]').val() !== '' ? parseInt($('input[name="conversions_cap"]').val()) : null,
                     offer_desc: $('textarea[name="offer_desc"]').val(),
                     conversion_tracking_method: $('select[name="conversion_tracking_method"]').val(),
                     mmp_id: $('select[name="mmp_id"]').val(),

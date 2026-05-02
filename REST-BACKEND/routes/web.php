@@ -27,6 +27,10 @@ Route::middleware('api.tenant')->group(function () {
 Route::get('invalid_country', [WebsiteController::class, 'invalid_country'])->name('ic');
 Route::get('verify', [WebsiteController::class, 'verify']);
 
+// Cap Reached Pages
+Route::get('cap/clicks-reached', [WebsiteController::class, 'clicks_cap_reached'])->name('cap.clicks.reached');
+Route::get('cap/conversions-reached', [WebsiteController::class, 'conversions_cap_reached'])->name('cap.conversions.reached');
+
 // Fallback for non-existent web routes?
 // Route::fallback(function () {
 //     return response()->json(['message' => 'Not Found'], 404);

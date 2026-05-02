@@ -60,6 +60,23 @@ class TrackingService
             return ['type' => 'redirect', 'url' => 'verify'];
         }
 
+        // Per-offer clicks cap enforcement
+        if (!is_null($offer->clicks_cap)) {
+            $currentClicks = DB::table('offer_trackings')->where('offer_id', $oid)->count();
+            if ($currentClicks >= $offer->clicks_cap) {
+                // Record cap reached timestamp and reason on first hit only
+                if (is_null($offer->cap_reached_at)) {
+                    DB::table('offers')->where('id', $oid)->update([
+                        'cap_reached_at'     => now(),
+                        'cap_reached_reason' => 'clicks',
+                    ]);
+                    Cache::forget("offer:{$oid}");
+                }
+                Log::info("Offer {$oid} clicks cap ({$offer->clicks_cap}) reached. Blocking click.");
+                return ['type' => 'redirect', 'url' => route('cap.clicks.reached')];
+            }
+        }
+
         $response = $this->is_matching_target($offer, $payoutRule, $arrBrowserData, $arrLocation);
 
         Log::info('' . json_encode($response));
@@ -114,6 +131,26 @@ class TrackingService
         if (!$click) {
             $resp['message'] = 'Click not found for: ' . $request->aff_click_id;
             return $resp;
+        }
+
+        // Per-offer conversions cap enforcement (count only approved conversions)
+        $postbackOffer = Offer::find($click->offer_id);
+        if ($postbackOffer && !is_null($postbackOffer->conversions_cap)) {
+            $approvedCount = Conversion::where('offer_id', $click->offer_id)
+                ->where('status', 'approved')
+                ->count();
+            if ($approvedCount >= $postbackOffer->conversions_cap) {
+                // Record cap reached timestamp and reason on first hit only
+                if (is_null($postbackOffer->cap_reached_at)) {
+                    $postbackOffer->cap_reached_at     = now();
+                    $postbackOffer->cap_reached_reason = 'conversions';
+                    $postbackOffer->save();
+                }
+                Log::info("Offer {$click->offer_id} conversions cap ({$postbackOffer->conversions_cap}) reached. Blocking postback.");
+                $resp['message'] = 'conversions_cap_reached';
+                $resp['redirect'] = route('cap.conversions.reached');
+                return $resp;
+            }
         }
 
         // Get browser/device data

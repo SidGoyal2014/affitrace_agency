@@ -198,11 +198,21 @@ include $pathPrefix . '/includes/head.php';
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label><i class="fas fa-mouse-pointer mr-1 text-warning"></i> Clicks Cap <small class="text-muted">(blank = unlimited)</small></label>
+                                                <input type="number" name="clicks_cap" class="form-control" min="0" placeholder="Unlimited">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label><i class="fas fa-check-circle mr-1 text-success"></i> Conversions Cap <small class="text-muted">(blank = unlimited)</small></label>
+                                                <input type="number" name="conversions_cap" class="form-control" min="0" placeholder="Unlimited">
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-
-                                <hr class="form-divider">
-
-                                <!-- Conversion Tracking -->
                                 <div class="offer-form-section">
                                     <div class="section-title">
                                         <div class="section-icon"><i class="fas fa-exchange-alt"></i></div>
@@ -666,6 +676,8 @@ include $pathPrefix . '/includes/head.php';
                 $('input[name="aff_pricing"]').val(parseFloat(offer.aff_pricing).toFixed(2));
                 $('input[name="campaign_start_date"]').val(offer.campaign_start_date);
                 $('input[name="campaign_end_date"]').val(offer.campaign_end_date);
+                $('input[name="clicks_cap"]').val(offer.clicks_cap !== null && offer.clicks_cap !== undefined ? offer.clicks_cap : '');
+                $('input[name="conversions_cap"]').val(offer.conversions_cap !== null && offer.conversions_cap !== undefined ? offer.conversions_cap : '');
                 $('textarea[name="offer_desc"]').val(offer.offer_desc);
                 $('select[name="offer_status"]').val(offer.offer_status);
                 $('select[name="conversion_tracking_method"]').val(offer.conversion_tracking_method || 's2s').trigger('change');
@@ -902,6 +914,8 @@ include $pathPrefix . '/includes/head.php';
                         currency: $('select[name="currency"]').val(),
                         campaign_start_date: $('input[name="campaign_start_date"]').val(),
                         campaign_end_date: $('input[name="campaign_end_date"]').val(),
+                        clicks_cap: $('input[name="clicks_cap"]').val() !== '' ? parseInt($('input[name="clicks_cap"]').val()) : null,
+                        conversions_cap: $('input[name="conversions_cap"]').val() !== '' ? parseInt($('input[name="conversions_cap"]').val()) : null,
                         offer_status: $('select[name="offer_status"]').val(),
                         offer_desc: $('textarea[name="offer_desc"]').val()
                     })
