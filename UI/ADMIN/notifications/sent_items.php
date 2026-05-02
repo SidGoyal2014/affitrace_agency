@@ -26,10 +26,7 @@ include $pathPrefix . '/includes/head.php';
                         <i class="fas fa-paper-plane mr-1"></i> Send Notification
                     </a>
 
-                    <button class="btn btn-outline-secondary" id="markAllReadBtn" title="Mark all as read">
-                        <i class="fas fa-check-double mr-1"></i> Mark All as Read
-                    </button>
-</div>
+                </div>
             </div>
 
             <!-- Filter Bar -->
@@ -66,14 +63,6 @@ include $pathPrefix . '/includes/head.php';
                                 </select>
                             </div>
                             <div class="form-group col-md-2">
-                                <label for="filter_read" class="small font-weight-bold">Status</label>
-                                <select class="form-control form-control-sm" id="filter_read">
-                                    <option value="">All</option>
-                                    <option value="0">Unread</option>
-                                    <option value="1">Read</option>
-                                </select>
-                            </div>
-                            <div class="form-group col-md-2">
                                 <label for="filter_from" class="small font-weight-bold">From Date</label>
                                 <input type="date" class="form-control form-control-sm" id="filter_from">
                             </div>
@@ -97,7 +86,7 @@ include $pathPrefix . '/includes/head.php';
             <!-- Notifications Table -->
             <div class="card-modern">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold">Inbox</h6>
+                    <h6 class="m-0 font-weight-bold">Sent Notifications</h6>
                     <span class="text-muted small" id="total-count"></span>
                 </div>
                 <div class="card-body p-0">
@@ -243,13 +232,13 @@ include $pathPrefix . '/includes/head.php';
 
             const type     = document.getElementById('filter_type').value;
             const category = document.getElementById('filter_category').value;
-            const read     = document.getElementById('filter_read').value;
+            //const read     = document.getElementById('filter_read').value;
             const from     = document.getElementById('filter_from').value;
             const to       = document.getElementById('filter_to').value;
 
             if (type)     params.set('type', type);
             if (category) params.set('category', category);
-            if (read !== '') params.set('is_read', read);
+            //if (read !== '') params.set('is_read', read);
             if (from) params.set('from', from);
             if (to)   params.set('to', to);
 
@@ -272,9 +261,9 @@ include $pathPrefix . '/includes/head.php';
                 items.forEach(n => {
                     const isUnread = !n.is_read;
                     const li = document.createElement('li');
-                    li.className = `notif-item list-group-item ${isUnread ? 'unread' : 'read'}`;
+                    //li.className = `notif-item list-group-item ${isUnread ? 'unread' : 'read'}`;
                     li.dataset.id       = n.id;
-                    li.dataset.read     = n.is_read ? '1' : '0';
+                    //li.dataset.read     = n.is_read ? '1' : '0';
                     li.dataset.title    = n.notification?.title || '';
                     li.dataset.body     = n.notification?.body || '';
                     li.dataset.type     = n.notification?.type  || '';
@@ -322,7 +311,7 @@ include $pathPrefix . '/includes/head.php';
         // ---- Open detail modal & mark as read ----
         async function openDetail(li) {
             const id       = li.dataset.id;
-            const wasUnread = li.dataset.read === '0';
+            //const wasUnread = li.dataset.read === '0';
 
             document.getElementById('notifDetailTitle').textContent = li.dataset.title || 'Notification';
             document.getElementById('notifDetailBody').textContent  = li.dataset.body  || '';
@@ -334,67 +323,6 @@ include $pathPrefix . '/includes/head.php';
 
             $('#notifDetailModal').modal('show');
 
-            if (wasUnread) {
-                try {
-                    await API.fetchWithAuth(`v1/notifications/inbox/${id}/read`, { method: 'PATCH' });
-                    li.classList.replace('unread', 'read');
-                    li.dataset.read = '1';
-                    const dot = li.querySelector('.unread-dot');
-                    if (dot) dot.style.visibility = 'hidden';
-                    refreshUnreadCount();
-                } catch (e) {
-                    console.warn('Mark-read failed:', e.message);
-                }
-            }
-        }
-
-        // ---- Mark all as read ----
-        document.getElementById('markAllReadBtn').addEventListener('click', async function() {
-            if (!confirm('Mark all visible notifications as read?')) return;
-            try {
-
-                await API.fetchWithAuth('v1/notifications/inbox/read-all', { method: 'PATCH' });
-                document.querySelectorAll('.notif-item.unread').forEach(el => {
-                    el.classList.replace('unread', 'read');
-                    el.dataset.read = '1';
-                    const dot = el.querySelector('.unread-dot');
-                    if (dot) dot.style.visibility = 'hidden';
-                });
-                refreshUnreadCount();
-            } catch (e) {
-                alert('Failed: ' + e.message);
-            }
-        });
-
-        // ---- Refresh unread count badge ----
-        async function refreshUnreadCount() {
-            try {
-                // TODO: Confirm endpoint: v1/notifications/unread-count
-                const res = await API.fetchWithAuth('v1/notifications/unread-count');
-                //const count = res.count || 0;
-                const count = (res.data && res.data.unread_count) || 0;
-                updateUnreadBadgeGlobal(count);
-                if (count > 0) {
-                    UNREAD_BADGE.textContent = count;
-                    UNREAD_BADGE.style.display = '';
-                } else {
-                    UNREAD_BADGE.style.display = 'none';
-                }
-            } catch (e) {
-                // Silently fail — badge update is non-critical
-            }
-        }
-
-        // Write count to global badge in topnav (set by topnav.php)
-        function updateUnreadBadgeGlobal(count) {
-            const globalBadge = document.getElementById('notif-nav-badge');
-            if (!globalBadge) return;
-            if (count > 0) {
-                globalBadge.textContent = count > 99 ? '99+' : count;
-                globalBadge.style.display = '';
-            } else {
-                globalBadge.style.display = 'none';
-            }
         }
 
         // ---- Pagination ----
@@ -443,7 +371,6 @@ include $pathPrefix . '/includes/head.php';
         document.getElementById('clearFiltersBtn').addEventListener('click', function() {
             document.getElementById('filter_type').value     = '';
             document.getElementById('filter_category').value = '';
-            document.getElementById('filter_read').value     = '';
             document.getElementById('filter_from').value     = '';
             document.getElementById('filter_to').value       = '';
             currentPage = 1;
@@ -479,14 +406,9 @@ include $pathPrefix . '/includes/head.php';
             }
 
             await loadNotifications(1);
-            await refreshUnreadCount();
 
-            // Poll unread count every 60 seconds
-            pollTimer = setInterval(refreshUnreadCount, 60000);
         });
 
-        // Clear poll on page unload
-        window.addEventListener('beforeunload', () => clearInterval(pollTimer));
     })();
     </script>
 </body>

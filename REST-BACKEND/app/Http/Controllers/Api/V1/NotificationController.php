@@ -220,21 +220,31 @@ class NotificationController extends Controller
         $perPage = (int) $request->input('per_page', 15);
         $perPage = min($perPage, 100);
 
-        // TODO: agency_notification_recipients migration created FK column as
-        //       'notification_id' but the model/service reference 'agency_notification_id'.
-        //       Verify column name matches the actual DB schema before deploying.
         $query = AgencyNotificationRecipient::where('recipient_id', $userId)
             ->with('notification')
             ->whereHas('notification', function ($q) use ($request) {
                 if ($request->filled('category')) {
                     $q->where('category', $request->input('category'));
                 }
+
                 if ($request->filled('type')) {
                     $q->where('type', $request->input('type'));
                 }
+
                 if ($request->filled('priority')) {
                     $q->where('priority', $request->input('priority'));
                 }
+
+                if ($request->filled('from')) {
+                    $q->whereDate('created_at', '>=', $request->input('from'));
+                }
+
+                if ($request->filled('to')) {
+                    $q->whereDate('created_at', '<=', $request->input('to'));
+                }
+
+
+
             })
             ->latest();
 

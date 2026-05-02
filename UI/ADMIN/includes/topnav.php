@@ -168,7 +168,7 @@ function url($path)
 
         <!-- Notifications Bell -->
         <div class="nav-item mr-2">
-            <a class="nav-link position-relative" href="<?php echo $pathPrefix; ?>/notifications/inbox.php"
+            <a class="nav-link position-relative" href="<?php echo $pathPrefix; ?>/notifications/sent_items.php"
                title="Notifications" id="notif-bell-link">
                 <i class="fas fa-bell fa-fw"></i>
                 <span id="notif-nav-badge"
@@ -189,7 +189,7 @@ function url($path)
                 <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/profile.php">
                     <i class="fas fa-user fa-sm fa-fw mr-2"></i> Profile
                 </a>
-                <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/notifications/inbox.php">
+                <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/notifications/sent_items.php">
                     <i class="fas fa-bell fa-sm fa-fw mr-2"></i> Notifications
                     <span id="notif-dropdown-badge" class="badge badge-danger ml-1" style="display:none;"></span>
                 </a>

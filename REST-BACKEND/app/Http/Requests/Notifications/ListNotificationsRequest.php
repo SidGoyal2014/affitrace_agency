@@ -49,6 +49,11 @@ class ListNotificationsRequest extends FormRequest
 
             // ── Pagination ───────────────────────────────────────────────────
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+
+            // ── Date range filter ────────────────────────────────────────────
+            'from' => ['nullable', 'date'],
+            'to'   => ['nullable', 'date', 'after_or_equal:from'],            
+            
         ];
     }
 

@@ -20,8 +20,8 @@ include $pathPrefix . '/includes/head.php';
                     <i class="fas fa-paper-plane mr-2 text-primary"></i>
                     Send Notification
                 </h1>
-                <a href="inbox.php" class="btn btn-outline-primary">
-                    <i class="fas fa-arrow-left mr-2"></i> Back to Inbox
+                <a href="sent_items.php" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Sent List
                 </a>
             </div>
 
@@ -452,15 +452,27 @@ include $pathPrefix . '/includes/head.php';
                 const div = document.createElement('div');
                 div.className = 'user-result-item';
                 div.innerHTML = `<strong>${escHtml(u.name)}</strong> <span class="text-muted">&lt;${escHtml(u.email)}&gt;</span>`;
-                div.addEventListener('click', () => {
+                div.addEventListener('click', (e) => {
+                    e.stopPropagation(); // prevent outside-click handler from firing
                     addUserChip(u);
-                    resultsEl.style.display = 'none';
-                    document.getElementById('user_search_input').value = '';
+                    div.remove(); // remove only the selected item, keep list open
+                    if (!resultsEl.querySelector('.user-result-item')) {
+                        resultsEl.innerHTML = '<div class="text-muted small p-2">All results selected.</div>';
+                    }
                     updatePreview();
                 });
                 resultsEl.appendChild(div);
             });
         }
+
+        // Close search results when clicking anywhere outside the search area
+        document.addEventListener('click', function(e) {
+            const resultsEl  = document.getElementById('user_search_results');
+            const searchWrap = document.getElementById('recipient_users_section');
+            if (searchWrap && !searchWrap.contains(e.target)) {
+                resultsEl.style.display = 'none';
+            }
+        });
 
         function addUserChip(user) {
             if (selectedUsers[user.id]) return;
