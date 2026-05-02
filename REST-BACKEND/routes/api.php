@@ -34,6 +34,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::patch('inbox/{id}/read', [App\Http\Controllers\Api\V1\NotificationController::class, 'markRead']);
         Route::get('unread-count',      [App\Http\Controllers\Api\V1\NotificationController::class, 'unreadCount']);
         Route::post('send',              [App\Http\Controllers\Api\V1\NotificationController::class, 'send']);
+        Route::get('sent',               [App\Http\Controllers\Api\V1\NotificationController::class, 'sentIndex']);
     });
 
     // Impersonation Exit (Must be outside 'admin' middleware so impersonated users can call it)

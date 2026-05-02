@@ -92,16 +92,18 @@ class NotificationController extends Controller
      *
      * GET /api/v1/notifications/sent
      */
-    public function sentIndex(Request $request): JsonResponse
+    public function sentIndex(ListNotificationsRequest $request): JsonResponse
     {
         $agencyId = (string) $request->header('X-Agency-ID', '');
         $perPage  = (int) $request->input('per_page', 15);
-        $perPage  = min($perPage, 100); // hard cap
+        $perPage  = min($perPage, 100);
 
-        $query = AgencyNotification::query()
-            ->where('agency_id', $agencyId)
+        $query = AgencyNotification::where('agency_id', $agencyId)
+            ->with('sender') 
             ->withCount('recipients')
             ->latest();
+
+
 
         if ($request->filled('category')) {
             $query->where('category', $request->input('category'));
@@ -111,11 +113,16 @@ class NotificationController extends Controller
             $query->where('type', $request->input('type'));
         }
 
-        if ($request->filled('is_dispatched')) {
-            $query->where('is_dispatched', filter_var($request->input('is_dispatched'), FILTER_VALIDATE_BOOLEAN));
+        if ($request->filled('from')) { 
+            $query->whereDate('created_at', '>=', $request->input('from'));
+        }
+
+        if ($request->filled('to')) {
+            $query->whereDate('created_at', '<=', $request->input('to'));
         }
 
         $paginator = $query->paginate($perPage);
+
 
         return response()->json([
             'success' => true,
@@ -127,6 +134,10 @@ class NotificationController extends Controller
                 'total'        => $paginator->total(),
             ],
         ]);
+
+
+
+
     }
 
     /**

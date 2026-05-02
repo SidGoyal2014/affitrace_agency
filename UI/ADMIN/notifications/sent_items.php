@@ -244,7 +244,7 @@ include $pathPrefix . '/includes/head.php';
 
             try {
                 // TODO: Confirm endpoint: v1/notifications/inbox
-                const res = await API.fetchWithAuth(`v1/notifications/inbox?${params.toString()}`);
+                const res = await API.fetchWithAuth(`admin/v1/notifications/sent?${params.toString()}`);
                 LOADING.style.display = 'none';
 
                 const items = res.data || [];
@@ -262,35 +262,39 @@ include $pathPrefix . '/includes/head.php';
                     const isUnread = !n.is_read;
                     const li = document.createElement('li');
                     //li.className = `notif-item list-group-item ${isUnread ? 'unread' : 'read'}`;
+                    li.className = 'notif-item list-group-item';
                     li.dataset.id       = n.id;
                     //li.dataset.read     = n.is_read ? '1' : '0';
-                    li.dataset.title    = n.notification?.title || '';
-                    li.dataset.body     = n.notification?.body || '';
-                    li.dataset.type     = n.notification?.type  || '';
-                    li.dataset.category = n.notification?.category || '';
-                    li.dataset.priority = n.notification?.priority || '';
-                    li.dataset.sentAt   = n.notification?.created_at || '';
+                    li.dataset.title    = n.title    || '';
+                    li.dataset.body     = n.body     || '';
+                    li.dataset.type     = n.type     || '';
+                    li.dataset.category = n.category || '';
+                    li.dataset.sentAt   = n.created_at || '';
+
 
                     li.innerHTML = `
                         <div class="d-flex align-items-start">
-                            <div class="mr-2 pt-1">
-                                ${isUnread ? '<span class="unread-dot"></span>' : '<span style="width:8px;display:inline-block;"></span>'}
-                            </div>
+
                             <div class="flex-grow-1 overflow-hidden">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span class="notif-title">${escHtml(n.notification?.title || '(No title)')}</span>
+                                    <span class="notif-title">${escHtml(n.title || '(No title)')}</span>
                                     <span class="notif-meta ml-2 text-nowrap">
-                                        ${typeBadge(n.notification?.type)}
-                                        <span class="ml-1">${timeAgo(n.notification?.created_at)}</span>
+                                        ${typeBadge(n.type)}
+                                        <span class="ml-1">${timeAgo(n.created_at)}</span>
                                     </span>
                                 </div>
-                                <div class="notif-excerpt">${escHtml(n.notification?.body || '')}</div>
+                                <div class="notif-excerpt">${escHtml(n.body || '')}</div>
                                 <div class="mt-1">
-                                    <span class="badge badge-light text-muted small">${escHtml(n.notification?.category || '')}</span>
-                                    ${n.notification?.priority ? `<span class="small priority-${n.notification.priority} ml-1"><i class="fas fa-flag"></i> ${escHtml(n.notification.priority)}</span>` : ''}
+                                    <span class="badge badge-light text-muted small">${escHtml(n.category || '')}</span>
+                                    ${n.priority ? `<span class="small priority-${n.priority} ml-1"><i class="fas fa-flag"></i> ${escHtml(n.priority)}</span>` : ''}
                                 </div>
                             </div>
                         </div>
+
+
+
+
+
                     `;
 
                     li.addEventListener('click', () => openDetail(li));
