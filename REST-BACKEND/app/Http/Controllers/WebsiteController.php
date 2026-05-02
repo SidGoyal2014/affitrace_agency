@@ -30,9 +30,37 @@ class WebsiteController extends Controller
 	public function verify()
 	{
 		$this->websiteService->getVerifyViewData();
-		return view()->file(base_path('UI/verify_response.php'));
+		return view()->file($this->resolveUiFilePath('verify_response.php'));
 
-	}//about
+	}//verify
+
+
+	public function clicks_cap_reached()
+	{
+		return view()->file($this->resolveUiFilePath('cap_clicks_reached.php'));
+	}
+
+
+	public function conversions_cap_reached()
+	{
+		return view()->file($this->resolveUiFilePath('cap_conversions_reached.php'));
+	}
+
+	private function resolveUiFilePath(string $fileName): string
+	{
+		$candidates = [
+			base_path('UI/' . $fileName),
+			base_path('../UI/' . $fileName),
+		];
+
+		foreach ($candidates as $path) {
+			if (is_file($path)) {
+				return $path;
+			}
+		}
+
+		return $candidates[0];
+	}
 
 
 
