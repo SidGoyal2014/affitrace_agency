@@ -111,7 +111,7 @@ include $pathPrefix . '/includes/head.php';
                                     <th>Cost</th>
                                 </tr>
                             </thead>
-                            <tbody id="summaryTableBody">
+                            <tbody>
                                 <!-- Loaded via JS -->
                             </tbody>
                         </table>
@@ -125,10 +125,6 @@ include $pathPrefix . '/includes/head.php';
     <?php include $pathPrefix . '/includes/footer.php'; ?>
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
-
-    <!-- Page level plugins -->
-    <script src="<?php echo $pathPrefix; ?>/assets/vendor/datatables/jquery.dataTables.min.js"></script>
-    <script src="<?php echo $pathPrefix; ?>/assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
 
     <script>
         let dataTableInstance = null;
@@ -149,12 +145,9 @@ include $pathPrefix . '/includes/head.php';
 
         async function loadReport(filters = {}) {
             try {
-                // Build query string from filters
                 const queryParams = new URLSearchParams();
                 Object.keys(filters).forEach(key => {
-                    if (filters[key]) {
-                        queryParams.append(key, filters[key]);
-                    }
+                    if (filters[key]) queryParams.append(key, filters[key]);
                 });
 
                 const queryString = queryParams.toString();
@@ -162,46 +155,39 @@ include $pathPrefix . '/includes/head.php';
 
                 const data = await API.fetchWithAuth(endpoint);
 
-                let html = '';
+                dataTableInstance.clear();
+
                 if (data.stats && data.stats.length > 0) {
-                    data.stats.forEach(row => {
-                        html += `<tr>
-                            <td>${row.date}</td>
-                            <td>${Number(row.impressions || 0).toLocaleString()}</td>
-                            <td>${Number(row.clicks || 0).toLocaleString()}</td>
-                            <td>${Number(row.conversions || 0).toLocaleString()}</td>
-                            <td>$${Number(row.cost || 0).toFixed(2)}</td>
-                        </tr>`;
-                    });
-                } else {
-                    html = '<tr><td colspan="5" class="text-center">No data found for the selected filters</td></tr>';
+                    const rows = data.stats.map(row => [
+                        row.date,
+                        Number(row.impressions || 0).toLocaleString(),
+                        Number(row.clicks || 0).toLocaleString(),
+                        Number(row.conversions || 0).toLocaleString(),
+                        '$' + Number(row.cost || 0).toFixed(2)
+                    ]);
+                    dataTableInstance.rows.add(rows);
                 }
 
-                $('#summaryTableBody').html(html);
+                dataTableInstance.draw();
 
-                // Destroy existing DataTable if it exists
-                if (dataTableInstance) {
-                    dataTableInstance.destroy();
-                }
-
-                // Initialize DataTable
-                dataTableInstance = $('#dataTable').DataTable({
-                    order: [[0, 'desc']]
-                });
             } catch (error) {
                 console.error('Summary load failed:', error);
-                $('#summaryTableBody').html('<tr><td colspan="5" class="text-center text-danger">Failed to load report: ' + error.message + '</td></tr>');
+                dataTableInstance.clear().draw();
             }
         }
 
         $(document).ready(async function () {
-            // Load offers for filter dropdown
-            await loadOffers();
+            // Initialize DataTables ONCE with empty table — never destroy/reinit
+            dataTableInstance = $('#dataTable').DataTable({
+                order: [[0, 'desc']],
+                language: {
+                    emptyTable: 'No data found for the selected filters'
+                }
+            });
 
-            // Load initial report
+            await loadOffers();
             await loadReport();
 
-            // Handle filter form submission
             $('#filterForm').on('submit', function (e) {
                 e.preventDefault();
                 const filters = {
@@ -216,7 +202,6 @@ include $pathPrefix . '/includes/head.php';
                 loadReport(filters);
             });
 
-            // Handle reset button
             $('#resetBtn').on('click', function () {
                 $('#filterForm')[0].reset();
                 loadReport();
