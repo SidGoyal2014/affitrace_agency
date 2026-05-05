@@ -187,7 +187,7 @@ include $pathPrefix . '/includes/head.php';
             tbody.html('<tr><td colspan="7" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></td></tr>');
 
             try {
-                const response = await API.fetchWithAuth('employee/reports/exports');
+                const response = await API.fetchWithAuth('reports/exports');
 
                 if (!response.success || !response.data || response.data.length === 0) {
                     tbody.html('<tr><td colspan="7" class="text-center text-muted py-4">No exports found. Create one above!</td></tr>');
@@ -277,7 +277,7 @@ include $pathPrefix . '/includes/head.php';
                 });
 
                 if (response.success) {
-                    toastr.success('Export started successfully!');
+                    Toast.success('Export started successfully!');
 
                     // Show modal and start polling
                     showExportModal(response.data.export_id);
@@ -286,12 +286,12 @@ include $pathPrefix . '/includes/head.php';
                     // Reload the table
                     loadExports();
                 } else {
-                    toastr.error(response.message || 'Failed to start export');
+                    Toast.error(response.message || 'Failed to start export');
                 }
 
             } catch (error) {
                 console.error('Export error:', error);
-                toastr.error('Failed to start export. Please try again.');
+                Toast.error('Failed to start export. Please try again.');
             } finally {
                 btn.prop('disabled', false).html('<i class="fas fa-file-export mr-2"></i>Start Export');
             }
@@ -406,19 +406,19 @@ include $pathPrefix . '/includes/head.php';
                 });
 
                 if (response.status === 410) {
-                    toastr.error('Export has expired.');
+                    Toast.error('Export has expired.');
                     loadExports();
                     return;
                 }
 
                 if (response.status === 409) {
-                    toastr.warning('Export is not ready yet.');
+                    Toast.warning('Export is not ready yet.');
                     return;
                 }
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    toastr.error(errorData.message || 'Download failed');
+                    Toast.error(errorData.message || 'Download failed');
                     return;
                 }
 
@@ -441,7 +441,7 @@ include $pathPrefix . '/includes/head.php';
                 window.URL.revokeObjectURL(url);
                 a.remove();
 
-                toastr.success('Download started!');
+                Toast.success('Download started!');
 
                 // Close modal if open
                 $('#exportStatusModal').modal('hide');
@@ -451,7 +451,7 @@ include $pathPrefix . '/includes/head.php';
 
             } catch (error) {
                 console.error('Download error:', error);
-                toastr.error('Failed to download export');
+                Toast.error('Failed to download export');
             }
         }
 

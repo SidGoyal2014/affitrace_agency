@@ -11,6 +11,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         \App\Console\Commands\AffiliatePushData::class,
         \App\Console\Commands\CleanupReportExports::class,
+        \App\Console\Commands\ProcessTenantQueues::class,
         // ── Notifications ────────────────────────────────────────────────
         \App\Console\Commands\ProcessScheduledNotifications::class,
         \App\Console\Commands\SubscriptionExpiryNotifier::class,

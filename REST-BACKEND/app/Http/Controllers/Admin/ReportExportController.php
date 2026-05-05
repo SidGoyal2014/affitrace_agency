@@ -48,6 +48,7 @@ class ReportExportController extends Controller
             'expires_at' => now()->addMinutes($ttlMinutes),
         ]);
 
+        \Illuminate\Support\Facades\Config::set('queue.connections.database.connection', 'tenant_db_con_runtime');
         // Dispatch async job to dedicated reports queue
         GenerateReportExport::dispatch($export->id);
 
@@ -117,14 +118,14 @@ class ReportExportController extends Controller
     {
         $export = ReportExport::find($id);
 
-        Log::info('Export ID: ' . $id . ' Export Format: ' . $export->format);
-
         if (!$export) {
             return response()->json([
                 'success' => false,
                 'message' => 'Export not found',
             ], 404);
         }
+
+        Log::info('Export ID: ' . $id . ' Export Format: ' . $export->format);
 
         // Authorization: only owner can download
         if ($export->user_id !== Auth::id()) {
@@ -157,6 +158,7 @@ class ReportExportController extends Controller
         }
 
         // Get temp file path
+        /*
         $filePath = $this->service->getExistingTempFile($export);
 
         Log::info("filePath : " . $filePath);
@@ -167,6 +169,21 @@ class ReportExportController extends Controller
                 'message' => 'Export file not found',
             ], 404);
         }
+        */
+
+        // Get temp file path from DB record
+        $filePath = $export->file_path;
+
+        Log::info("filePath : " . $filePath);
+
+        if (!$filePath || !file_exists($filePath)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Export file not found',
+            ], 404);
+        }
+
+
 
         $filename = "report_{$export->report_type}_{$export->id}.{$export->format}";
         $mimeType = $export->format === 'csv'

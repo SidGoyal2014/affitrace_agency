@@ -7,6 +7,7 @@ use App\Models\OfferTracking;
 use App\Models\Conversion;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ReportExportService
@@ -82,7 +83,7 @@ class ReportExportService
     {
         $tempPath = config('reports.temp_path');
 
-        \Log::info($tempPath);
+        Log::info($tempPath);
 
         // Ensure directory exists
         if (!File::isDirectory($tempPath)) {
@@ -102,6 +103,9 @@ class ReportExportService
     {
         $query = $this->buildQuery($export->report_type, $export->filters ?? []);
         $filePath = $this->getTempFilePath($export);
+        
+        Log::info("filePath in ReportExportService.php: " . $filePath);
+
         $columns = $export->columns ?? $this->getDefaultColumns($export->report_type);
 
         // Open file for writing
