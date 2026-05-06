@@ -25,7 +25,6 @@ include $pathPrefix . '/includes/head.php';
                         <table class="table table-flush mb-0" id="dataTable">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Platform Name</th>
                                     <th>Status</th>
                                     <th>Actions</th>
@@ -66,7 +65,6 @@ include $pathPrefix . '/includes/head.php';
                     platforms.forEach(p => {
                         tbody.append(`
                             <tr>
-                                <td>${p.id}</td>
                                 <td><strong>${p.name}</strong></td>
                                 <td><span class="badge badge-${p.active === true ? 'success' : 'secondary'}">${p.active === true ? 'Active' : 'Inactive'}</span></td>
                                 <td>

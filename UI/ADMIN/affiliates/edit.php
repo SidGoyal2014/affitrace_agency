@@ -4,7 +4,7 @@ $activePage = 'affiliates';
 $pageTitle = 'Edit Affiliate';
 include $pathPrefix . '/includes/head.php';
 ?>
-
+<script src="../../common/js/countries.js"></script>
 
 <body id="page-top">
 
@@ -72,8 +72,9 @@ include $pathPrefix . '/includes/head.php';
                         </div>
 
                         <div class="form-group col-lg-6">
-                            <input type="text" name="country" class="form-control form-control" id="exampleInputCountry"
-                                placeholder="Enter country" value="US">
+                            <select name="country" class="form-control select2-country">
+                                <option value="">(All Countries)</option>
+                            </select>
                             <span style='color:#f00;'></span>
                         </div>
 
@@ -161,8 +162,8 @@ include $pathPrefix . '/includes/head.php';
                 if (data) {
                     $('input[name="name"]').val(data.name);
                     $('input[name="email"]').val(data.email);
-                    $('input[name="company"]').val(data.company);
-                    $('input[name="country"]').val(data.country);
+                    $('input[name="company"]').val(data.company);                    
+                    $('select[name="country"]').val(data.country),
                     $('input[name="country"]').val(data.country);
                     $('input[name="phone"]').val(data.phone);
                     $('#role_id').val(data.role_id);
@@ -175,6 +176,26 @@ include $pathPrefix . '/includes/head.php';
                     } else {
                         $('#statusActive').prop('checked', true);
                     }
+
+                    // Countries (for targeting)
+                    const countrySelect = $('select[name="country"]');
+                    Object.entries(COUNTRIES).forEach(([code, name]) => {
+                        countrySelect.append(new Option(name, code));
+                    });
+
+                    // Pre-select values
+                    if (data.country) {
+                        let val = data.country;
+                        if (val.includes(',')) {
+                            val = val.split(',')[0].trim();
+                        }
+                        countrySelect.val(val);
+                    } else {
+                        countrySelect.val("");
+                    }
+
+
+
                 }
             } catch (error) {
                 console.error("Load Error:", error);

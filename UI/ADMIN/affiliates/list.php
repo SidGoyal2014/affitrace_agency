@@ -32,7 +32,6 @@ include $pathPrefix . '/includes/head.php';
                         <table class="table table-flush mb-0" id="dataTable">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Contact</th>
@@ -91,7 +90,6 @@ include $pathPrefix . '/includes/head.php';
                     data.forEach(aff => {
                         const row = `
                             <tr>
-                                <td><strong>${aff.uid}</strong></td>
                                 <td>${aff.name}</td>
                                 <td>${aff.email}</td>
                                 <td>${aff.phone || '-'}</td>

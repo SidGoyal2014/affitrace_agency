@@ -23,8 +23,7 @@ include $pathPrefix . '/includes/head.php';
                     <div class="table-responsive">
                         <table class="table table-flush mb-0" id="dataTable">
                             <thead>
-                                <tr>
-                                    <th>ID</th>
+                                <tr>                                    
                                     <th>Impersonator</th>
                                     <th>Impersonated User</th>
                                     <th>Type</th>
@@ -68,8 +67,7 @@ include $pathPrefix . '/includes/head.php';
                         const ended = log.ended_at ? new Date(log.ended_at).toLocaleString() : '<span class="badge badge-warning">Active</span>';
                         const notified = log.notified ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-secondary">No</span>';
                         tbody.append(`
-                            <tr>
-                                <td>${log.id}</td>
+                            <tr>                                
                                 <td>${log.impersonator ? log.impersonator.name : '-'}<br><small class="text-muted">${log.impersonator ? log.impersonator.email : ''}</small></td>
                                 <td>${log.impersonated ? log.impersonated.name : '-'}<br><small class="text-muted">${log.impersonated ? log.impersonated.email : ''}</small></td>
                                 <td>${log.impersonated ? log.impersonated.user_type : '-'}</td>

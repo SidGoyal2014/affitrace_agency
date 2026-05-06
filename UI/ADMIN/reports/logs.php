@@ -24,8 +24,7 @@ include $pathPrefix . '/includes/head.php';
                     <div class="table-responsive">
                         <table class="table table-flush mb-0" id="dataTable">
                             <thead>
-                                <tr>
-                                    <th>ID</th>
+                                <tr>                                    
                                     <th>Action</th>
                                     <th>User</th>
                                     <th>Details</th>
@@ -66,7 +65,6 @@ include $pathPrefix . '/includes/head.php';
                     logs.forEach(log => {
                         tbody.append(`
                             <tr>
-                                <td>${log.id}</td>
                                 <td><span class="badge badge-info">${log.action || '-'}</span></td>
                                 <td>${log.user_name || log.user_id || '-'}</td>
                                 <td class="small">${log.details || '-'}</td>

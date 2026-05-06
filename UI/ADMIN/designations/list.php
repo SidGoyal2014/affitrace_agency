@@ -26,8 +26,7 @@ include $pathPrefix . '/includes/head.php';
                     <div class="table-responsive">
                         <table class="table table-flush mb-0" id="dataTable">
                             <thead>
-                                <tr>
-                                    <th>ID</th>
+                                <tr>                                    
                                     <th>Name</th>
                                     <th>Description</th>
                                     <th>Employees</th>
@@ -112,8 +111,7 @@ include $pathPrefix . '/includes/head.php';
                 if (items && items.length > 0) {
                     items.forEach(d => {
                         tbody.append(`
-                            <tr>
-                                <td>${d.id}</td>
+                            <tr>                                
                                 <td><strong>${d.name}</strong></td>
                                 <td>${d.description || '-'}</td>
                                 <td><span class="badge badge-secondary">${d.users_count || 0}</span></td>

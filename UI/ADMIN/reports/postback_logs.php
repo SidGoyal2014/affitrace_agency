@@ -24,8 +24,7 @@ include $pathPrefix . '/includes/head.php';
                     <div class="table-responsive">
                         <table class="table table-flush mb-0" id="dataTable">
                             <thead>
-                                <tr>
-                                    <th>Log ID</th>
+                                <tr>                                    
                                     <th>Date Fired</th>
                                     <th>Affiliate Name</th>
                                     <th>Conv ID</th>
@@ -86,8 +85,7 @@ include $pathPrefix . '/includes/head.php';
                         let shortUrl = log.url_fired.length > 50 ? log.url_fired.substring(0, 50) + '...' : log.url_fired;
                         
                         tbody.append(`
-                            <tr>
-                                <td>${log.id}</td>
+                            <tr>                                
                                 <td>${log.created_at || '-'}</td>
                                 <td>${log.affiliate_name || '-'}</td>
                                 <td><span class="badge badge-info">${log.conversion_id || '-'}</span></td>

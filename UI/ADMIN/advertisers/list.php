@@ -28,7 +28,6 @@ include $pathPrefix . '/includes/head.php';
                         <table class="table table-flush mb-0" id="dataTable">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Company</th>
@@ -69,7 +68,6 @@ include $pathPrefix . '/includes/head.php';
                     data.forEach((adv, index) => {
                         tbody.append(`
                             <tr>
-                                <td><strong>${index + 1}</strong></td>
                                 <td>${adv.name}</td>
                                 <td>${adv.email}</td>
                                 <td>${adv.company || '-'}</td>

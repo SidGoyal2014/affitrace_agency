@@ -4,6 +4,7 @@ $activePage = 'affiliates';
 $pageTitle = 'Create Affiliate';
 include $pathPrefix . '/includes/head.php';
 ?>
+<script src="../../common/js/countries.js"></script>
 
 <body id="page-top">
 
@@ -57,7 +58,9 @@ include $pathPrefix . '/includes/head.php';
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Country</label>
-                                            <input type="text" name="country" class="form-control">
+                                            <select name="country" class="form-control select2-country">
+                                                <option value="">(All Countries)</option>
+                                            </select>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -120,6 +123,16 @@ include $pathPrefix . '/includes/head.php';
                         }
                     });
                 }
+
+                // Countries (for targeting)
+                const countrySelect = $('select[name="country"]');
+                Object.entries(COUNTRIES).forEach(([code, name]) => {
+                    countrySelect.append(new Option(name, code));
+                });
+
+
+
+
             } catch(e) { console.error("Failed to load roles"); }
 
             $('#createForm').on('submit', async function (e) {
@@ -133,8 +146,8 @@ include $pathPrefix . '/includes/head.php';
                             name: $('input[name="name"]').val(),
                             email: $('input[name="email"]').val(),
                             phone: $('input[name="phone"]').val(),
-                            company: $('input[name="company"]').val(),
-                            country: $('input[name="country"]').val(),
+                            company: $('input[name="company"]').val(),                            
+                            country: $('select[name="country"]').val(),
                             password: $('input[name="password"]').val(),
                             password_confirmation: $('input[name="password_confirmation"]').val(),
                             user_type: 'affiliate',

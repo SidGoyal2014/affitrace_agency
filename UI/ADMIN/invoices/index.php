@@ -154,8 +154,7 @@ include $pathPrefix . '/includes/head.php';
                     <div class="table-responsive">
                         <table class="table table-flush mb-0" id="dataTable">
                             <thead>
-                                <tr>
-                                    <th>ID</th>
+                                <tr>                                    
                                     <th>Invoice #</th>
                                     <th>Company</th>
                                     <th>Total Amount</th>
@@ -228,8 +227,7 @@ include $pathPrefix . '/includes/head.php';
                         }
                     }
                 },
-                columns: [
-                    { data: 'id', name: 'id' },
+                columns: [                    
                     { data: 'invoice_number', name: 'invoice_number' },
                     { data: 'display_company', name: 'display_company', defaultContent: 'N/A', orderable: false },
                     {

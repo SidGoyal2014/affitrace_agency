@@ -26,8 +26,7 @@ include $pathPrefix . '/includes/head.php';
                     <div class="table-responsive">
                         <table class="table table-flush mb-0" id="dataTable">
                             <thead>
-                                <tr>
-                                    <th>ID</th>
+                                <tr>                                    
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Contact</th>
@@ -78,8 +77,7 @@ include $pathPrefix . '/includes/head.php';
                 if (data && data.length > 0) {
                     data.forEach(emp => {
                         const row = `
-                            <tr>
-                                <td><strong>${emp.id}</strong></td>
+                            <tr>                                
                                 <td>${emp.name}</td>
                                 <td>${emp.email}</td>
                                 <td>${emp.phone || '-'}</td>

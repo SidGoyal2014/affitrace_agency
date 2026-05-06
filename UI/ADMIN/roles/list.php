@@ -51,8 +51,7 @@ include $pathPrefix . '/includes/head.php';
                     <div class="table-responsive">
                         <table class="table table-flush mb-0" id="dataTable">
                             <thead>
-                                <tr>
-                                    <th>ID</th>
+                                <tr>                                    
                                     <th>Name</th>
                                     <th>User Type</th>
                                     <th>Default</th>
@@ -120,8 +119,7 @@ include $pathPrefix . '/includes/head.php';
                         }[role.user_type] || role.user_type;
 
                         const row = `
-                            <tr>
-                                <td><strong>${role.id}</strong></td>
+                            <tr>                                
                                 <td>${role.name}</td>
                                 <td>${userTypeBadge}</td>
                                 <td>${defaultBadge}</td>

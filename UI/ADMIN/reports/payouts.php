@@ -122,7 +122,6 @@ include $pathPrefix . '/includes/head.php';
                         <table class="table table-flush mb-0" id="legacyDataTable">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Affiliate</th>
                                     <th>Offer</th>
                                     <th>Amount</th>
@@ -257,7 +256,6 @@ include $pathPrefix . '/includes/head.php';
                 payouts.forEach(p => {
                     tbody.append(`
                         <tr>
-                            <td>${p.id}</td>
                             <td>${p.affiliate_name || p.aid}</td>
                             <td>${p.offer_name || p.oid}</td>
                             <td><strong>${formatDecimal(p.amount)}</strong></td>
