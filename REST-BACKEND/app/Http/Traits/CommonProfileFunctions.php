@@ -19,7 +19,8 @@ trait CommonProfileFunctions
     function update_advertiser_profile(Request $request)
     {
         try {
-            $uid = $request->user()->id;
+        
+            $uid = $request->filled('uid') ? (int) $request->uid : $request->user()->id;
 
             $validator = Validator::make(request()->all(), [
                 'name' => 'required|string|min:5',
@@ -98,17 +99,13 @@ trait CommonProfileFunctions
     {
         try {
 
-
-
-
-
-            $uid = $request->user()->id;
+            $uid = $request->filled('uid') ? (int) $request->uid : $request->user()->id;
 
             $validator = Validator::make(request()->all(), [
                 'name' => 'required|string|min:5',
                 'phone' => 'nullable|string',
                 'company' => 'nullable|string',
-                'email' => 'unique:users,email,' . $uid,
+                'email' => 'unique:users,email,'.$uid,
                 'job_title' => 'nullable|string',
                 'instant_messenger_name' => 'nullable|string',
                 'instant_messenger_value' => 'nullable|string'
@@ -122,6 +119,7 @@ trait CommonProfileFunctions
                 return response()->json(['status' => 0, 'error' => $validator->errors()->toArray()], 422);
             }
 
+            
             $user = User::findOrFail($uid);
 
             if ($request->has('name'))

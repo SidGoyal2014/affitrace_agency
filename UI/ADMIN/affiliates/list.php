@@ -24,9 +24,6 @@ include $pathPrefix . '/includes/head.php';
 
             <!-- Affiliates Table -->
             <div class="card-modern">
-                <div class="card-header">
-                    <h6 class="m-0 font-weight-bold">Affiliate List</h6>
-                </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-flush mb-0" id="dataTable">

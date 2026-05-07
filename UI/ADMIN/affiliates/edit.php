@@ -13,96 +13,100 @@ include $pathPrefix . '/includes/head.php';
     <main id="main-content">
         <!-- Begin Page Content -->
         <div class="container-fluid">
-
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary"><span style='color:#f00;'>* marked values are
-                        mandatory</span></h6>
+            <div class="page-header">
+                <h1>Edit Affiliate</h1>
+                <a href="list.php" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left mr-2"></i> Back
+                </a>
             </div>
 
-            <div class="card-body">
 
-                <form class="user" method='post' action="#">
+            <div class="card-modern">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary"><span style='color:#f00;'>* marked values are
+                        mandatory</span></h6>
+                </div>
 
-                    <div class="row">
 
-                        <div class="form-group col-lg-6">
-                            <input type="text" name="name" class="form-control form-control" id="exampleInputName"
-                                aria-describedby="nameHelp" placeholder="Enter Name" value="John Doe">
-                            <span style='color:#f00;'></span>
-                        </div>
+                <div class="card-body">
 
-                        <div class="form-group col-lg-6">
-                            <input type="email" name="email" class="form-control form-control" id="exampleInputEmail"
-                                aria-describedby="emailHelp" placeholder="Enter Email Address..."
-                                value="john@example.com">
-                            <span style='color:#f00;'></span>
-                        </div>
+                    <form class="user" method='post' action="#">
 
-                        <div class="form-group col-lg-6">
-                            <label class="d-block">Status <span style='color:#f00;'>*</span></label>
-                            <div class="custom-control custom-radio custom-control-inline">
-                                <input type="radio" id="statusActive" name="status" class="custom-control-input"
-                                    value="active">
-                                <label class="custom-control-label" for="statusActive">Active</label>
+                        <div class="row">
+
+                            <div class="form-group col-lg-6">
+                                <input type="text" name="name" class="form-control form-control" id="exampleInputName"
+                                    aria-describedby="nameHelp" placeholder="Enter Name" value="John Doe">
+                                <span style='color:#f00;'></span>
                             </div>
-                            <div class="custom-control custom-radio custom-control-inline">
-                                <input type="radio" id="statusInactive" name="status" class="custom-control-input"
-                                    value="suspended">
-                                <label class="custom-control-label" for="statusInactive">Inactive</label>
+
+                            <div class="form-group col-lg-6">
+                                <input type="email" name="email" class="form-control form-control" id="exampleInputEmail"
+                                    aria-describedby="emailHelp" placeholder="Enter Email Address..."
+                                    value="john@example.com">
+                                <span style='color:#f00;'></span>
                             </div>
-                            <span style='color:#f00;'></span>
+
+                            <div class="form-group col-lg-6">
+                                <label class="d-block">Status <span style='color:#f00;'>*</span></label>
+                                <div class="custom-control custom-radio custom-control-inline">
+                                    <input type="radio" id="statusActive" name="status" class="custom-control-input"
+                                        value="active">
+                                    <label class="custom-control-label" for="statusActive">Active</label>
+                                </div>
+                                <div class="custom-control custom-radio custom-control-inline">
+                                    <input type="radio" id="statusInactive" name="status" class="custom-control-input"
+                                        value="suspended">
+                                    <label class="custom-control-label" for="statusInactive">Inactive</label>
+                                </div>
+                                <span style='color:#f00;'></span>
+                            </div>
+
+                            <div class="form-group col-lg-6">
+                                <input type="password" name="password" class="form-control form-control"
+                                    id="exampleInputPassword" placeholder="Enter Password">
+                                <span style='color:#f00;'></span>
+                            </div>
+
+                            <div class="form-group col-lg-6">
+                                <input type="password" name="password_confirmation" class="form-control form-control"
+                                    id="exampleInputConfirmPassword" placeholder="Confirm password">
+                                <span style='color:#f00;'></span>
+                            </div>
+
+                            <div class="form-group col-lg-6">
+                                <input type="text" name="company" class="form-control form-control" id="exampleInputCompany"
+                                    placeholder="Enter company" value="Doe Inc.">
+                                <span style='color:#f00;'></span>
+                            </div>
+
+                            <div class="form-group col-lg-6">
+                                <select name="country" class="form-control select2-country">
+                                    <option value="">(All Countries)</option>
+                                </select>
+                                <span style='color:#f00;'></span>
+                            </div>
+
+                            <div class="form-group col-lg-6">
+                                <input type="text" name="phone" class="form-control form-control" id="exampleInputMobile"
+                                    placeholder="Enter phone no" value="1234567890">
+                                <span style='color:#f00;'></span>
+                            </div>
+
                         </div>
 
-                        <div class="form-group col-lg-6">
-                            <input type="password" name="password" class="form-control form-control"
-                                id="exampleInputPassword" placeholder="Enter Password">
-                            <span style='color:#f00;'></span>
+
+
+                        <div class="row">
+                            <div class="form-group col-lg-12">
+                                <input type="submit" value="Update" class="btn btn-primary" style="float:right;">
+                            </div>
                         </div>
 
-                        <div class="form-group col-lg-6">
-                            <input type="password" name="password_confirmation" class="form-control form-control"
-                                id="exampleInputConfirmPassword" placeholder="Confirm password">
-                            <span style='color:#f00;'></span>
-                        </div>
+                        <input type="hidden" name="user_type" value="affiliate">
+                    </form>
+                </div>
 
-                        <div class="form-group col-lg-6">
-                            <input type="text" name="company" class="form-control form-control" id="exampleInputCompany"
-                                placeholder="Enter company" value="Doe Inc.">
-                            <span style='color:#f00;'></span>
-                        </div>
-
-                        <div class="form-group col-lg-6">
-                            <select name="country" class="form-control select2-country">
-                                <option value="">(All Countries)</option>
-                            </select>
-                            <span style='color:#f00;'></span>
-                        </div>
-
-                        <div class="form-group col-lg-6">
-                            <input type="text" name="phone" class="form-control form-control" id="exampleInputMobile"
-                                placeholder="Enter phone no" value="1234567890">
-                            <span style='color:#f00;'></span>
-                        </div>
-
-                        <div class="form-group col-lg-6">
-                            <label class="d-block">Role</label>
-                            <select name="role_id" id="role_id" class="form-control">
-                                <option value="">Select Role</option>
-                            </select>
-                        </div>
-
-                    </div>
-
-
-
-                    <div class="row">
-                        <div class="form-group col-lg-12">
-                            <input type="submit" value="Update" class="btn btn-primary" style="float:right;">
-                        </div>
-                    </div>
-
-                    <input type="hidden" name="user_type" value="affiliate">
-                </form>
             </div>
 
         </div>
@@ -166,7 +170,7 @@ include $pathPrefix . '/includes/head.php';
                     $('select[name="country"]').val(data.country),
                     $('input[name="country"]').val(data.country);
                     $('input[name="phone"]').val(data.phone);
-                    $('#role_id').val(data.role_id);
+                    //$('#role_id').val(data.role_id);
 
                     // Set Status
                     if (data.status) {

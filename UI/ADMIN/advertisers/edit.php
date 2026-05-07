@@ -4,141 +4,8 @@ $activePage = 'advertisers';
 $pageTitle = 'Edit Advertiser';
 include $pathPrefix . '/includes/head.php';
 ?>
-
+<script src="../../common/js/countries.js"></script>
 <style>
-    .form-card {
-        background: #6366F1;
-        border-radius: 20px;
-        padding: 3px;
-    }
-
-    .form-card-inner {
-        background: #fff;
-        border-radius: 18px;
-        padding: 40px;
-    }
-
-    .form-floating {
-        position: relative;
-        margin-bottom: 1.5rem;
-    }
-
-    .form-floating input {
-        width: 100%;
-        padding: 20px 16px 8px;
-        border: 2px solid #e0e6ed;
-        border-radius: 12px;
-        font-size: 16px;
-        transition: all 0.3s ease;
-        background: #f8fafc;
-    }
-
-    .form-floating input:focus {
-        border-color: #667eea;
-        background: #fff;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-        outline: none;
-    }
-
-    .form-floating label {
-        position: absolute;
-        left: 16px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #94a3b8;
-        font-size: 16px;
-        pointer-events: none;
-        transition: all 0.2s ease;
-        background: transparent;
-        padding: 0 4px;
-    }
-
-    .form-floating input:focus+label,
-    .form-floating input:not(:placeholder-shown)+label {
-        top: 0;
-        font-size: 12px;
-        color: #667eea;
-        background: #fff;
-        font-weight: 600;
-    }
-
-    .form-floating input::placeholder {
-        color: transparent;
-    }
-
-    .btn-gradient {
-        background: #6366F1;
-        border: none;
-        color: #fff;
-        padding: 16px 32px;
-        border-radius: 12px;
-        font-size: 16px;
-        font-weight: 600;
-        width: 100%;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-    }
-
-    .btn-gradient:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
-        background: #4f46e5;
-        color: #fff;
-    }
-
-    .btn-gradient:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .header-section {
-        text-align: center;
-        margin-bottom: 40px;
-    }
-
-    .header-section h1 {
-        font-size: 28px;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 8px;
-    }
-
-    .header-section p {
-        color: #64748b;
-        font-size: 15px;
-    }
-
-    .back-link {
-        display: inline-flex;
-        align-items: center;
-        color: #64748b;
-        text-decoration: none;
-        font-size: 14px;
-        margin-bottom: 24px;
-        transition: color 0.2s;
-    }
-
-    .back-link:hover {
-        color: #667eea;
-        text-decoration: none;
-    }
-
-    .back-link i {
-        margin-right: 8px;
-    }
-
-    .alert-modern {
-        border-radius: 12px;
-        border: none;
-        padding: 16px 20px;
-    }
-
-    .row-gap {
-        gap: 0 24px;
-    }
-
     .divider {
         display: flex;
         align-items: center;
@@ -158,36 +25,6 @@ include $pathPrefix . '/includes/head.php';
     .divider span {
         padding: 0 16px;
     }
-
-    .user-badge {
-        display: inline-flex;
-        align-items: center;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: #fff;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        margin-bottom: 12px;
-    }
-
-    .loading-skeleton {
-        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-        background-size: 200% 100%;
-        animation: shimmer 1.5s infinite;
-        border-radius: 8px;
-        height: 56px;
-    }
-
-    @keyframes shimmer {
-        0% {
-            background-position: 200% 0;
-        }
-
-        100% {
-            background-position: -200% 0;
-        }
-    }
 </style>
 
 <body id="page-top">
@@ -195,89 +32,78 @@ include $pathPrefix . '/includes/head.php';
     <?php include $pathPrefix . '/includes/topnav.php'; ?>
 
     <main id="main-content">
-        <div class="container-fluid py-4">
-            <div class="row justify-content-center">
-                <div class="col-lg-6 col-xl-5">
+        <div class="container-fluid">
 
-                    <a href="list.php" class="back-link">
-                        <i class="fas fa-arrow-left"></i> Back to Advertisers
-                    </a>
+            <div class="page-header">
+                <h1>Edit Advertiser</h1>
+                <a href="list.php" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left mr-2"></i> Back
+                </a>
+            </div>
 
-                    <div class="form-card">
-                        <div class="form-card-inner">
-                            <div class="header-section">
-                                <h1><i class="fas fa-user-edit mr-2" style="color: #667eea;"></i> Edit Advertiser</h1>
-                            </div>
-
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card-modern">
+                        <div class="card-body">
                             <div id="alert-container"></div>
-
                             <form id="editForm">
-                                <div class="form-floating">
-                                    <input type="text" name="name" id="name" placeholder=" " required>
+                                <div class="form-group">
                                     <label for="name">Full Name</label>
+                                    <input type="text" name="name" id="name" class="form-control" placeholder=" " required>
+                                    
                                 </div>
 
-                                <div class="form-floating">
-                                    <input type="email" name="email" id="email" placeholder=" " required>
+                                <div class="form-group">
                                     <label for="email">Email Address</label>
+                                    <input type="email" name="email" id="email" class="form-control" placeholder=" " required>
                                 </div>
 
                                 <div class="row row-gap">
                                     <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="text" name="company" id="company" placeholder=" ">
+                                        <div class="form-group">
                                             <label for="company">Company</label>
+                                            <input type="text" name="company" id="company" class="form-control" placeholder=" ">                                            
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="tel" name="phone" id="phone" placeholder=" ">
+                                        <div class="form-group">
                                             <label for="phone">Phone Number</label>
+                                            <input type="tel" name="phone" id="phone" class="form-control" placeholder=" ">                                            
                                         </div>
                                     </div>
                                 </div>
-
-                                <div class="form-floating">
-                                    <input type="text" name="country" id="country" placeholder=" ">
-                                    <label for="country">Country</label>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Country</label>
+                                            <select name="country" class="form-control select2-country">
+                                                <option value="">(All Countries)</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-
-                                <?php
-                                /*
-                                <div class="form-group mb-4">
-                                    <label class="text-muted" style="font-size: 14px; padding-left: 16px;">Role
-                                        Assignment</label>
-                                    <select name="role_id" id="role_id" class="form-control"
-                                        style="border-radius:12px; height:58px; padding-left:16px;">
-                                        <option value="">Select Role (Optional)</option>
-                                    </select>
-                                </div>
-                                */
-                                ?>
 
                                 <div class="divider"><span>Change Password (Optional)</span></div>
 
                                 <div class="row row-gap">
                                     <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="password" name="password" id="password" placeholder=" ">
+                                        <div class="form-group">
                                             <label for="password">New Password</label>
+                                            <input type="password" name="password" id="password" class="form-control" placeholder=" ">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="password" name="password_confirmation"
-                                                id="password_confirmation" placeholder=" ">
+                                        <div class="form-group">
                                             <label for="password_confirmation">Confirm Password</label>
+                                            <input type="password" name="password_confirmation"
+                                                id="password_confirmation" class="form-control" placeholder=" ">                                            
                                         </div>
                                     </div>
                                 </div>
 
                                 <input type="hidden" name="user_type" value="advertiser">
 
-                                <button type="submit" class="btn-gradient mt-4" id="submitBtn">
-                                    <i class="fas fa-save mr-2"></i> Save Changes
-                                </button>
+                                <button type="submit" id="submitBtn" class="btn btn-primary">Save Changes</button>
                             </form>
                         </div>
                     </div>
@@ -299,15 +125,11 @@ include $pathPrefix . '/includes/head.php';
             if (user) $('.user-name').text(user.name);
 
             try {
-                const rolesRes = await API.fetchWithAuth('admin/roles');
-                if (rolesRes && rolesRes.length > 0) {
-                    rolesRes.forEach(r => {
-                        if (r.user_type === 'advertiser') {
-                            $('#role_id').append(`<option value="${r.id}">${r.name}</option>`);
-                        }
-                    });
-                }
-            } catch (e) { console.error("Failed to load roles"); }
+                const countrySelect = $('select[name="country"]');
+                Object.entries(COUNTRIES).forEach(([code, name]) => {
+                    countrySelect.append(new Option(name, code));
+                });
+            } catch(e) { console.error("Failed to load countries"); }
 
             // Get ID from URL
             const urlParams = new URLSearchParams(window.location.search);

@@ -63,22 +63,6 @@ include $pathPrefix . '/includes/head.php';
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>User Type</label>
-                                            <input type="text" class="form-control" value="Affiliate" disabled>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Role</label>
-                                            <select name="role_id" id="role_id" class="form-control">
-                                                <option value="">Select Role</option>
-                                            </select>
-                                        </div>
-                                    </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6">
@@ -115,6 +99,7 @@ include $pathPrefix . '/includes/head.php';
             if (user) $('.user-name').text(user.name);
 
             try {
+                /*
                 const rolesRes = await API.fetchWithAuth('admin/roles');
                 if(rolesRes && rolesRes.length > 0) {
                     rolesRes.forEach(r => {
@@ -123,6 +108,7 @@ include $pathPrefix . '/includes/head.php';
                         }
                     });
                 }
+                */
 
                 // Countries (for targeting)
                 const countrySelect = $('select[name="country"]');
@@ -150,8 +136,8 @@ include $pathPrefix . '/includes/head.php';
                             country: $('select[name="country"]').val(),
                             password: $('input[name="password"]').val(),
                             password_confirmation: $('input[name="password_confirmation"]').val(),
-                            user_type: 'affiliate',
-                            role_id: $('#role_id').val()
+                            user_type: 'affiliate'/*,
+                            role_id: $('#role_id').val()*/
                         })
                     });
                     if (response.status === 1) {

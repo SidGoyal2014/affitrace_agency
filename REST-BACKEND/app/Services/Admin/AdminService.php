@@ -220,12 +220,12 @@ class AdminService
         $user->username = str_replace(' ', '', strtolower($request->name));
         $user->email = $request->email;
         $user->password = Hash::make($request->password);
-        $user->user_type = $request->user_type;
+        $user->user_type = 'advertiser';
 
         $user->company = $request->company;
         $user->country = $request->country;
         $user->phone = $request->phone;
-        $user->role_id = $request->filled('role_id') ? $request->role_id : null;
+        //$user->role_id = $request->filled('role_id') ? $request->role_id : null;
 
         $user->save();
 

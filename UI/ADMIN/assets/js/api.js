@@ -149,9 +149,16 @@ const API = {
 
             const data = await response.json();
 
+            /*
             if (!response.ok) {
                 throw new Error(data.message || `API Error: ${response.status}`);
             }
+            */
+            if (!response.ok) {
+                const err = new Error(data.message || `API Error: ${response.status}`);
+                err.responseData = data;
+                throw err;
+            }           
 
             return data;
         } catch (error) {
