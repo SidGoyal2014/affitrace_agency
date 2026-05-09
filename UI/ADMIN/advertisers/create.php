@@ -5,7 +5,27 @@ $pageTitle = 'Create Advertiser';
 include $pathPrefix . '/includes/head.php';
 ?>
 <script src="../../common/js/countries.js"></script>
+<style>
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 24px 0;
+        color: #94a3b8;
+        font-size: 13px;
+    }
 
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #e2e8f0;
+    }
+
+    .divider span {
+        padding: 0 16px;
+    }
+</style>
 <body id="page-top">
 
     <?php include $pathPrefix . '/includes/topnav.php'; ?>
@@ -19,7 +39,6 @@ include $pathPrefix . '/includes/head.php';
                     <i class="fas fa-arrow-left mr-2"></i> Back
                 </a>
             </div>
-
             <div class="row">
                 <div class="col-lg-8">
                     <div class="card-modern">
@@ -29,41 +48,11 @@ include $pathPrefix . '/includes/head.php';
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>Full Name *</label>
-                                            <input type="text" name="name" id="name" class="form-control" placeholder=" " required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
                                             <label>Email *</label>
                                             <input type="email" name="email" id="email" class="form-control" placeholder=" " required>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Phone *</label>
-                                            <input type="text" name="phone" id="phone" class="form-control" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Company *</label>
-                                            <input type="text" name="company" id="company" placeholder=" " class="form-control" required>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Country</label>
-                                            <select name="country" class="form-control select2-country">
-                                                <option value="">(All Countries)</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
+                                </div>                                
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
@@ -79,6 +68,38 @@ include $pathPrefix . '/includes/head.php';
                                         </div>
                                     </div>
                                 </div>
+                                <div class="divider"><span>Other details</span></div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Full Name *</label>
+                                            <input type="text" name="name" id="name" class="form-control" placeholder=" " required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Phone *</label>
+                                            <input type="text" name="phone" id="phone" class="form-control" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Company *</label>
+                                            <input type="text" name="company" id="company" placeholder=" " class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Country</label>
+                                            <select name="country" class="form-control select2-country">
+                                                <option value="">(All Countries)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <button type="submit" id="submitBtn" class="btn btn-primary">Create Advertiser</button>
                             </form>
                         </div>

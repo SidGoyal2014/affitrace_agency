@@ -5,6 +5,8 @@ $pageTitle = 'Edit Advertiser';
 include $pathPrefix . '/includes/head.php';
 ?>
 <script src="../../common/js/countries.js"></script>
+<script src="../../common/js/timezones.js"></script>
+<script src="../../common/js/currencies.js"></script>
 <style>
     .divider {
         display: flex;
@@ -47,56 +49,147 @@ include $pathPrefix . '/includes/head.php';
                         <div class="card-body">
                             <div id="alert-container"></div>
                             <form id="editForm">
-                                <div class="form-group">
-                                    <label for="name">Full Name</label>
-                                    <input type="text" name="name" id="name" class="form-control" placeholder=" " required>
-                                    
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="email">Email Address</label>
-                                    <input type="email" name="email" id="email" class="form-control" placeholder=" " required>
-                                </div>
-
-                                <div class="row row-gap">
+                                <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label for="company">Company</label>
-                                            <input type="text" name="company" id="company" class="form-control" placeholder=" ">                                            
+                                            <label>Email *</label>
+                                            <input type="email" name="email" id="email" class="form-control" placeholder=" " required>
+                                        </div>
+                                    </div>
+                                </div>                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Password *</label>
+                                            <input type="password" name="password" id="password" class="form-control">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label for="phone">Phone Number</label>
-                                            <input type="tel" name="phone" id="phone" class="form-control" placeholder=" ">                                            
+                                            <label>Confirm Password *</label>
+                                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="divider"><span>Other details</span></div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Name </label>
+                                            <input type="text" name="name" id="name" class="form-control" placeholder=" " required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Phone *</label>
+                                            <input type="text" name="phone" id="phone" class="form-control" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Company </label>
+                                            <input type="text" name="company" id="company" class="form-control" placeholder=" " required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Address</label>
+                                            <input type="text" name="address" id="address" class="form-control" placeholder=" " >
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>Country</label>
-                                            <select name="country" class="form-control select2-country">
+                                            <label>City </label>
+                                            <input type="text" name="city" id="city" class="form-control" placeholder=" " >
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>State</label>
+                                            <input type="text" name="state" id="state" class="form-control" placeholder=" " >
+                                        </div>
+                                    </div>
+                                </div>                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>ZipCode </label>
+                                            <input type="text" name="zipcode" id="zipcode" class="form-control" placeholder=" " >
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Country *</label>
+                                            <select name="country" id="country" class="form-control select2-country">
                                                 <option value="">(All Countries)</option>
                                             </select>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="divider"><span>Change Password (Optional)</span></div>
-
-                                <div class="row row-gap">
+                                <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label for="password">New Password</label>
-                                            <input type="password" name="password" id="password" class="form-control" placeholder=" ">
+                                            <label>Currency </label>
+                                            <select name="currency" id="currency" class="form-control">
+                                                <option value="">Select Currency</option>
+                                            </select>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label for="password_confirmation">Confirm Password</label>
-                                            <input type="password" name="password_confirmation"
-                                                id="password_confirmation" class="form-control" placeholder=" ">                                            
+                                            <label>Time Zone</label>
+                                            <select name="time_zone" id="time_zone" class="form-control">
+                                                <option value="">Select Timezone</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Affiliate Block </label>
+                                            <input type="text" name="affiliate_block" id="affiliate_block" class="form-control" placeholder="">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Affiliate whitelist</label>
+                                            <input type="text" name="affiliate_whitelist" id="affiliate_whitelist" class="form-control" placeholder="">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Private Note </label>
+                                            <textarea name="private_note" id="private_note" class="form-control" placeholder=""></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Additional Info</label>
+                                            <textarea name="additional_info" id="additional_info" class="form-control" placeholder=""></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Postback IP Whitelist </label>
+                                            <input type="text" name="postback_ip_whitelist" id="postback_ip_whitelist" class="form-control" placeholder="">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Tax Details</label>
+                                            <input type="text" name="tax_details" id="tax_details" class="form-control" placeholder="">
                                         </div>
                                     </div>
                                 </div>
@@ -131,6 +224,21 @@ include $pathPrefix . '/includes/head.php';
                 });
             } catch(e) { console.error("Failed to load countries"); }
 
+            try {
+                const currencySelect = $('select[name="currency"]');
+                Object.entries(CURRENCIES).forEach(([code, name]) => {
+                    currencySelect.append(new Option(name, code));
+                });
+            } catch(e) { console.error("Failed to load currencies"); }
+
+            try {
+                const timeZoneSelect = $('select[name="time_zone"]');
+                Object.entries(TIMEZONE_LIST).forEach(([code, name]) => {
+                    timeZoneSelect.append(new Option(name, code));
+                });
+
+            } catch(e) { console.error("Failed to load time zones"); }
+
             // Get ID from URL
             const urlParams = new URLSearchParams(window.location.search);
             advertiserId = urlParams.get('id');
@@ -146,6 +254,10 @@ include $pathPrefix . '/includes/head.php';
             try {
                 const response = await API.fetchWithAuth(`admin/advertisers/edit/${advertiserId}`);
                 const data = response.user;
+                const dataAdud = response.adud;
+
+                console.log(response)
+
 
                 if (data) {
                     $('#name').val(data.name || '');
@@ -153,8 +265,20 @@ include $pathPrefix . '/includes/head.php';
                     $('#company').val(data.company || '');
                     $('#phone').val(data.phone || '');
                     $('#country').val(data.country || '');
-                    $('#role_id').val(data.role_id);
+                    $('#currency').val(dataAdud.currency || '');
+                    $('#time_zone').val(dataAdud.time_zone || '');
+                    $('#affiliate_block').val(dataAdud.affiliate_block || '');
+                    $('#affiliate_whitelist').val(dataAdud.affiliate_whitelist || '');
+                    $('#private_note').val(dataAdud.private_note || '');
+                    $('#additional_info').val(dataAdud.additional_info || '');
+                    $('#postback_ip_whitelist').val(dataAdud.postback_ip_whitelist || '');
+                    $('#tax_details').val(dataAdud.tax_details || '');
+
                 }
+
+
+
+
             } catch (error) {
                 console.error('Load Error:', error);
                 $('#alert-container').html('<div class="alert alert-danger alert-modern"><i class="fas fa-exclamation-circle mr-2"></i> Failed to load advertiser data.</div>');
@@ -185,9 +309,16 @@ include $pathPrefix . '/includes/head.php';
                     phone: $('#phone').val(),
                     country: $('#country').val(),
                     user_type: 'advertiser',
-                    role_id: $('#role_id').val(),
-                    instant_messenger_name: 'Skype',
-                    instant_messenger_value: 'N/A'
+                    currency: $('#currency').val(),
+                    time_zone: $('#time_zone').val(),
+                    affiliate_block: $('#affiliate_block').val(),
+                    affiliate_whitelist: $('#affiliate_whitelist').val(),
+                    private_note: $('#private_note').val(),
+                    additional_info: $('#additional_info').val(),
+                    postback_ip_whitelist: $('#postback_ip_whitelist').val(),
+                    tax_details: $('#tax_details').val(),
+                    instant_messenger_name: $('#instant_messenger_name').val(),
+                    instant_messenger_value: $('#instant_messenger_value').val(),
                 };
 
                 if (password) {
@@ -203,8 +334,10 @@ include $pathPrefix . '/includes/head.php';
                     });
 
                     if (response.status === 1) {
+
                         $('#alert-container').html('<div class="alert alert-success alert-modern"><i class="fas fa-check-circle mr-2"></i> Advertiser updated successfully! Redirecting...</div>');
                         setTimeout(() => window.location.href = 'list.php', 1500);
+
                     } else {
                         let errorMsg = response.error;
                         if (typeof response.error === 'object') {

@@ -17,29 +17,7 @@ include $pathPrefix . '/includes/head.php';
             </div>
 
             <div class="row mb-4">
-                <div class="col-6">
-                    <div class="card-modern">
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-flush mb-0" id="dataTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Attribute</th>
-                                            <th>Value</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tableBodyPlanDetails">
-                                        <tr>
-                                            <td colspan="5" class="text-center py-4 text-muted">Loading...</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                
-                            </div>
-                        </div>
-                    </div>                        
-                    
-                </div>
+
                 <div class="col-6">
                     <div class="card-modern">
                         <div class="card-body p-0">
@@ -65,7 +43,29 @@ include $pathPrefix . '/includes/head.php';
 
                 
                 </div>
-
+                <div class="col-6">
+                    <div class="card-modern">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-flush mb-0" id="dataTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Attribute</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableBodyPlanDetails">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">Loading...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                            </div>
+                        </div>
+                    </div>                        
+                    
+                </div>
             </div>
 
 

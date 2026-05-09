@@ -58,9 +58,6 @@ trait CommonProfileFunctions
             if ($request->has('country')) $user->country = $request->country;
             if ($request->has('zipcode')) $user->zipcode = $request->zipcode;
 
-            if ($request->has('role_id')) {
-                $user->role_id = $request->filled('role_id') ? $request->role_id : null;
-            }
 
             if ($request->has('timezone')) $user->timezone = $request->timezone;
             elseif ($request->has('time_zone')) $user->timezone = $request->time_zone;
@@ -155,10 +152,6 @@ trait CommonProfileFunctions
             // Allow Admin to update status
             if ($request->user()->user_type === \App\Enums\UserType::Admin->value && $request->has('status')) {
                 $user->status = \App\Enums\UserStatus::tryFrom($request->status) ?? $user->status;
-            }
-
-            if ($request->has('role_id')) {
-                $user->role_id = $request->filled('role_id') ? $request->role_id : null;
             }
 
             if ($request->has('timezone')) $user->timezone = $request->timezone;
