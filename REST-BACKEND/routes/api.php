@@ -118,6 +118,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('reports/all-offers', [App\Http\Controllers\Admin\ReportController::class, 'all_offers']);
         Route::get('reports/offer-clicks/{offer_id}', [App\Http\Controllers\Admin\ReportController::class, 'offer_clicks']);
         Route::post('reports/offer-clicks/search', [App\Http\Controllers\Admin\ReportController::class, 'search_offer_clicks']);
+        Route::get('reports/devices', [App\Http\Controllers\Admin\ReportController::class, 'devices_list']);
 
         Route::get('reports/all-payouts', [App\Http\Controllers\Admin\ReportController::class, 'all_payouts']);
         Route::post('reports/all-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_all_payouts']);

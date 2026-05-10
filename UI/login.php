@@ -57,7 +57,7 @@
                             <div class="form-group">
                                 <label>Agency ID</label>
                                 <input type="text" name="eai" class="form-control" id="eai"
-                                    placeholder="Enter Agency ID" value="demo" autocomplete="off" data-lpignore="true" required>
+                                    placeholder="Enter Agency ID" autocomplete="off" data-lpignore="true" required>
                             </div>
 
                             <div class="form-group">

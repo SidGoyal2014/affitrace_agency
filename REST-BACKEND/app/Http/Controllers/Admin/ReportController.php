@@ -24,6 +24,14 @@ class ReportController extends Controller
 		$this->weeklyPayoutService = $weeklyPayoutService;
 	}
 
+	public function devices_list(Request $request)
+	{
+		return response()->json([
+			'success' => true,
+			'data' => \App\Models\Device::select('id', 'device_name')->orderBy('device_name')->get()
+		]);
+	}
+
 	public function list_transactions(Request $request)
 	{
 		return response()->json($this->reportService->listTransactions());

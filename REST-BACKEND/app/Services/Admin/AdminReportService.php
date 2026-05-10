@@ -471,48 +471,72 @@ class AdminReportService extends BaseReportService
      */
     public function getClicksReport($request): array
     {
+
+//\Log::info('Request Submitted Array', $request->all());
+
+
         $query = DB::table('offer_trackings')
             ->select(
-                'offer_trackings.*',
+                '*',
                 'offer_trackings.id as otid',
                 'offer_trackings.created_at as link_clicked_at',
-                'offer_trackings.country as ot_country',
-                'offer_trackings.os as ot_os',
-                'offer_trackings.browser as ot_browser',
+                'offer_trackings.sub1',
                 'affis.id as aff_id',
-                'affis.name as aff_name',
-                'adverts.id as adv_id',
+                'affis.name as aff_name', 
+                'adverts.id as adv_id', 
                 'adverts.name as advert_name',
-                'offers.id as offer_id',
-                'offers.offer_name',
-                'devices.device_name'
+                'offer_trackings.country as ot_country', 
+                'offer_trackings.os as ot_os', 
+                'offer_trackings.browser as ot_browser'
             )
-            ->leftJoin('offers', 'offer_trackings.offer_id', '=', 'offers.id')
-            ->leftJoin('devices', 'offer_trackings.device_id', '=', 'devices.id')
-            ->leftJoin('users as affis', 'offer_trackings.aff_id', '=', 'affis.id')
-            ->leftJoin('users as adverts', 'offer_trackings.adv_id', '=', 'adverts.id');
+            ->join('offers', 'offer_trackings.offer_id','=', 'offers.id')
+            ->leftJoin('devices', 'offer_trackings.device_id','=', 'devices.id')
+            ->join('users as affis', 'offer_trackings.aff_id','=', 'affis.id')
+            ->join('users as adverts', 'offer_trackings.adv_id','=', 'adverts.id');
 
         // Apply filters
-        if ($request->from && $request->to) {
-            $fromUtc = $this->getUtcStartOfDay($request->from);
-            $toUtc   = $this->getUtcEndOfDay($request->to);
-            $query->whereBetween('offer_trackings.created_at', [$fromUtc, $toUtc]);
-        }
-        if ($request->offer_id) {
-            $query->where('offers.id', $request->offer_id);
-        }
-        if ($request->affiliate_id) {
-            $query->where('offer_trackings.aff_id', $request->affiliate_id);
-        }
-        if ($request->advertiser_id) {
-            $query->where('offers.advertiser_id', $request->advertiser_id);
-        }
+		if($request->from != "" && $request->to != "" && $request->from != $request->to){
+			$query = $query->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
 
-        $limit = $request->limit ?? 50;
-        $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);
+		}elseif($request->from != "" && $request->to != "" && $request->from == $request->to){
+			$query = $query->where('offer_trackings.created_at', $request->from);
+
+		}
+
+
+        
+        if ($request->device) {
+            $query = $query->where('offer_trackings.device_id', $request->device);
+        }
+        if ($request->browser) {
+
+            $query = $query->where('offer_trackings.browser', $request->browser);
+        }
+        
+		if($request->os != ""){
+			$query = $query->where('offer_trackings.os', 'LIKE', "%{$request->os}%");
+
+		}
+
+        $arrC = $this->getCountry();
+		if(isset($request->country) && $request->country != ""){
+            $query = $query->where('offer_trackings.country', $arrC[$request->country]);
+
+		}/**/
+
+       
+        /*$limit = min((int) ($request->limit ?? 50), 500);
+        $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);*/
+
+        $results = $query->orderBy('offer_trackings.id', 'desc')
+				->get();
+
+
+
+
 
         // Convert UTC timestamps to user's configured timezone
-        $results->getCollection()->transform(function ($row) {
+        $results->transform(function ($row) {
             if (isset($row->link_clicked_at)) $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
             if (isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
             return $row;
