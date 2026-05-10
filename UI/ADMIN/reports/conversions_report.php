@@ -44,32 +44,8 @@ include $pathPrefix . '/includes/head.php';
                                     <option value="declined">Declined</option>
                                 </select>
                             </div>
-                            <div class="form-group col-md-2">
-                                <label for="limit">Rows per page</label>
-                                <select class="form-control" id="limit" name="limit">
-                                    <option value="10">10</option>
-                                    <option value="25">25</option>
-                                    <option value="50" selected>50</option>
-                                    <option value="100">100</option>
-                                </select>
-                            </div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group col-md-3">
-                                <label for="offer_id">Offer ID</label>
-                                <input type="text" class="form-control" id="offer_id" name="offer_id"
-                                    placeholder="Offer ID">
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="affiliate_id">Affiliate ID</label>
-                                <input type="text" class="form-control" id="affiliate_id" name="affiliate_id"
-                                    placeholder="Affiliate ID">
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="advertiser_id">Advertiser ID</label>
-                                <input type="text" class="form-control" id="advertiser_id" name="advertiser_id"
-                                    placeholder="Advertiser ID">
-                            </div>
                             <div class="form-group col-md-2 d-flex align-items-end">
                                 <button type="submit" class="btn btn-success btn-block">
                                     <i class="fas fa-search mr-2"></i> Apply Filters
@@ -98,6 +74,8 @@ include $pathPrefix . '/includes/head.php';
                             <thead>
                                 <tr>
                                     <th>Conversion ID</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>                                    
                                     <th>Conversion Time</th>
                                     <th>Offer</th>
                                     <th>Affiliate</th>
@@ -107,32 +85,12 @@ include $pathPrefix . '/includes/head.php';
                                     <th>Payout</th>
                                     <th>Country</th>
                                     <th>Device</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
+
                                 </tr>
                             </thead>
-                            <tbody id="reportTableBody">
-                                <tr>
-                                    <td colspan="12" class="text-center">Loading...</td>
-                                </tr>
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
-
-                    <!-- Pagination Controls -->
-                    <div class="row align-items-center mt-3">
-                        <div class="col-md-6 text-muted">
-                            Showing <span id="startEntry">0</span> to <span id="endEntry">0</span> of <span
-                                id="totalEntries">0</span> entries
-                        </div>
-                        <div class="col-md-6">
-                            <nav aria-label="Page navigation">
-                                <ul class="pagination justify-content-end mb-0" id="pagination">
-                                </ul>
-                            </nav>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 
@@ -144,8 +102,7 @@ include $pathPrefix . '/includes/head.php';
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
 
     <script>
-        let currentPage = 1;
-
+        let dt = null;
         $(document).ready(function () {
             const date = new Date();
             const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -161,16 +118,93 @@ include $pathPrefix . '/includes/head.php';
             if (!$('#from').val()) $('#from').val(formatDate(firstDay));
             if (!$('#to').val()) $('#to').val(formatDate(lastDay));
 
-            loadReport(1);
+            dt = $('#reportTable').DataTable({
+                processing: true,
+                language: {
+                    emptyTable: 'No conversions found.',
+                    zeroRecords: 'No conversions found.',
+                    processing: '<div class="d-flex justify-content-center py-3"><div class="spinner-border text-success" role="status"><span class="sr-only">Loading...</span></div></div>'
+                },
+                columns: [
+                    { data: 'tid', title: 'Conversion ID' },
+                    {
+                        data: 'status', title: 'Status',
+                        render: function (data, type, row) {
+                            if (type !== 'display') return (row.status || '');
+                            return getStatusBadge(row.status);
+                        }
+                    },
+                    {
+                        data: null, title: 'Actions',
+                        orderable: false,
+                        searchable: false,
+                        render: function (data, type, row) {
+                            return getActionButtons(row);
+                        }
+                    },
+                    {
+                        data: null, title: 'Conversion Time',
+                        render: function (data, type, row) {
+                            const d = row.conversion_time || row.created_at || '-';
+                            return type === 'display' ? '<small>' + d + '</small>' : d;
+                        }
+                    },
+                    {
+                        data: 'offer_name', title: 'Offer',
+                        render: function (data, type, row) {
+                            if (type !== 'display') return (row.offer_id + ' ' + (row.offer_name || ''));
+                            return '<a href="../offers/edit.php?id=' + row.offer_id + '" title="' + (row.offer_name || '') + '">' + truncate(row.offer_name, 20) + '</a>';
+                        }
+                    },
+                    {
+                        data: 'affiliate_name', title: 'Affiliate',
+                        render: function (data, type, row) {
+                            if (type !== 'display') return (row.affiliate_id + ' ' + (row.affiliate_name || ''));
+                            return '<a href="../affiliates/edit.php?id=' + row.affiliate_id + '" title="' + (row.affiliate_name || '') + '">' + truncate(row.affiliate_name, 15) + '</a>';
+                        }
+                    },
+                    {
+                        data: 'advertiser_name', title: 'Advertiser',
+                        render: function (data, type, row) {
+                            if (type !== 'display') return (row.advertiser_id + ' ' + (row.advertiser_name || ''));
+                            return '<a href="../advertisers/edit.php?id=' + row.advertiser_id + '" title="' + (row.advertiser_name || '') + '">' + truncate(row.advertiser_name || 'N/A', 15) + '</a>';
+                        }
+                    },
+                    {
+                        data: 'event', title: 'Event',
+                        render: function (data, type, row) {
+                            if (type !== 'display') return (row.event || 'Conversion');
+                            return '<span class="badge badge-info">' + (row.event || 'Conversion') + '</span>';
+                        }
+                    },
+                    {
+                        data: 'revenue', title: 'Revenue',
+                        render: function (data, type, row) {
+                            if (type !== 'display') return parseFloat(row.revenue || 0);
+                            return '<span class="text-success font-weight-bold">$' + parseFloat(row.revenue || 0).toFixed(2) + '</span>';
+                        }
+                    },
+                    {
+                        data: 'payout', title: 'Payout',
+                        render: function (data, type, row) {
+                            if (type !== 'display') return parseFloat(row.payout || 0);
+                            return '<span class="text-primary font-weight-bold">$' + parseFloat(row.payout || 0).toFixed(2) + '</span>';
+                        }
+                    },
+                    { data: 'country', title: 'Country', defaultContent: '-' },
+                    { data: 'device',  title: 'Device',  defaultContent: '-' }
+                ],
+                order: [[0, 'desc']],
+                pageLength: 25
+            });
+
+            loadReport();
 
             $('#filterForm').on('submit', function (e) {
                 e.preventDefault();
-                loadReport(1);
+                loadReport();
             });
 
-            $('#limit').on('change', function () {
-                loadReport(1);
-            });
         });
 
         function getStatusBadge(status) {
@@ -213,7 +247,7 @@ include $pathPrefix . '/includes/head.php';
 
                 if (response.success) {
                     Toast.success('Success', response.message);
-                    loadReport(currentPage);
+                    loadReport();
                 } else {
                     Toast.error('Error', response.message || 'Failed to update status');
                 }
@@ -223,15 +257,10 @@ include $pathPrefix . '/includes/head.php';
             }
         }
 
-        async function loadReport(page) {
-            currentPage = page;
-            const tbody = $('#reportTableBody');
-            tbody.html('<tr><td colspan="12" class="text-center py-4"><div class="spinner-border text-success" role="status"><span class="sr-only">Loading...</span></div></td></tr>');
-
+        async function loadReport() {
             try {
                 const formData = new FormData(document.getElementById('filterForm'));
                 const formObj = Object.fromEntries(formData.entries());
-                formObj.page = page;
 
                 const response = await API.fetchWithAuth('admin/reports/conversions', {
                     method: 'POST',
@@ -240,68 +269,28 @@ include $pathPrefix . '/includes/head.php';
                 });
 
                 renderTable(response);
-
             } catch (error) {
-                console.error("Report Error:", error);
-                tbody.html('<tr><td colspan="12" class="text-center text-danger">Failed to load data. Please try again.</td></tr>');
+                console.error('Report Error:', error);
+                dt.clear().draw();
+                Toast.error('Error', 'Failed to load data. Please try again.');
             }
         }
 
         function renderTable(response) {
-            const tbody = $('#reportTableBody');
-            tbody.empty();
-
-            const result = response.data;
-            const rows = result.data;
-
-            if (rows.length === 0) {
-                tbody.html('<tr><td colspan="12" class="text-center text-muted">No conversions found.</td></tr>');
-                updatePagination(result);
+            const rows = response.data;
+            dt.clear();
+            if (!rows || rows.length === 0) {
+                dt.draw();
                 return;
             }
-
-            rows.forEach(row => {
-                const dateStr = row.conversion_time || row.created_at || '-';
-
-                const tr = `
-                    <tr>
-                        <td>${row.tid}</td>
-                        <td><small>${dateStr}</small></td>
-                        <td>
-                            <a href="../offers/edit.php?id=${row.offer_id}" title="${row.offer_name || ''}">
-                                ${row.offer_id}: ${truncate(row.offer_name, 20)}
-                            </a>
-                        </td>
-                        <td>
-                            <a href="../affiliates/edit.php?id=${row.affiliate_id}" title="${row.affiliate_name || ''}">
-                                ${row.affiliate_id}: ${truncate(row.affiliate_name, 15)}
-                            </a>
-                        </td>
-                        <td>
-                            <a href="../advertisers/edit.php?id=${row.advertiser_id}" title="${row.advertiser_name || ''}">
-                                ${row.advertiser_id}: ${truncate(row.advertiser_name || 'N/A', 15)}
-                            </a>
-                        </td>
-                        <td><span class="badge badge-info">${row.event || 'Conversion'}</span></td>
-                        <td class="text-success font-weight-bold">$${parseFloat(row.revenue || 0).toFixed(2)}</td>
-                        <td class="text-primary font-weight-bold">$${parseFloat(row.payout || 0).toFixed(2)}</td>
-                        <td>${row.country || '-'}</td>
-                        <td>${row.device || '-'}</td>
-                        <td>${getStatusBadge(row.status)}</td>
-                        <td>${getActionButtons(row)}</td>
-                    </tr>
-                `;
-                tbody.append(tr);
-            });
-
-            updatePagination(result);
+            dt.rows.add(rows).draw();
         }
 
         function truncate(str, n) {
             return (str && str.length > n) ? str.substr(0, n - 1) + '&hellip;' : str;
         }
 
-        function updatePagination(meta) {
+        /*function updatePagination(meta) {
             $('#startEntry').text(meta.from || 0);
             $('#endEntry').text(meta.to || 0);
             $('#totalEntries').text(meta.total || 0);
@@ -337,7 +326,7 @@ include $pathPrefix . '/includes/head.php';
                     <a class="page-link" href="#" onclick="loadReport(${meta.current_page + 1}); return false;">Next</a>
                 </li>
             `);
-        }
+        }*/
 
         async function exportReport() {
             const btn = event.target.closest('button');

@@ -595,11 +595,10 @@ class AdminReportService extends BaseReportService
             $query->where('conversions.status', $request->status);
         }
 
-        $limit = $request->limit ?? 50;
-        $results = $query->orderBy('conversions.id', 'desc')->paginate($limit);
+        $results = $query->orderBy('conversions.id', 'desc')->get();
 
         // Convert UTC timestamps to user's configured timezone
-        $results->getCollection()->transform(function ($row) {
+        $results->transform(function ($row) {
             if (isset($row->conversion_time)) $row->conversion_time = $this->formatUtcToLocal($row->conversion_time);
             if (isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
             return $row;
