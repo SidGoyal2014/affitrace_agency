@@ -26,6 +26,7 @@ include $pathPrefix . '/includes/head.php';
                             <thead>
                                 <tr>
                                     <th>Offer</th>
+                                    <th>Advertiser</th>
                                     <th>Target Geo</th>
                                     <th>Revenue</th>
                                     <th>Payout</th>
@@ -69,6 +70,7 @@ include $pathPrefix . '/includes/head.php';
                         tbody.append(`
                             <tr>
                                 <td><strong>${offer.offer_name}</strong><div class="small text-muted">ID: ${offer.id}</div></td>
+                                <td>${offer.advertiser_name}</td>
                                 <td>${offer.target_country || 'Global'}</td>
                                 <td>${formatDecimal(offer.ad_pricing)} ${offer.currency}</td>
                                 <td>${formatDecimal(offer.aff_pricing)} ${offer.currency}</td>

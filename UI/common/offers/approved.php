@@ -30,6 +30,7 @@ include $pathPrefix . '/includes/head.php';
                             <thead>
                                 <tr>
                                     <th>Offer</th>
+                                    <th>Advertiser</th>
                                     <th>Target Geo</th>
                                     <th>Model</th>
                                     <th>Revenue</th>
@@ -75,6 +76,8 @@ include $pathPrefix . '/includes/head.php';
             try {
                 const response = await API.fetchWithAuth('<?php echo $user_type;?>/offer/approved');
                 const tbody = $('#offersTableBody');
+
+
                 tbody.empty();
 
                 if (response.offers && response.offers.length > 0) {
@@ -85,6 +88,7 @@ include $pathPrefix . '/includes/head.php';
                                     <strong>${offer.offer_name}</strong>
                                     <div class="small text-muted">ID: ${offer.id}</div>
                                 </td>
+                                <td>${offer.advertiser_name}</td>
                                 <td>${offer.target_country || 'Global'}</td>
                                 <td><span class="badge badge-info">${offer.name || offer.ad_model}</span></td>
                                 <td>${offer.ad_pricing} ${offer.currency}</td>

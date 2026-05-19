@@ -252,7 +252,8 @@ class AdminOfferService
     {
         $query = DB::table('offers')
             ->join('ad_models', DB::raw("CAST(NULLIF(offers.ad_model, '') AS BIGINT)"), '=', 'ad_models.id')
-            ->select('offers.*', 'ad_models.name');
+            ->leftJoin('users', DB::raw("CAST(NULLIF(offers.advertiser_id, '') AS BIGINT)"), '=', 'users.id')
+            ->select('offers.*', 'ad_models.name', 'users.name as advertiser_name', 'users.id as user_advertiser_id');
 
         if ($status == 'deleted') {
             $query->where('deleted_at', '!=', null);
