@@ -163,22 +163,8 @@ function url($path)
         });
     </script>
 
-    <!-- Right Side - Notifications Bell + User Menu -->
+    <!-- Right Side - User Menu -->
     <div class="navbar-right d-flex align-items-center">
-
-        <!-- Notifications Bell -->
-        <div class="nav-item mr-2">
-            <a class="nav-link position-relative" href="<?php echo $pathPrefix; ?>/notifications/sent_items.php"
-               title="Notifications" id="notif-bell-link">
-                <i class="fas fa-bell fa-fw"></i>
-                <span id="notif-nav-badge"
-                      style="display:none; position:absolute; top:2px; right:0;
-                             background:#e74a3b; color:#fff; border-radius:50%;
-                             width:18px; height:18px; font-size:0.65rem;
-                             line-height:18px; text-align:center; font-weight:700;">
-                </span>
-            </a>
-        </div>
 
         <div class="nav-item">
             <a class="user-menu nav-link" href="#" data-toggle="dropdown" id="userDropdown">

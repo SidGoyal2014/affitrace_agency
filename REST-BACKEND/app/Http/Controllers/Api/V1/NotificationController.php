@@ -95,15 +95,11 @@ class NotificationController extends Controller
     public function sentIndex(ListNotificationsRequest $request): JsonResponse
     {
         $agencyId = (string) $request->header('X-Agency-ID', '');
-        $perPage  = (int) $request->input('per_page', 15);
-        $perPage  = min($perPage, 100);
 
         $query = AgencyNotification::where('agency_id', $agencyId)
-            ->with('sender') 
+            ->with('sender')
             ->withCount('recipients')
             ->latest();
-
-
 
         if ($request->filled('category')) {
             $query->where('category', $request->input('category'));
@@ -113,7 +109,7 @@ class NotificationController extends Controller
             $query->where('type', $request->input('type'));
         }
 
-        if ($request->filled('from')) { 
+        if ($request->filled('from')) {
             $query->whereDate('created_at', '>=', $request->input('from'));
         }
 
@@ -121,23 +117,12 @@ class NotificationController extends Controller
             $query->whereDate('created_at', '<=', $request->input('to'));
         }
 
-        $paginator = $query->paginate($perPage);
-
+        $items = $query->get();
 
         return response()->json([
             'success' => true,
-            'data'    => NotificationResource::collection($paginator->items()),
-            'meta'    => [
-                'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-            ],
+            'data'    => NotificationResource::collection($items),
         ]);
-
-
-
-
     }
 
     /**

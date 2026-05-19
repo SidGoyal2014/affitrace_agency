@@ -87,32 +87,28 @@ include $pathPrefix . '/includes/head.php';
             <div class="card-modern">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h6 class="m-0 font-weight-bold">Sent Notifications</h6>
-                    <span class="text-muted small" id="total-count"></span>
                 </div>
-                <div class="card-body p-0">
-                    <!-- Loading State -->
-                    <div id="loading-state" class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status"></div>
-                        <div class="mt-2 text-muted small">Loading notifications…</div>
+
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="notif-table" class="table table-bordered table-hover mb-0" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Message</th>
+                                    <th>Type</th>
+                                    <th>Category</th>
+                                    <th>Priority</th>
+                                    <th>Sent At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
-
-                    <!-- Empty State -->
-                    <div id="empty-state" class="text-center py-5" style="display:none;">
-                        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">No notifications found.</p>
-                    </div>
-
-                    <!-- Notifications List -->
-                    <ul class="list-group list-group-flush" id="notifications-list" style="display:none;"></ul>
                 </div>
 
-                <!-- Pagination -->
-                <div class="card-footer d-flex justify-content-between align-items-center" id="pagination-wrapper" style="display:none!important;">
-                    <div class="small text-muted" id="pagination-info"></div>
-                    <nav>
-                        <ul class="pagination pagination-sm mb-0" id="pagination-controls"></ul>
-                    </nav>
-                </div>
+
             </div>
 
         </div>
@@ -144,26 +140,12 @@ include $pathPrefix . '/includes/head.php';
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
 
     <style>
-        /* ---- Notification item styles ---- */
-        .notif-item {
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid #e3e6f0;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-        .notif-item:hover { background: #f8f9fc; }
-        .notif-item.unread { background: #eef3ff; border-left: 4px solid #4e73df; }
-        .notif-item.unread .notif-title { font-weight: 700; }
-        .notif-item.read { border-left: 4px solid transparent; }
-        .notif-item .notif-title { font-size: 0.95rem; color: #333; }
-        .notif-item .notif-excerpt { font-size: 0.82rem; color: #6c757d; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%; }
-        .notif-meta { font-size: 0.78rem; color: #aaa; }
         .notif-type-badge { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; }
-        .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: #4e73df; display: inline-block; flex-shrink: 0; margin-top: 5px; }
-        /* ---- Priority colors ---- */
-        .priority-high { color: #e74a3b; }
+        .priority-high   { color: #e74a3b; }
         .priority-medium { color: #f6c23e; }
-        .priority-low { color: #1cc88a; }
+        .priority-low    { color: #1cc88a; }
+        .priority-normal { color: #858796; }
+        #notif-table td  { vertical-align: middle; }
     </style>
 
     <script>
@@ -172,29 +154,22 @@ include $pathPrefix . '/includes/head.php';
        API base: /api/v1/notifications/...
        TODO: Confirm exact route prefixes with backend team.
     ===================================================== */
+    
     (function() {
         'use strict';
 
-        let currentPage = 1;
-        let totalPages  = 1;
-        let pollTimer   = null;
+        let notifTable = null;
+        const rowDataMap = {};
 
-        const LIST = document.getElementById('notifications-list');
-        const EMPTY = document.getElementById('empty-state');
-        const LOADING = document.getElementById('loading-state');
-        const PAGINATION_WRAPPER = document.getElementById('pagination-wrapper');
-        const PAGINATION_CONTROLS = document.getElementById('pagination-controls');
-        const PAGINATION_INFO = document.getElementById('pagination-info');
-        const TOTAL_LABEL = document.getElementById('total-count');
-        const UNREAD_BADGE = document.getElementById('unread-badge');
-
-        // ---- Helper: type badge colour ----
+        // ---- Helpers ----
         const TYPE_CLASSES = {
-            info: 'badge-info',
-            warning: 'badge-warning',
-            alert: 'badge-danger',
-            announcement: 'badge-primary',
-            system: 'badge-secondary'
+            notification: 'badge-primary',
+            news:         'badge-info',
+            alert:        'badge-danger',
+            broadcast:    'badge-secondary',
+            info:         'badge-info',
+            warning:      'badge-warning',
+            system:       'badge-secondary'
         };
 
         function typeBadge(type) {
@@ -208,168 +183,76 @@ include $pathPrefix . '/includes/head.php';
             return d.innerHTML;
         }
 
-        function timeAgo(dateStr) {
-            if (!dateStr) return '';
-            const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-            if (diff < 60)    return `${diff}s ago`;
-            if (diff < 3600)  return `${Math.floor(diff/60)}m ago`;
-            if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
-            return new Date(dateStr).toLocaleDateString();
-        }
+        // ---- Load data and redraw table ----
+        async function loadNotifications() {
 
-        // ---- Load notifications from API ----
-        async function loadNotifications(page) {
-            LOADING.style.display = '';
-            LIST.style.display    = 'none';
-            EMPTY.style.display   = 'none';
-            PAGINATION_WRAPPER.style.display = 'none';
-            TOTAL_LABEL.textContent = '';
+            notifTable.settings()[0].oLanguage.sEmptyTable =
+                '<div class="text-center py-3"><i class="fas fa-spinner fa-spin text-primary mr-1"></i> Loading notifications…</div>';
+            notifTable.clear().draw();
 
-            const params = new URLSearchParams({
-                page: page || 1,
-                per_page: 20,
-            });
+            const params = new URLSearchParams();
 
             const type     = document.getElementById('filter_type').value;
             const category = document.getElementById('filter_category').value;
-            //const read     = document.getElementById('filter_read').value;
             const from     = document.getElementById('filter_from').value;
             const to       = document.getElementById('filter_to').value;
 
             if (type)     params.set('type', type);
             if (category) params.set('category', category);
-            //if (read !== '') params.set('is_read', read);
-            if (from) params.set('from', from);
-            if (to)   params.set('to', to);
+            if (from)     params.set('from', from);
+            if (to)       params.set('to', to);
 
             try {
-                // TODO: Confirm endpoint: v1/notifications/inbox
-                const res = await API.fetchWithAuth(`admin/v1/notifications/sent?${params.toString()}`);
-                LOADING.style.display = 'none';
-
+                const res   = await API.fetchWithAuth(`admin/v1/notifications/sent?${params.toString()}`);
                 const items = res.data || [];
-                totalPages  = res.meta?.last_page || 1;
-                currentPage = res.meta?.current_page || 1;
-                const total = res.meta?.total || 0;
 
-                if (items.length === 0) {
-                    EMPTY.style.display = '';
-                    return;
-                }
+                notifTable.settings()[0].oLanguage.sEmptyTable = 'No notifications found.';
 
-                LIST.innerHTML = '';
-                items.forEach(n => {
-                    const isUnread = !n.is_read;
-                    const li = document.createElement('li');
-                    //li.className = `notif-item list-group-item ${isUnread ? 'unread' : 'read'}`;
-                    li.className = 'notif-item list-group-item';
-                    li.dataset.id       = n.id;
-                    //li.dataset.read     = n.is_read ? '1' : '0';
-                    li.dataset.title    = n.title    || '';
-                    li.dataset.body     = n.body     || '';
-                    li.dataset.type     = n.type     || '';
-                    li.dataset.category = n.category || '';
-                    li.dataset.sentAt   = n.created_at || '';
+                // Cache row data for modal lookup
+                items.forEach(n => { rowDataMap[n.id] = n; });
 
+                const rows = items.map(n => [
+                    escHtml(n.title || '(No title)'),
+                    escHtml((n.body || '').substring(0, 80) + ((n.body || '').length > 80 ? '…' : '')),
+                    typeBadge(n.type),
+                    n.category ? `<span class="badge badge-light text-muted">${escHtml(n.category)}</span>` : '',
+                    n.priority ? `<span class="small priority-${n.priority}"><i class="fas fa-flag mr-1"></i>${escHtml(n.priority)}</span>` : '',
+                    n.created_at ? new Date(n.created_at).toLocaleString() : '',
+                    `<button class="btn btn-sm btn-outline-primary btn-view-notif" data-id="${parseInt(n.id, 10)}"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-sm btn-outline-danger btn-delete-notif" data-id="${parseInt(n.id, 10)}" title="Delete"><i class="fas fa-trash"></i></button>`
+                ]);
 
-                    li.innerHTML = `
-                        <div class="d-flex align-items-start">
-
-                            <div class="flex-grow-1 overflow-hidden">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="notif-title">${escHtml(n.title || '(No title)')}</span>
-                                    <span class="notif-meta ml-2 text-nowrap">
-                                        ${typeBadge(n.type)}
-                                        <span class="ml-1">${timeAgo(n.created_at)}</span>
-                                    </span>
-                                </div>
-                                <div class="notif-excerpt">${escHtml(n.body || '')}</div>
-                                <div class="mt-1">
-                                    <span class="badge badge-light text-muted small">${escHtml(n.category || '')}</span>
-                                    ${n.priority ? `<span class="small priority-${n.priority} ml-1"><i class="fas fa-flag"></i> ${escHtml(n.priority)}</span>` : ''}
-                                </div>
-                            </div>
-                        </div>
-
-
-
-
-
-                    `;
-
-                    li.addEventListener('click', () => openDetail(li));
-                    LIST.appendChild(li);
-                });
-
-                LIST.style.display = '';
-                TOTAL_LABEL.textContent = `${total} notification${total !== 1 ? 's' : ''}`;
-                renderPagination(currentPage, totalPages);
+                notifTable.clear().rows.add(rows).draw();
 
             } catch (err) {
-                LOADING.style.display = 'none';
-                EMPTY.innerHTML = `<i class="fas fa-exclamation-triangle fa-2x text-danger mb-2"></i><p class="text-danger small">${escHtml(err.message || 'Failed to load notifications')}</p>`;
-                EMPTY.style.display = '';
+                notifTable.settings()[0].oLanguage.sEmptyTable =
+                    '<span class="text-danger"><i class="fas fa-exclamation-triangle mr-1"></i>Failed to load notifications.</span>';
+                notifTable.clear().draw();
+
+                console.error('Failed to load notifications', err);
             }
         }
 
-        // ---- Open detail modal & mark as read ----
-        async function openDetail(li) {
-            const id       = li.dataset.id;
-            //const wasUnread = li.dataset.read === '0';
+        // ---- Open detail modal ----
+        function openDetail(id) {
+            const n = rowDataMap[id];
+            if (!n) return;
 
-            document.getElementById('notifDetailTitle').textContent = li.dataset.title || 'Notification';
-            document.getElementById('notifDetailBody').textContent  = li.dataset.body  || '';
+            document.getElementById('notifDetailTitle').textContent = n.title || 'Notification';
+            document.getElementById('notifDetailBody').textContent  = n.body  || '';
 
-            const priority = li.dataset.priority ? `<span class="badge badge-secondary mr-1">${escHtml(li.dataset.priority)}</span>` : '';
-            const category = li.dataset.category ? `<span class="badge badge-light text-muted mr-1">${escHtml(li.dataset.category)}</span>` : '';
-            const sentAt   = li.dataset.sentAt    ? `<span class="small text-muted">${new Date(li.dataset.sentAt).toLocaleString()}</span>` : '';
-            document.getElementById('notifDetailMeta').innerHTML = `${typeBadge(li.dataset.type)} ${priority} ${category} ${sentAt}`;
+            const priority = n.priority ? `<span class="badge badge-secondary mr-1">${escHtml(n.priority)}</span>` : '';
+            const category = n.category ? `<span class="badge badge-light text-muted mr-1">${escHtml(n.category)}</span>` : '';
+            const sentAt   = n.created_at ? `<span class="small text-muted">${new Date(n.created_at).toLocaleString()}</span>` : '';
+            document.getElementById('notifDetailMeta').innerHTML = `${typeBadge(n.type)} ${priority} ${category} ${sentAt}`;
 
             $('#notifDetailModal').modal('show');
-
-        }
-
-        // ---- Pagination ----
-        function renderPagination(current, total) {
-            PAGINATION_CONTROLS.innerHTML = '';
-            PAGINATION_INFO.textContent = `Page ${current} of ${total}`;
-
-            if (total <= 1) {
-                PAGINATION_WRAPPER.style.display = 'none';
-                return;
-            }
-            PAGINATION_WRAPPER.style.display = '';
-
-            const mkLi = (label, page, disabled, active) => {
-                const li = document.createElement('li');
-                li.className = `page-item${disabled ? ' disabled' : ''}${active ? ' active' : ''}`;
-                li.innerHTML = `<a class="page-link" href="#">${label}</a>`;
-                if (!disabled && !active) {
-                    li.querySelector('a').addEventListener('click', e => {
-                        e.preventDefault();
-                        loadNotifications(page);
-                    });
-                }
-                return li;
-            };
-
-            PAGINATION_CONTROLS.appendChild(mkLi('&laquo;', current - 1, current === 1, false));
-
-            // Show at most 5 page links around current
-            const start = Math.max(1, current - 2);
-            const end   = Math.min(total, current + 2);
-            for (let p = start; p <= end; p++) {
-                PAGINATION_CONTROLS.appendChild(mkLi(p, p, false, p === current));
-            }
-
-            PAGINATION_CONTROLS.appendChild(mkLi('&raquo;', current + 1, current === total, false));
         }
 
         // ---- Filter form ----
         document.getElementById('filterForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            currentPage = 1;
-            loadNotifications(1);
+            loadNotifications();
         });
 
         document.getElementById('clearFiltersBtn').addEventListener('click', function() {
@@ -377,8 +260,7 @@ include $pathPrefix . '/includes/head.php';
             document.getElementById('filter_category').value = '';
             document.getElementById('filter_from').value     = '';
             document.getElementById('filter_to').value       = '';
-            currentPage = 1;
-            loadNotifications(1);
+            loadNotifications();
         });
 
         // ---- Collapse chevron animation ----
@@ -399,7 +281,6 @@ include $pathPrefix . '/includes/head.php';
             const user = JSON.parse(localStorage.getItem('user') || '{}');
             if (user.name) $('.user-name').text(user.name);
 
-            // Show Send button for admins and users with notification create permission
             if (user.user_type === 'admin') {
                 document.getElementById('sendNotifBtn').style.display = '';
             } else {
@@ -409,8 +290,53 @@ include $pathPrefix . '/includes/head.php';
                 }
             }
 
-            await loadNotifications(1);
+            // Initialize DataTable
+            notifTable = $('#notif-table').DataTable({
+                pageLength: 10,
+                ordering: true,
+                data: [],
+                columns: [
+                    { title: 'Title' },
+                    { title: 'Message', orderable: false },
+                    { title: 'Type'},
+                    { title: 'Category'},
+                    { title: 'Priority'},
+                    { title: 'Sent At' },
+                    { title: 'Action',   orderable: false }
+                ],
+                language: {
+                    emptyTable: ''
+                }
+            });
 
+            // Delegated click handler for view buttons
+            $('#notif-table tbody').on('click', '.btn-view-notif', function() {
+                openDetail($(this).data('id'));
+            });
+
+            // Delegated click handler for delete buttons
+            $('#notif-table tbody').on('click', '.btn-delete-notif', function() {
+                const id  = $(this).data('id');
+                const row = $(this).closest('tr');
+
+                if (!confirm('Are you sure you want to delete this notification? This action cannot be undone.')) {
+                    return;
+                }
+
+                const $btn = $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+                API.fetchWithAuth(`admin/v1/notifications/sent/${id}`, { method: 'DELETE' })
+                    .then(() => {
+                        delete rowDataMap[id];
+                        notifTable.row(row).remove().draw(false);
+                    })
+                    .catch(err => {
+                        $btn.prop('disabled', false).html('<i class="fas fa-trash"></i>');
+                        alert('Failed to delete notification: ' + (err.message || 'Unknown error'));
+                    });
+            });
+
+            await loadNotifications();
         });
 
     })();
