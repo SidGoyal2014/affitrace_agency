@@ -128,7 +128,16 @@ function url($path)
                 <a class="dropdown-item" href="<?php echo url('payments/transactions.php'); ?>">Transactions</a>
             </div>
         </li>
-
+        <li class="nav-item <?php echo isActiveNav('tools', $activePage); ?> require-permission" data-module="tools">
+            <a class="nav-link" href="#" data-toggle="dropdown">
+                <i class="fas fa-cog"></i>
+                Tools
+                <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
+            </a>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" href="<?php echo url('redirect_checker/index.php'); ?>">Redirect Checker</a>
+            </div>
+        </li>
         <!-- User Management Dropdown -->
         <li class="nav-item <?php echo isActiveNav('users', $activePage); ?> require-permission" data-module="role_management">
             <a class="nav-link" href="#" data-toggle="dropdown">

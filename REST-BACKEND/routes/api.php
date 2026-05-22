@@ -165,6 +165,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('reports/export/{id}/status', [\App\Http\Controllers\Admin\ReportExportController::class, 'status']);
         Route::get('reports/export/{id}/download', [\App\Http\Controllers\Admin\ReportExportController::class, 'download']);
 
+        // ─── Redirect Checker ─────────────────────────────
+        Route::get('redirect-checker/devices', [App\Http\Controllers\Admin\RedirectCheckerController::class, 'devices']);
+        Route::get('redirect-checker', [App\Http\Controllers\Admin\RedirectCheckerController::class, 'index']);
+        Route::post('redirect-checker/check', [App\Http\Controllers\Admin\RedirectCheckerController::class, 'check']);
+        Route::post('redirect-checker/test-proxy', [App\Http\Controllers\Admin\RedirectCheckerController::class, 'testProxy']);
+        Route::get('redirect-checker/{id}', [App\Http\Controllers\Admin\RedirectCheckerController::class, 'show']);
+        Route::delete('redirect-checker/{id}', [App\Http\Controllers\Admin\RedirectCheckerController::class, 'destroy']);
+
         // ─── Role Management ──────────────────────────────
         Route::get('roles', [App\Http\Controllers\Admin\RoleController::class, 'index']);
         Route::post('roles', [App\Http\Controllers\Admin\RoleController::class, 'store']);
