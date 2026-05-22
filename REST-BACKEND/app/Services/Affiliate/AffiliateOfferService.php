@@ -20,12 +20,7 @@ class AffiliateOfferService
                     ->where('oa.affiliate_id', '=', $affiliateId);
             })
             ->select(
-                'offers.id',
-                'offers.offer_name',
-                'offers.offer_desc',
-                'offers.offer_status',
-                'offers.payout_usd',
-                'offers.aff_pricing',
+                'offers.*',
                 'categories.category_name',
                 'ad_models.name as model_name',
                 'oa.request_status',

@@ -19,24 +19,28 @@ include $pathPrefix . '/includes/head.php';
             <div class="card-modern mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h6 class="m-0 font-weight-bold">Available Offers</h6>
-                    <span class="badge badge-primary" id="offerCount">0</span>
+                    <!--<span class="badge badge-primary" id="offerCount">0</span>-->
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered" id="browseOffersTable" width="100%" cellspacing="0">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
                                     <th>Offer Name</th>
                                     <th>Category</th>
+                                    <th>Model</th>
                                     <th>Payout</th>
+                                    <th>CAP</th>
+                                    <th>City</th>
+                                    <th>State</th>
+                                    <th>Country</th>
                                     <th>Request Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted">Loading offers...</td>
+                                    <td colspan="10" class="text-center text-muted">Loading offers...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -84,7 +88,7 @@ include $pathPrefix . '/includes/head.php';
             }
 
             if (status === 'Pending') {
-                return '<button class="btn btn-warning btn-sm" disabled>Pending Approval</button>';
+                return '<button class="badge badge-warning" disabled>Pending Approval</button>';
             }
 
             const btnText = status === 'Rejected' ? 'Request Again' : 'Request Access';
@@ -99,10 +103,14 @@ include $pathPrefix . '/includes/head.php';
                 $('#offerCount').text(offers.length);
 
                 const rows = offers.map(offer => [
-                    offer.id,
                     offer.offer_name || 'N/A',
                     offer.category_name || 'General',
-                    '$' + (offer.payout_usd || offer.aff_pricing || '0.00'),
+                    offer.model_name,
+                    offer.currency +" " +(offer.aff_pricing || '0.00'),
+                    " Clicks: " + (offer.clicks_cap || 'N/A') +" Conversions: " +(offer.conversions_cap || 'N/A'),
+                    offer.target_city || 'N/A',
+                    offer.target_state || 'N/A',
+                    offer.target_country || 'N/A',
                     statusBadge(offer.request_status),
                     actionButton(offer)
                 ]);
