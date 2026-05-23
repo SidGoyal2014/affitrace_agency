@@ -99,7 +99,36 @@ class TrackingController extends Controller
 
 	}//sd
 
-	// All private methods removed as they are moved to Service
+	
+	/**
+	 * Resolve a short-link slug and process the click.
+	 *
+	 * @unauthenticated
+	 * @urlParam slug string required The short link slug. Example: aBcD1234
+	 */
+	public function resolveSlug(string $slug, Request $request)
+	{
+		$oa = \App\Models\OfferAffiliate::where('slug', $slug)
+				->where('request_status', 'Accepted')
+				->first();
+
+		if (!$oa) {
+			return redirect('verify');
+		}
+
+		$result = $this->trackingService->processClick($oa->offer_id, $oa->affiliate_id, $request);
+
+		if (isset($result['type'])) {
+			if ($result['type'] === 'redirect') {
+				return redirect($result['url']);
+			}
+			if ($result['type'] === 'error') {
+				return false;
+			}
+		}
+
+		return redirect('verify');
+	}
 
 
 }//TrackingController

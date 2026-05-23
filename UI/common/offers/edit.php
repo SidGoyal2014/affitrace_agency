@@ -545,6 +545,40 @@ include $pathPrefix . '/includes/head.php';
         </div>
     </main>
 
+    <!-- ── Custom Domain Assignment Modal ──────────────────────────── -->
+    <div class="modal fade" id="domainModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-globe mr-2 text-primary"></i>Assign Custom Domain
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="domainModalAlert" class="d-none"></div>
+                    <div class="form-group">
+                        <label>Custom Domain</label>
+                        <select id="domainSelect" class="form-control">
+                            <option value="">&#8212; Use default domain (main URL) &#8212;</option>
+                        </select>
+                        <small class="text-muted">Only verified and active domains are shown.</small>
+                    </div>
+                    <div id="domainPreview" class="alert alert-info d-none mt-3" style="word-break:break-all;">
+                        New tracking URL: <strong id="domainPreviewUrl"></strong>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveDomainBtn">
+                        <i class="fas fa-save mr-1"></i>Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <?php include $pathPrefix . '/includes/footer.php'; ?>
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
@@ -553,6 +587,8 @@ include $pathPrefix . '/includes/head.php';
         const urlParams = new URLSearchParams(window.location.search);
         const offerId = urlParams.get('id');
         let currentBaseUrl = "";
+        let currentOaId    = null;
+        let verifiedDomains = [];
 
         $(document).ready(async function () {
             if (!API.isAuthenticated()) {
@@ -653,6 +689,53 @@ include $pathPrefix . '/includes/head.php';
                 }, 500);
             }
 
+            // Domain assignment modal — preview URL on dropdown change
+            $('#domainSelect').on('change', function () {
+                const selectedId = $(this).val();
+                const selected   = verifiedDomains.find(d => String(d.id) === String(selectedId));
+                if (selected) {
+                    $('#domainPreviewUrl').text('https://' + selected.domain + '/xxxxxxxx');
+                    $('#domainPreview').removeClass('d-none');
+                } else {
+                    $('#domainPreview').addClass('d-none');
+                }
+            });
+
+            // Domain assignment modal — save button
+            $('#saveDomainBtn').on('click', async function () {
+                if (!currentOaId) return;
+                const domainIdRaw = $('#domainSelect').val();
+                const domainId    = domainIdRaw ? parseInt(domainIdRaw) : null;
+                const btn         = $(this);
+
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Saving...');
+                $('#domainModalAlert').addClass('d-none').removeClass('alert alert-success alert-danger');
+
+                try {
+                    const response = await API.fetchWithAuth('admin/offer/assign-custom-domain', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            offer_affiliate_id: currentOaId,
+                            custom_domain_id:   domainId
+                        })
+                    });
+
+                    if (response.status === 1) {
+                        $('#domainModal').modal('hide');
+                        Toast.success('Domain Updated', 'Tracking URL: ' + response.tracking_url);
+                        await loadOfferData();
+                    } else {
+                        const alertEl = $('#domainModalAlert');
+                        alertEl.removeClass('d-none').addClass('alert alert-danger').text(response.error || 'Failed to update domain.');
+                    }
+                } catch (e) {
+                    const alertEl = $('#domainModalAlert');
+                    alertEl.removeClass('d-none').addClass('alert alert-danger').text(e.message);
+                } finally {
+                    btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i>Save');
+                }
+            });
 
         });
 
@@ -793,8 +876,12 @@ include $pathPrefix . '/includes/head.php';
 
                 if (oa && oa.request_status !== 'Unassigned') {
                     status = `<span class="badge badge-${oa.request_status === 'Accepted' ? 'success' : 'warning'}">${oa.request_status}</span>`;
+                    const domainIcon = oa.custom_domain_id
+                        ? '<i class="fas fa-globe text-success mr-1" title="Custom domain applied"></i>'
+                        : '';
                     actions = `
                         <button onclick="showTrackingUrl('${oa.tracking_url}')" class="btn btn-sm btn-info mr-1">URL</button>
+                        <button onclick="openDomainModal(${oa.id}, ${oa.custom_domain_id || 'null'})" class="btn btn-sm btn-outline-primary mr-1" title="Assign custom domain">${domainIcon}Domain</button>
                         <button onclick="unassignOffer(${offer.id}, ${aff.id})" class="btn btn-sm btn-outline-danger">Unassign</button>
                     `;
                 }
@@ -997,6 +1084,40 @@ include $pathPrefix . '/includes/head.php';
                 }
                 else Toast.error('Unassign Failed', res.error || 'Failed to unassign affiliate');
             } catch (e) { Toast.error('Error', e.message); }
+        }
+
+        async function openDomainModal(oaId, currentDomainId) {
+            currentOaId = oaId;
+
+            // Load verified+active domains once per page session; force reload if empty
+            if (verifiedDomains.length === 0) {
+                try {
+                    const res = await API.fetchWithAuth('admin/custom-domain/list');
+                    verifiedDomains = (res.domains || []).filter(d => d.is_verified && d.is_active);
+                } catch (e) {
+                    Toast.error('Error', 'Could not load custom domains: ' + e.message);
+                    return;
+                }
+            }
+
+            const select = $('#domainSelect').empty();
+            select.append('<option value="">&#8212; Use default domain (main URL) &#8212;</option>');
+            verifiedDomains.forEach(function (d) {
+                const selected = (currentDomainId && String(d.id) === String(currentDomainId)) ? 'selected' : '';
+                select.append('<option value="' + d.id + '" ' + selected + '>' + d.domain + '</option>');
+            });
+
+            // Show preview if a domain is already selected
+            const preselected = verifiedDomains.find(d => String(d.id) === String(currentDomainId));
+            if (preselected) {
+                $('#domainPreviewUrl').text('https://' + preselected.domain + '/xxxxxxxx');
+                $('#domainPreview').removeClass('d-none');
+            } else {
+                $('#domainPreview').addClass('d-none');
+            }
+
+            $('#domainModalAlert').addClass('d-none').removeClass('alert alert-success alert-danger');
+            $('#domainModal').modal('show');
         }
 
         function showTrackingUrl(url) {

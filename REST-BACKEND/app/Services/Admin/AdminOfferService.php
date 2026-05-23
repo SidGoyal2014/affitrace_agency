@@ -320,23 +320,32 @@ class AdminOfferService
 
     public function assignOffer($oid, $aid)
     {
-        $turl = \App\Utils\UrlHelper::getBaseUrl() . "/offer/gourl/" . $oid . "/" . $aid . "/?&tid={tid}";
+        $slug = $this->generateUniqueSlug();
+        $turl = \App\Utils\UrlHelper::buildShortLinkUrl(null, $slug);
+
         $query = OfferAffiliate::where('offer_id', $oid)->where('affiliate_id', $aid);
 
         if ($query->exists()) {
-            $query->update(['request_status' => 'Accepted', 'request_made' => 'N', 'tracking_url' => $turl]);
+            $query->update([
+                'request_status' => 'Accepted',
+                'request_made'   => 'N',
+                'tracking_url'   => $turl,
+                'slug'           => $slug,
+            ]);
         } else {
             $oa = new OfferAffiliate();
-            $oa->offer_id = $oid;
-            $oa->affiliate_id = $aid;
-            $oa->tracking_url = $turl;
-            $oa->request_made = 'N';
-            $oa->request_status = 'Accepted';
+            $oa->offer_id        = $oid;
+            $oa->affiliate_id    = $aid;
+            $oa->tracking_url    = $turl;
+            $oa->slug            = $slug;
+            $oa->request_made    = 'N';
+            $oa->request_status  = 'Accepted';
             $oa->save();
         }
 
-        return ['status' => 1, 'msg' => 'Offer assigned successfully', 'code' => 200];
+        return ['status' => 1, 'msg' => 'Offer assigned successfully', 'tracking_url' => $turl, 'code' => 200];
     }
+
 
     public function rejectOffer($oid, $aid)
     {
@@ -477,4 +486,53 @@ class AdminOfferService
             return ['status' => 0, 'error' => 'Failed: ' . $e->getMessage(), 'code' => 500];
         }
     }
+
+    public function updateOfferAffiliateDomain(int $oaId, ?int $domainId): array
+    {
+        $oa = OfferAffiliate::find($oaId);
+
+        if (!$oa) {
+            return ['status' => 0, 'error' => 'Link not found.', 'code' => 404];
+        }
+
+        if (!$oa->slug) {
+            // Generate slug for legacy records that were assigned before this feature
+            $oa->slug = $this->generateUniqueSlug();
+        }
+
+        if ($domainId !== null) {
+            $domain = \App\Models\CustomDomain::find($domainId);
+
+            if (!$domain) {
+                return ['status' => 0, 'error' => 'Custom domain not found.', 'code' => 404];
+            }
+            if (!$domain->is_verified) {
+                return ['status' => 0, 'error' => 'Domain is not verified yet.', 'code' => 422];
+            }
+            if (!$domain->is_active) {
+                return ['status' => 0, 'error' => 'Domain is inactive.', 'code' => 422];
+            }
+
+            $oa->custom_domain_id = $domainId;
+            $oa->tracking_url     = \App\Utils\UrlHelper::buildShortLinkUrl($domain->domain, $oa->slug);
+        } else {
+            // Remove custom domain — revert to base URL
+            $oa->custom_domain_id = null;
+            $oa->tracking_url     = \App\Utils\UrlHelper::buildShortLinkUrl(null, $oa->slug);
+        }
+
+        $oa->save();
+
+        return ['status' => 1, 'msg' => 'Domain updated.', 'tracking_url' => $oa->tracking_url, 'code' => 200];
+    }
+
+    private function generateUniqueSlug(): string
+    {
+        do {
+            $slug = \Illuminate\Support\Str::random(8);
+        } while (\App\Models\OfferAffiliate::where('slug', $slug)->exists());
+
+        return $slug;
+    }
+
 }

@@ -15,4 +15,18 @@ class UrlHelper
         // 2. Fallback to standard Laravel APP_URL
         return rtrim(config('app.url'), '/');
     }
+
+    /**
+     * Build a short link URL.
+     * If a verified+active custom domain is supplied, use it; otherwise use the base URL.
+     */
+    public static function buildShortLinkUrl(?string $customDomain, string $slug): string
+    {
+        if ($customDomain) {
+            return 'https://' . rtrim($customDomain, '/') . '/' . $slug;
+        }
+
+        return self::getBaseUrl() . '/' . $slug;
+    }    
+
 }

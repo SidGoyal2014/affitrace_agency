@@ -201,6 +201,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::put('sent/{id}',    [App\Http\Controllers\Api\V1\NotificationController::class, 'sentUpdate']);
             Route::delete('sent/{id}', [App\Http\Controllers\Api\V1\NotificationController::class, 'sentDestroy']);
         });
+
+        // Custom Domains
+        Route::get('custom-domain/list',          [App\Http\Controllers\Admin\CustomDomainController::class, 'list']);
+        Route::post('custom-domain/add',          [App\Http\Controllers\Admin\CustomDomainController::class, 'add']);
+        Route::post('custom-domain/{id}/verify',  [App\Http\Controllers\Admin\CustomDomainController::class, 'verify']);
+        Route::patch('custom-domain/{id}/toggle', [App\Http\Controllers\Admin\CustomDomainController::class, 'toggle']);
+        Route::delete('custom-domain/{id}',       [App\Http\Controllers\Admin\CustomDomainController::class, 'destroy']);
+        Route::post('offer/assign-custom-domain', [App\Http\Controllers\Admin\CustomDomainController::class, 'assignDomainToLink']);
+
+
+
     });
 
     // Affiliate Routes

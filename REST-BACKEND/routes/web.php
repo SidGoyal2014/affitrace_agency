@@ -31,6 +31,9 @@ Route::get('verify', [WebsiteController::class, 'verify']);
 Route::get('cap/clicks-reached', [WebsiteController::class, 'clicks_cap_reached'])->name('cap.clicks.reached');
 Route::get('cap/conversions-reached', [WebsiteController::class, 'conversions_cap_reached'])->name('cap.conversions.reached');
 
+Route::middleware('api.tenant')->get('/{slug}', [TrackingController::class, 'resolveSlug'])
+     ->where('slug', '[A-Za-z0-9]{6,16}'); 
+
 // Fallback for non-existent web routes?
 // Route::fallback(function () {
 //     return response()->json(['message' => 'Not Found'], 404);
