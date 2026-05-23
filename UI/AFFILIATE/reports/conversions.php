@@ -173,7 +173,7 @@ include $pathPrefix . '/includes/head.php';
             }
 
             rows.forEach(row => {
-                const dateStr = row.conversion_time ? new Date(row.conversion_time).toLocaleString() : new Date(row.created_at).toLocaleString();
+                const dateStr = row.conversion_time || row.created_at || '-';
                 const tr = `
                     <tr>
                         <td>${row.tid || row.id || '-'}</td>

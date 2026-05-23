@@ -52,7 +52,8 @@ class AdminTransactionService
                 $objSSD->save();
 
                 DB::commit();
-                return ['success' => true, 'code' => 200]; // Assuming no content needed, original returns nothing explicit on success?
+                return ['success' => true, 'code' => 200]; 
+                // Assuming no content needed, original returns nothing explicit on success?
                 // Original: if($objSub->id > 0) { ... DB::commit(); } else { return 500 }
                 // Ah, original method save_user_subscription didn't return json on success path? It just finished.
                 // Wait, it says "It is called from main parent website", likely expecting status code.

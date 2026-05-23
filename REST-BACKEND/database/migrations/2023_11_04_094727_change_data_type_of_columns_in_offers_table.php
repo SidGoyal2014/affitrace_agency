@@ -13,8 +13,13 @@ return new class extends Migration
     {
         Schema::table('offers', function (Blueprint $table) {
 
-            $table->time('daily_start_time')->change();
-            $table->time('daily_stop_time')->change();
+            if (\Illuminate\Support\Facades\DB::connection()->getDriverName() === 'pgsql') {
+                \Illuminate\Support\Facades\DB::statement('ALTER TABLE offers ALTER COLUMN daily_start_time TYPE TIME(0) WITHOUT TIME ZONE USING daily_start_time::time without time zone');
+                \Illuminate\Support\Facades\DB::statement('ALTER TABLE offers ALTER COLUMN daily_stop_time TYPE TIME(0) WITHOUT TIME ZONE USING daily_stop_time::time without time zone');
+            } else {
+                $table->time('daily_start_time')->change();
+                $table->time('daily_stop_time')->change();
+            }
 
         });
     }

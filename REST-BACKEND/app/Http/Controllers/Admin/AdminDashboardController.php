@@ -44,4 +44,10 @@ class AdminDashboardController extends Controller
 		$result = $this->dashboardService->rejectOfferAssignRequest($oaid);
 		return response()->json($result);
 	}
+
+	public function approve_offer_assign_requests($oaid)
+	{
+		$result = $this->dashboardService->approveOfferAssignRequest($oaid);
+		return response()->json($result, $result['code'] ?? 200);
+	}
 }

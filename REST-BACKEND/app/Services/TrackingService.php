@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use App\Models\Offer;
 use App\Models\OfferTracking;
 use App\Models\Conversion;
@@ -41,27 +42,44 @@ class TrackingService
 
         $offer = $offers[0];
 
-        \Log::info("Offer: " . json_encode($offer));
+        Log::info("Offer: " . json_encode($offer));
 
         // User Data
         $arrBrowserData = $this->getBrowswerData();
         $client_ip = $this->get_client_ip(TRUE);
         $arrLocation = $this->ip_info("location", $client_ip);
 
-        \Log::info("Location: " . json_encode($arrLocation));
+        Log::info("Location: " . json_encode($arrLocation));
 
         // Get user country
         $visitor_country = strtoupper($arrLocation['country']);
 
         // Check Click Limit
         if ($this->get_total_clicks() >= $this->get_settings("num_clicks")) {
-            \Log::info("Clicks not saved as maximum allowed limit as per purchased plan already reached");
+            Log::info("Clicks not saved as maximum allowed limit as per purchased plan already reached");
             return ['type' => 'redirect', 'url' => 'verify'];
+        }
+
+        // Per-offer clicks cap enforcement
+        if (!is_null($offer->clicks_cap)) {
+            $currentClicks = DB::table('offer_trackings')->where('offer_id', $oid)->count();
+            if ($currentClicks >= $offer->clicks_cap) {
+                // Record cap reached timestamp and reason on first hit only
+                if (is_null($offer->cap_reached_at)) {
+                    DB::table('offers')->where('id', $oid)->update([
+                        'cap_reached_at'     => now(),
+                        'cap_reached_reason' => 'clicks',
+                    ]);
+                    Cache::forget("offer:{$oid}");
+                }
+                Log::info("Offer {$oid} clicks cap ({$offer->clicks_cap}) reached. Blocking click.");
+                return ['type' => 'redirect', 'url' => route('cap.clicks.reached')];
+            }
         }
 
         $response = $this->is_matching_target($offer, $payoutRule, $arrBrowserData, $arrLocation);
 
-        \Log::info('' . json_encode($response));
+        Log::info('' . json_encode($response));
 
         if ($response) {
 
@@ -108,26 +126,62 @@ class TrackingService
         // Find the original click
         $click = OfferTracking::where('tid', $request->aff_click_id)->first();
 
+        Log::info("Click : ".$click);
+
         if (!$click) {
             $resp['message'] = 'Click not found for: ' . $request->aff_click_id;
             return $resp;
+        }
+
+        // Per-offer conversions cap enforcement (count only approved conversions)
+        $postbackOffer = Offer::find($click->offer_id);
+        if ($postbackOffer && !is_null($postbackOffer->conversions_cap)) {
+            $approvedCount = Conversion::where('offer_id', $click->offer_id)
+                ->where('status', 'approved')
+                ->count();
+            if ($approvedCount >= $postbackOffer->conversions_cap) {
+                // Record cap reached timestamp and reason on first hit only
+                if (is_null($postbackOffer->cap_reached_at)) {
+                    $postbackOffer->cap_reached_at     = now();
+                    $postbackOffer->cap_reached_reason = 'conversions';
+                    $postbackOffer->save();
+                }
+                Log::info("Offer {$click->offer_id} conversions cap ({$postbackOffer->conversions_cap}) reached. Blocking postback.");
+                $resp['message'] = 'conversions_cap_reached';
+                $resp['redirect'] = route('cap.conversions.reached');
+                return $resp;
+            }
         }
 
         // Get browser/device data
         $arrBrowserData = $this->getBrowswerData();
         $device_type = ucfirst($arrBrowserData['device_type']);
 
-        // Check for payout rules if event_id provided
-        $payoutRule = [];
-        if (isset($request->event_id) && $request->event_id > 0) {
+        // Validate event_id token when provided and resolve against this offer.
+        $eventToken = $request->event_id;
+        $offerEvent = null;
+
+        if (isset($eventToken) && $eventToken !== '') {
+            if (!is_string($eventToken) || !preg_match('/^[A-Za-z0-9_]+$/', $eventToken)) {
+                $resp['message'] = 'Invalid event_id format. Only letters, numbers, and underscore are allowed.';
+                return $resp;
+            }
+
             $arr_valid_offer_events = $this->get_valid_offer_events($click->offer_id);
 
-            if (!in_array($request->event_id, $arr_valid_offer_events)) {
+            if (!in_array($eventToken, $arr_valid_offer_events, true)) {
                 $resp['message'] = 'This event is not allowed for this offer';
                 return $resp;
             }
 
-            $payoutRule = $this->get_payout_rule($click->offer_id, $request->event_id);
+            $offerEvent = $this->get_offer_event_by_token($click->offer_id, $eventToken);
+
+            // Deduplicate: reject if this (tid, event_id) pair has already been recorded
+            if (Conversion::where('tid', $request->aff_click_id)
+                         ->where('event_id', $eventToken)
+                         ->exists()) {
+                return ['success' => 'Y', 'message' => 'already_recorded'];
+            }
         }
 
         // Create conversion record with all available data
@@ -161,14 +215,17 @@ class TrackingService
         $conv->unique_clicks = $request->unique_clicks ?? 0;
 
         // === Pricing ===
-        if (count($payoutRule) > 0) {
-            $conv->revenue = $payoutRule[0]['revenue_pricing'];
-            $conv->payout = $payoutRule[0]['payout_pricing'];
-            $conv->advertiser_price = $payoutRule[0]['revenue_pricing'];
-            $conv->affiliate_price = $payoutRule[0]['payout_pricing'];
-            $conv->currency = $payoutRule[0]['currency'];
-            $conv->revenue_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($payoutRule[0]['revenue_pricing'], $payoutRule[0]['currency']);
-            $conv->payout_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($payoutRule[0]['payout_pricing'], $payoutRule[0]['currency']);
+        if ($offerEvent) {
+            $eventRevenue = $offerEvent->revenue;
+            $eventPayout = $offerEvent->payout;
+
+            $conv->revenue = ($eventRevenue !== null && $eventRevenue !== '') ? $eventRevenue : ($click->revenue ?? 0);
+            $conv->payout = ($eventPayout !== null && $eventPayout !== '') ? $eventPayout : ($click->payout ?? 0);
+            $conv->advertiser_price = $conv->revenue;
+            $conv->affiliate_price = $conv->payout;
+            $conv->currency = $click->currency ?? 'USD';
+            $conv->revenue_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($conv->revenue, $conv->currency);
+            $conv->payout_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($conv->payout, $conv->currency);
         } else {
             $conv->revenue = $request->revenue ?? $click->revenue ?? 0;
             $conv->payout = $request->payout ?? $click->payout ?? 0;
@@ -184,9 +241,9 @@ class TrackingService
         $conv->profit = ($conv->revenue ?? 0) - ($conv->payout ?? 0);
 
         // === Event Data ===
-        $conv->event_id = $request->event_id ?? null;
-        $conv->event = $request->event ?? 'default';
-        $conv->status = $request->status ?? 'approved';
+        $conv->event_id = $eventToken ?? null;
+        $conv->event = $request->event ?? ($offerEvent?->event_name ?? 'default');
+        $conv->status = 'pending';
         $conv->status_type = $request->status_type ?? null;
         $conv->filter_log = $request->filter_log ?? null;
 
@@ -304,6 +361,7 @@ class TrackingService
         $conv->hour = now()->format('H');
         $conv->conversion_time = now();
         $conv->conversion = 1;
+        $conv->status = 'pending';
 
         $conv->save();
 
@@ -422,13 +480,18 @@ class TrackingService
 
     public function get_valid_offer_events($offer_id)
     {
-        $arrEvents = array();
-        $events = OfferEvent::select('id')->where('offer_id', $offer_id)->get()->toArray();
+        return OfferEvent::where('offer_id', $offer_id)
+            ->pluck('event_token')
+            ->filter()
+            ->values()
+            ->toArray();
+    }
 
-        foreach ($events as $e) {
-            $arrEvents[] = $e['id'];
-        }
-        return $arrEvents;
+    public function get_offer_event_by_token($offer_id, $eventToken)
+    {
+        return OfferEvent::where('offer_id', $offer_id)
+            ->where('event_token', $eventToken)
+            ->first();
     }
 
     public function get_payout_rule($offer_id, $event_id)

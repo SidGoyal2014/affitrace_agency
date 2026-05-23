@@ -175,7 +175,7 @@ include $pathPrefix . '/includes/head.php';
             }
 
             rows.forEach(row => {
-                const dateStr = new Date(row.link_clicked_at).toLocaleString();
+                const dateStr = row.link_clicked_at || '-';
                 const tr = `
                     <tr>
                         <td>${row.tid || '-'}</td>

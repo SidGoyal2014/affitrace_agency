@@ -25,6 +25,26 @@ class AdminController extends Controller
 		return response()->json($this->adminService->listAffiliates());
 	}
 
+	public function list_employees()
+	{
+		return response()->json($this->adminService->listEmployees());
+	}
+
+	public function search_users(Request $request)
+	{
+		$request->validate([
+			'q'     => 'required|string|min:2|max:100',
+			'limit' => 'sometimes|integer|min:1|max:50',
+		]);
+
+		$result = $this->adminService->searchUsers(
+			$request->q,
+			(int) $request->input('limit', 20)
+		);
+
+		return response()->json($result);
+	}
+		
 	public function profile(Request $request)
 	{
 		// Auth check handled by middleware
@@ -52,6 +72,29 @@ class AdminController extends Controller
 	{
 		$result = $this->adminService->saveAffiliate($request);
 		return response()->json($result, $result['code'] ?? 200);
+	}
+
+	public function create_employee()
+	{
+		return response()->json([
+			'module_name' => 'Create Employee',
+			'title' => 'Create Employee'
+		]);
+	}
+
+	public function save_employee(Request $request)
+	{
+		$result = $this->adminService->saveEmployee($request);
+		return response()->json($result, $result['code'] ?? 200);
+	}
+
+	public function edit_employee($id)
+	{
+		$result = $this->adminService->editEmployee($id);
+		if (isset($result['code']) && $result['code'] != 200) {
+			return response()->json($result, $result['code']);
+		}
+		return response()->json($result);
 	}
 
 	public function create_affiliate()
@@ -94,6 +137,11 @@ class AdminController extends Controller
 	function update_affiliate(Request $request)
 	{
 		return $this->adminService->updateAffiliateProfile($request);
+	}
+
+	function update_employee(Request $request)
+	{
+		return $this->adminService->updateEmployeeProfile($request);
 	}
 
 }

@@ -70,7 +70,7 @@ return [
     |
     */
 
-    'timezone' => 'Asia/Kolkata',
+    'timezone' => 'UTC',
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +169,7 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         Yajra\DataTables\DataTablesServiceProvider::class,
-       
+
     ])->toArray(),
 
     /*
@@ -187,5 +187,9 @@ return [
         // 'Example' => App\Facades\Example::class,
         'DataTables' => Yajra\DataTables\Facades\DataTables::class,
     ])->toArray(),
+
+
+    
+    'notification_trigger_secret' => env('NOTIFICATION_TRIGGER_SECRET'),
 
 ];

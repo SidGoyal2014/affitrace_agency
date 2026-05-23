@@ -50,13 +50,14 @@
                                     <option value="admin">Administrator</option>
                                     <option value="affiliate">Affiliate</option>
                                     <option value="advertiser">Advertiser</option>
+                                    <option value="employee">Employee</option>
                                 </select>
                             </div>
                             
                             <div class="form-group">
                                 <label>Agency ID</label>
                                 <input type="text" name="eai" class="form-control" id="eai"
-                                    placeholder="Enter Agency ID" value="demo" required>
+                                    placeholder="Enter Agency ID" autocomplete="off" data-lpignore="true" required>
                             </div>
 
                             <div class="form-group">
@@ -133,11 +134,19 @@
 
                     // Check response for redirect logic
                     if (data && data.user) {
+                        // Store permissions for sidebar filtering
+                        if (data.permissions) {
+                            localStorage.setItem('permissions', JSON.stringify(data.permissions));
+                        }
+
                         if (data.user.user_type === 'affiliate') {
                             window.location.href = 'AFFILIATE/dashboard.php';
                         } else if (data.user.user_type === 'advertiser') {
                             window.location.href = 'ADVERTISER/dashboard.php';
+                        } else if (data.user.user_type === 'employee') {
+                            window.location.href = 'EMPLOYEE/dashboard.php';
                         } else {
+                            // Admin goes to ADMIN panel
                             window.location.href = 'ADMIN/dashboard.php';
                         }
                     } else {

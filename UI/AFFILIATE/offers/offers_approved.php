@@ -113,7 +113,7 @@ include $pathPrefix . '/includes/head.php';
                     offer.id,
                     offer.offer_name,
                     offer.category_name || 'General',
-                    '$' + (offer.offer_price_usd || '0.00'),
+                    '$' + (offer.payout_usd || '0.00'),
                     '<span class="badge badge-success">Active</span>',
                     `<button class="btn btn-primary btn-sm" onclick="openTrackingModal(${offer.id})">Get Link</button>`
                 ]);

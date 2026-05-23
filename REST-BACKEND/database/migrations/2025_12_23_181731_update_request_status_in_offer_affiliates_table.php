@@ -11,7 +11,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE offer_affiliates MODIFY COLUMN request_status ENUM('Accepted', 'Pending', 'Rejected', 'Unassigned') NULL");
+        if (Schema::hasTable('offer_affiliates')) {
+            Schema::table('offer_affiliates', function (Blueprint $table) {
+                $table->enum('request_status', ['Accepted', 'Pending', 'Rejected', 'Unassigned'])->nullable()->change();
+            });
+        }
     }
 
     /**
@@ -19,6 +23,10 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE offer_affiliates MODIFY COLUMN request_status ENUM('Accepted', 'Pending', 'Rejected') NULL");
+        if (Schema::hasTable('offer_affiliates')) {
+            Schema::table('offer_affiliates', function (Blueprint $table) {
+                $table->enum('request_status', ['Accepted', 'Pending', 'Rejected'])->nullable()->change();
+            });
+        }
     }
 };

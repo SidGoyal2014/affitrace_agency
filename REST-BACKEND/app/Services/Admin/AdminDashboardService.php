@@ -9,6 +9,7 @@ use App\Models\Conversion;
 use App\Models\User;
 use App\Models\OfferAffiliate;
 use App\Http\Traits\SystemSettings;
+use App\Utils\UrlHelper;
 
 class AdminDashboardService
 {
@@ -92,9 +93,29 @@ class AdminDashboardService
     public function rejectOfferAssignRequest($oaid)
     {
         $rec = OfferAffiliate::find($oaid);
+        if (!$rec) {
+            return ['message' => 'Offer assign request not found'];
+        }
         $rec->request_status = 'Rejected';
         $rec->save();
         return ['message' => 'Offer assign request updated successfully'];
+    }
+
+    public function approveOfferAssignRequest($oaid)
+    {
+        $rec = OfferAffiliate::find($oaid);
+        if (!$rec) {
+            return ['status' => 0, 'message' => 'Offer assign request not found', 'code' => 404];
+        }
+
+        $turl = UrlHelper::getBaseUrl() . "/offer/gourl/" . $rec->offer_id . "/" . $rec->affiliate_id . "/?&tid={tid}";
+
+        $rec->request_status = 'Accepted';
+        $rec->request_made = 'N';
+        $rec->tracking_url = $turl;
+        $rec->save();
+
+        return ['status' => 1, 'message' => 'Offer assign request approved successfully', 'tracking_url' => $turl, 'code' => 200];
     }
 
     private function get_category_wise_revenue()
@@ -200,7 +221,7 @@ class AdminDashboardService
                 WHERE
                     request_made = 'Y'
                     AND
-                    request_status != 'Accepted'
+                    request_status = 'Pending'
             ";
         return DB::select($sql);
     }

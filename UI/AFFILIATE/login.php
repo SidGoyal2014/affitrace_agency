@@ -44,6 +44,11 @@
 
                         <form class="user" id="loginForm">
                             <div class="form-group">
+                                <label>Agency ID</label>
+                                <input type="text" name="eai" class="form-control" id="eai"
+                                    placeholder="Enter Agency ID" value="demo" autocomplete="off" data-lpignore="true" required>
+                            </div>
+                            <div class="form-group">
                                 <label>Email Address</label>
                                 <input type="email" name="email" class="form-control" id="email"
                                     placeholder="Enter your email" required>
@@ -109,11 +114,12 @@
                 const formData = {
                     email: $('#email').val(),
                     password: $('#password').val(),
-                    user_type: 'affiliate'
+                    user_type: 'affiliate',
+                    eai: $('#eai').val()
                 };
 
                 try {
-                    const response = await API.login(formData);
+                    const response = await API.login(formData.email, formData.password, formData.user_type, formData.eai);
 
                     if (response.token) {
                         window.location.href = 'dashboard.php';

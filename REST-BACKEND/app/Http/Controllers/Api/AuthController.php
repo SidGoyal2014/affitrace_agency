@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 
 /**
@@ -46,7 +47,7 @@ class AuthController extends Controller
     {
         // 1. Validate Input
         $validator = Validator::make($request->all(), [
-            'eai' => 'required', // Agency ID / Username
+            //'eai' => 'required', // Agency ID / Username
             'email' => 'required|email',
             'password' => 'required|string',
             'user_type' => 'required|string'
@@ -58,11 +59,11 @@ class AuthController extends Controller
 
         // 2. Authenticate (DB connection is already set by api.tenant middleware)
         if (
-            Auth::attempt([
-                'email' => $request->email,
-                'password' => $request->password,
-                'user_type' => $request->user_type
-            ])
+        Auth::attempt([
+        'email' => $request->email,
+        'password' => $request->password,
+        'user_type' => $request->user_type
+        ])
         ) {
 
             $user = Auth::user();
@@ -82,12 +83,17 @@ class AuthController extends Controller
             // 2. Create Long-lived Refresh Token (2 Weeks)
             $refreshToken = $user->createToken('refresh_token', ['issue-access-token'], now()->addWeeks(2))->plainTextToken;
 
+            // 3. Load role & permissions for the UI
+            $user->load(['role.modules', 'designation']);
+            $permissions = $user->getPermissions();
+
             return response()->json([
                 'message' => 'Login successful',
                 'access_token' => $accessToken,
                 'refresh_token' => $refreshToken,
                 'token_type' => 'Bearer',
-                'user' => $user
+                'user' => $user,
+                'permissions' => $permissions,
             ]);
         }
 
@@ -168,5 +174,71 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
-}
 
+    /**
+     * Update Timezone
+     *
+     * Modifies the timezone for the currently authenticated user.
+     *
+     * @bodyParam timezone string required The timezone to set (e.g. America/New_York)
+     *
+     * @response 200 {
+     *   "message": "Timezone updated successfully",
+     *   "timezone": "America/New_York"
+     * }
+     */
+    public function updateTimezone(Request $request)
+    {
+        $user = $request->user();
+
+        Log::info('Timezone update requested', [
+            'user_id'   => $user->id,
+            'user_type' => $user->user_type,
+            'email'     => $user->email,
+            'requested_timezone' => $request->timezone,
+            'ip' => $request->ip(),
+        ]);
+
+        $validator = Validator::make($request->all(), [
+            'timezone' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            Log::warning('Timezone update validation failed', [
+                'user_id' => $user->id,
+                'errors'  => $validator->errors()->toArray(),
+            ]);
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $oldTimezone = $user->timezone;
+        $user->timezone = $request->timezone;
+
+        try {
+            $user->save();
+
+            Log::info('Timezone updated successfully', [
+                'user_id'      => $user->id,
+                'user_type'    => $user->user_type,
+                'email'        => $user->email,
+                'old_timezone' => $oldTimezone,
+                'new_timezone' => $user->timezone,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Timezone update failed', [
+                'user_id'   => $user->id,
+                'error'     => $e->getMessage(),
+                'trace'     => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to update timezone',
+            ], 500);
+        }
+
+        return response()->json([
+            'message' => 'Timezone updated successfully',
+            'timezone' => $user->timezone
+        ]);
+    }
+}

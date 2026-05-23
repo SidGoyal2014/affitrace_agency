@@ -47,7 +47,7 @@ function url($path)
     <hr class="sidebar-divider my-0">
 
     <!-- Nav Item - Dashboard -->
-    <li class="nav-item <?php echo isActive('dashboard', $activePage); ?>">
+    <li class="nav-item <?php echo isActive('dashboard', $activePage); ?> sidebar-module" data-module="dashboard">
         <a class="nav-link" href="<?php echo url('dashboard.php'); ?>">
             <i class="fas fa-th-large"></i>
             <span>Dashboard</span>
@@ -63,7 +63,7 @@ function url($path)
     </div>
 
     <!-- Nav Item - Offers -->
-    <li class="nav-item <?php echo isActive('offers', $activePage); ?>">
+    <li class="nav-item <?php echo isActive('offers', $activePage); ?> sidebar-module" data-module="offers">
         <a class="nav-link <?php echo getLinkClass('offers', $activePage); ?>" href="#" data-toggle="collapse"
             data-target="#collapseOffers" aria-expanded="<?php echo isExpanded('offers', $activePage); ?>"
             aria-controls="collapseOffers">
@@ -83,7 +83,7 @@ function url($path)
     </li>
 
     <!-- Nav Item - Affiliates -->
-    <li class="nav-item <?php echo isActive('affiliates', $activePage); ?>">
+    <li class="nav-item <?php echo isActive('affiliates', $activePage); ?> sidebar-module" data-module="affiliates">
         <a class="nav-link <?php echo getLinkClass('affiliates', $activePage); ?>" href="#" data-toggle="collapse"
             data-target="#collapseAff" aria-expanded="<?php echo isExpanded('affiliates', $activePage); ?>"
             aria-controls="collapseAff">
@@ -100,7 +100,7 @@ function url($path)
     </li>
 
     <!-- Nav Item - Advertisers -->
-    <li class="nav-item <?php echo isActive('advertisers', $activePage); ?>">
+    <li class="nav-item <?php echo isActive('advertisers', $activePage); ?> sidebar-module" data-module="advertisers">
         <a class="nav-link <?php echo getLinkClass('advertisers', $activePage); ?>" href="#" data-toggle="collapse"
             data-target="#collapseAds" aria-expanded="<?php echo isExpanded('advertisers', $activePage); ?>"
             aria-controls="collapseAds">
@@ -125,7 +125,7 @@ function url($path)
     </div>
 
     <!-- Nav Item - Reports -->
-    <li class="nav-item <?php echo isActive('reports', $activePage); ?>">
+    <li class="nav-item <?php echo isActive('reports', $activePage); ?> sidebar-module" data-module="reports">
         <a class="nav-link <?php echo getLinkClass('reports', $activePage); ?>" href="#" data-toggle="collapse"
             data-target="#collapseRepLogs" aria-expanded="<?php echo isExpanded('reports', $activePage); ?>"
             aria-controls="collapseRepLogs">
@@ -139,6 +139,7 @@ function url($path)
                 <a class="collapse-item" href="<?php echo url('reports/conversions.php'); ?>">Conversions</a>
                 <a class="collapse-item" href="<?php echo url('reports/payouts.php'); ?>">Payouts</a>
                 <a class="collapse-item" href="<?php echo url('reports/logs.php'); ?>">System Logs</a>
+                <a class="collapse-item" href="<?php echo url('reports/postback_logs.php'); ?>">Postback Logs</a>
             </div>
         </div>
     </li>
@@ -152,7 +153,7 @@ function url($path)
     </div>
 
     <!-- Nav Item - MMP -->
-    <li class="nav-item <?php echo isActive('mmp', $activePage); ?>">
+    <li class="nav-item <?php echo isActive('mmp', $activePage); ?> sidebar-module" data-module="mmp">
         <a class="nav-link <?php echo getLinkClass('mmp', $activePage); ?>" href="#" data-toggle="collapse"
             data-target="#collapseMMP" aria-expanded="<?php echo isExpanded('mmp', $activePage); ?>"
             aria-controls="collapseMMP">
@@ -168,7 +169,7 @@ function url($path)
     </li>
 
     <!-- Nav Item - Payments -->
-    <li class="nav-item <?php echo isActive('payments', $activePage); ?>">
+    <li class="nav-item <?php echo isActive('payments', $activePage); ?> sidebar-module" data-module="payments">
         <a class="nav-link <?php echo getLinkClass('payments', $activePage); ?>" href="#" data-toggle="collapse"
             data-target="#collapsePayments" aria-expanded="<?php echo isExpanded('payments', $activePage); ?>"
             aria-controls="collapsePayments">
@@ -186,6 +187,85 @@ function url($path)
     </li>
 
     <!-- Divider -->
+    <hr class="sidebar-divider">
+
+    <!-- Heading -->
+    <div class="sidebar-heading">
+        User Management
+    </div>
+
+    <!-- Nav Item - Role Management -->
+    <li class="nav-item <?php echo isActive('roles', $activePage); ?> sidebar-module" data-module="role_management">
+        <a class="nav-link <?php echo getLinkClass('roles', $activePage); ?>" href="#" data-toggle="collapse"
+            data-target="#collapseRoles" aria-expanded="<?php echo isExpanded('roles', $activePage); ?>"
+            aria-controls="collapseRoles">
+            <i class="fas fa-user-shield"></i>
+            <span>Role Management</span>
+        </a>
+        <div id="collapseRoles" class="collapse <?php echo getCollapseClass('roles', $activePage); ?>"
+            data-parent="#accordionSidebar">
+            <div class="collapse-inner rounded">
+                <a class="collapse-item" href="<?php echo url('roles/list.php'); ?>">All Roles</a>
+                <a class="collapse-item" href="<?php echo url('roles/create.php'); ?>">Create Role</a>
+            </div>
+        </div>
+    </li>
+
+    <!-- Nav Item - Designations -->
+    <li class="nav-item <?php echo isActive('designations', $activePage); ?> sidebar-module" data-module="role_management">
+        <a class="nav-link" href="<?php echo url('designations/list.php'); ?>">
+            <i class="fas fa-id-badge"></i>
+            <span>Designations</span>
+        </a>
+    </li>
+
+    <!-- Nav Item - Employees -->
+    <li class="nav-item <?php echo isActive('employees', $activePage); ?> sidebar-module" data-module="role_management">
+        <a class="nav-link" href="<?php echo url('employees/list.php'); ?>">
+            <i class="fas fa-users-cog"></i>
+            <span>Employees</span>
+        </a>
+    </li>
+
+    <!-- Nav Item - Impersonation Logs -->
+    <li class="nav-item <?php echo isActive('impersonation', $activePage); ?> sidebar-module" data-module="impersonation">
+        <a class="nav-link" href="<?php echo url('impersonation/logs.php'); ?>">
+            <i class="fas fa-user-secret"></i>
+            <span>Impersonation Logs</span>
+        </a>
+    </li>
+
+    <!-- Divider -->
+    <hr class="sidebar-divider">
+
+    <!-- Heading -->
+    <div class="sidebar-heading">
+        Communications
+    </div>
+
+    <!-- Nav Item - Notifications -->
+    <li class="nav-item <?php echo isActive('notifications', $activePage); ?>">
+        <a class="nav-link <?php echo getLinkClass('notifications', $activePage); ?>" href="#"
+           data-toggle="collapse" data-target="#collapseNotifications"
+           aria-expanded="<?php echo isExpanded('notifications', $activePage); ?>"
+           aria-controls="collapseNotifications">
+            <i class="fas fa-bell"></i>
+            <span>
+                Notifications
+                <span id="sidebar-notif-badge" class="badge badge-danger badge-counter ml-1"
+                      style="display:none; font-size:0.65rem;"></span>
+            </span>
+        </a>
+        <div id="collapseNotifications" class="collapse <?php echo getCollapseClass('notifications', $activePage); ?>"
+             data-parent="#accordionSidebar">
+            <div class="collapse-inner rounded">
+                <a class="collapse-item" href="<?php echo url('notifications/inbox.php'); ?>">Inbox</a>
+                <a class="collapse-item" href="<?php echo url('notifications/send.php'); ?>">Send Notification</a>
+            </div>
+        </div>
+    </li>
+
+    <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">
 
     <!-- Sidebar Toggler (Sidebar) -->
@@ -194,3 +274,45 @@ function url($path)
     </div>
 
 </ul>
+
+<!-- Permission-based sidebar filtering -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const permissions = JSON.parse(localStorage.getItem('permissions') || '{}');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    // Admin always sees everything
+    if (user.user_type === 'admin') return;
+
+    // Hide sidebar items the user doesn't have view access to
+    document.querySelectorAll('.sidebar-module').forEach(function(item) {
+        const moduleSlug = item.getAttribute('data-module');
+        if (moduleSlug && (!permissions[moduleSlug] || !permissions[moduleSlug].can_view)) {
+            item.style.display = 'none';
+        }
+    });
+});
+</script>
+
+<script>
+/* ---- Sync sidebar notifications badge from topnav badge ----
+   MutationObserver mirrors the topnav bell badge into the sidebar. */
+document.addEventListener('DOMContentLoaded', function () {
+    var topBadge     = document.getElementById('notif-nav-badge');
+    var sidebarBadge = document.getElementById('sidebar-notif-badge');
+    if (!topBadge || !sidebarBadge) return;
+
+    function syncBadge() {
+        if (topBadge.style.display === 'none' || !topBadge.textContent.trim()) {
+            sidebarBadge.style.display = 'none';
+        } else {
+            sidebarBadge.textContent   = topBadge.textContent;
+            sidebarBadge.style.display = '';
+        }
+    }
+
+    var obs = new MutationObserver(syncBadge);
+    obs.observe(topBadge, { childList: true, attributes: true, attributeFilter: ['style'] });
+    syncBadge();
+});
+</script>

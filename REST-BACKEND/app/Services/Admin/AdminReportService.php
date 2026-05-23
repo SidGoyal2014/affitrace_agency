@@ -7,6 +7,7 @@ use Yajra\DataTables\Facades\DataTables;
 use App\Services\Reports\BaseReportService;
 use App\DTOs\ReportFilterDTO;
 use App\Http\Traits\CommonOfferFunctions;
+use Illuminate\Support\Facades\Log;
 
 class AdminReportService extends BaseReportService
 {
@@ -19,16 +20,44 @@ class AdminReportService extends BaseReportService
      */
     public function listTransactions()
     {
+        /*
         $data = DB::table('subscriptions')
             ->join('transactions', 'subscriptions.id', '=', 'transactions.subscription_id')
             ->select('*')
             ->get()->toArray();
+        */
+
+        $data = DB::table('transactions')
+            ->select('*')
+            ->where('subscription_id', '=', 0)
+            ->get()->toArray();
 
         return [
-            'module_name' => "Payment Transactions",
+            'module_name' => "Transactions",
             'data' => $data
         ];
     }
+
+    /**
+     * Get subscription payment details
+    */
+    public function getSubscriptionPaymentDetails($sub_id)
+    {
+        $data = DB::table('subscriptions')
+            ->join('transactions', 'subscriptions.id', '=', 'transactions.subscription_id')
+            ->select('*')
+            ->where('subscriptions.id', '=', $sub_id)
+            ->get()->toArray();
+
+        return [
+            'module_name' => "",
+            'data' => $data
+        ];
+    }
+
+
+
+
 
     /**
      * List logs
@@ -52,6 +81,33 @@ class AdminReportService extends BaseReportService
 
         return [
             'module_name' => "Logs",
+            'data' => $data
+        ];
+    }
+
+    /**
+     * Get Affiliate Postback Logs
+     */
+    public function getAffiliatePostbackLogs($request)
+    {
+        $query = DB::table('affiliate_postback_logs as apl')
+            ->select(
+                'apl.id',
+                'apl.conversion_id',
+                'apl.url_fired',
+                'apl.http_status',
+                'apl.response_body',
+                'apl.created_at',
+                'affis.name as affiliate_name'
+            )
+            ->join('users as affis', 'apl.affiliate_id', '=', 'affis.id');
+
+        // Can easily add filters here later if needed
+
+        $data = $query->orderBy('apl.id', 'desc')->paginate(50);
+
+        return [
+            'module_name' => "Affiliate Postback Logs",
             'data' => $data
         ];
     }
@@ -220,7 +276,22 @@ class AdminReportService extends BaseReportService
      */
     public function allPayouts()
     {
-        $data = DB::select('SELECT C.affiliate_id as aff_id, U.name as affiliate_name, O.id as offer_id, O.offer_name, count(*) as total_conversions, C.aff_sub1 as sub1, C.revenue as revenue, C.payout as payout, C.currency as ot_currency, SUM(C.revenue) as total_revenue, SUM(C.payout) as total_payout, OE.event_name FROM offers O LEFT JOIN conversions C ON O.id = C.offer_id LEFT JOIN users U ON C.affiliate_id = U.id LEFT JOIN payout_rules PR ON C.event_id = PR.event_id LEFT JOIN offer_events OE ON PR.event_id = OE.id GROUP BY C.offer_id, C.affiliate_id, C.event_id, C.aff_sub1, C.revenue, C.payout, C.currency');
+        $data = DB::table('conversions as C')
+            ->leftJoin('offers as O', 'C.offer_id', '=', 'O.id')
+            ->leftJoin('users as U', 'C.affiliate_id', '=', 'U.id')
+            ->select(
+                'C.id',
+                'C.affiliate_id as aid',
+                'U.name as affiliate_name',
+                'C.offer_id as oid',
+                'O.offer_name',
+                'C.payout as amount',
+                'C.status',
+                'C.currency',
+                'C.created_at'
+            )
+            ->orderBy('C.created_at', 'desc')
+            ->get();
 
         return [
             'module_name' => "Payouts Report",
@@ -233,12 +304,27 @@ class AdminReportService extends BaseReportService
      */
     public function searchAllPayouts($request)
     {
-        $str = "";
-        if ($request->from != "" && $request->to != "") {
-            $str = " AND C.updated_at BETWEEN '" . $request->from . "' AND '" . $request->to . "'";
+        $query = DB::table('conversions as C')
+            ->leftJoin('offers as O', 'C.offer_id', '=', 'O.id')
+            ->leftJoin('users as U', 'C.affiliate_id', '=', 'U.id')
+            ->select(
+                'C.id',
+                'C.affiliate_id as aid',
+                'U.name as affiliate_name',
+                'C.offer_id as oid',
+                'O.offer_name',
+                'C.payout as amount',
+                'C.currency',
+                'C.created_at'
+            );
+
+        if ($request->from && $request->to) {
+            $fromUtc = $this->getUtcStartOfDay($request->from);
+            $toUtc   = $this->getUtcEndOfDay($request->to);
+            $query->whereBetween('C.created_at', [$fromUtc, $toUtc]);
         }
 
-        $data = DB::select("SELECT C.affiliate_id as aff_id, U.name as affiliate_name, O.id as offer_id, O.offer_name, count(*) as total_conversions, C.aff_sub1 as sub1, C.revenue as revenue, C.payout as payout, C.currency as ot_currency, SUM(C.revenue) as total_revenue, SUM(C.payout) as total_payout, OE.event_name FROM offers O LEFT JOIN conversions C ON O.id = C.offer_id LEFT JOIN users U ON C.affiliate_id = U.id LEFT JOIN payout_rules PR ON C.event_id = PR.event_id LEFT JOIN offer_events OE ON PR.event_id = OE.id WHERE 1=1 " . $str . " GROUP BY C.offer_id, C.affiliate_id, C.event_id");
+        $data = $query->orderBy('C.created_at', 'desc')->get();
 
         return [
             'module_name' => "All Payouts",
@@ -385,43 +471,76 @@ class AdminReportService extends BaseReportService
      */
     public function getClicksReport($request): array
     {
+
+//\Log::info('Request Submitted Array', $request->all());
+
+
         $query = DB::table('offer_trackings')
             ->select(
-                'offer_trackings.*',
+                '*',
                 'offer_trackings.id as otid',
                 'offer_trackings.created_at as link_clicked_at',
-                'offer_trackings.country as ot_country',
-                'offer_trackings.os as ot_os',
-                'offer_trackings.browser as ot_browser',
+                'offer_trackings.sub1',
                 'affis.id as aff_id',
-                'affis.name as aff_name',
-                'adverts.id as adv_id',
+                'affis.name as aff_name', 
+                'adverts.id as adv_id', 
                 'adverts.name as advert_name',
-                'offers.id as offer_id',
-                'offers.offer_name',
-                'devices.device_name'
+                'offer_trackings.country as ot_country', 
+                'offer_trackings.os as ot_os', 
+                'offer_trackings.browser as ot_browser'
             )
-            ->leftJoin('offers', 'offer_trackings.offer_id', '=', 'offers.id')
-            ->leftJoin('devices', 'offer_trackings.device_id', '=', 'devices.id')
-            ->leftJoin('users as affis', 'offer_trackings.aff_id', '=', 'affis.id')
-            ->leftJoin('users as adverts', 'offer_trackings.adv_id', '=', 'adverts.id');
+            ->join('offers', 'offer_trackings.offer_id','=', 'offers.id')
+            ->leftJoin('devices', 'offer_trackings.device_id','=', 'devices.id')
+            ->join('users as affis', 'offer_trackings.aff_id','=', 'affis.id')
+            ->join('users as adverts', 'offer_trackings.adv_id','=', 'adverts.id');
 
         // Apply filters
-        if ($request->from && $request->to) {
-            $query->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
-        }
-        if ($request->offer_id) {
-            $query->where('offers.id', $request->offer_id);
-        }
-        if ($request->affiliate_id) {
-            $query->where('offer_trackings.aff_id', $request->affiliate_id);
-        }
-        if ($request->advertiser_id) {
-            $query->where('offers.advertiser_id', $request->advertiser_id);
-        }
+		if($request->from != "" && $request->to != "" && $request->from != $request->to){
+			$query = $query->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
 
-        $limit = $request->limit ?? 50;
-        $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);
+		}elseif($request->from != "" && $request->to != "" && $request->from == $request->to){
+			$query = $query->where('offer_trackings.created_at', $request->from);
+
+		}
+
+
+        
+        if ($request->device) {
+            $query = $query->where('offer_trackings.device_id', $request->device);
+        }
+        if ($request->browser) {
+
+            $query = $query->where('offer_trackings.browser', $request->browser);
+        }
+        
+		if($request->os != ""){
+			$query = $query->where('offer_trackings.os', 'LIKE', "%{$request->os}%");
+
+		}
+
+        $arrC = $this->getCountry();
+		if(isset($request->country) && $request->country != ""){
+            $query = $query->where('offer_trackings.country', $arrC[$request->country]);
+
+		}/**/
+
+       
+        /*$limit = min((int) ($request->limit ?? 50), 500);
+        $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);*/
+
+        $results = $query->orderBy('offer_trackings.id', 'desc')
+				->get();
+
+
+
+
+
+        // Convert UTC timestamps to user's configured timezone
+        $results->transform(function ($row) {
+            if (isset($row->link_clicked_at)) $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
+            if (isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
+            return $row;
+        });
 
         return [
             'module_name' => 'Clicks Report',
@@ -443,6 +562,7 @@ class AdminReportService extends BaseReportService
                 'conversions.country',
                 'conversions.device',
                 'conversions.event',
+                'conversions.status',
                 'conversions.revenue',
                 'conversions.payout',
                 'affis.id as affiliate_id',
@@ -458,7 +578,9 @@ class AdminReportService extends BaseReportService
 
         // Apply filters
         if ($request->from && $request->to) {
-            $query->whereBetween('conversions.created_at', [$request->from, $request->to]);
+            $fromUtc = $this->getUtcStartOfDay($request->from);
+            $toUtc   = $this->getUtcEndOfDay($request->to);
+            $query->whereBetween('conversions.created_at', [$fromUtc, $toUtc]);
         }
         if ($request->offer_id) {
             $query->where('conversions.offer_id', $request->offer_id);
@@ -469,9 +591,18 @@ class AdminReportService extends BaseReportService
         if ($request->advertiser_id) {
             $query->where('conversions.advertiser_id', $request->advertiser_id);
         }
+        if ($request->status) {
+            $query->where('conversions.status', $request->status);
+        }
 
-        $limit = $request->limit ?? 50;
-        $results = $query->orderBy('conversions.id', 'desc')->paginate($limit);
+        $results = $query->orderBy('conversions.id', 'desc')->get();
+
+        // Convert UTC timestamps to user's configured timezone
+        $results->transform(function ($row) {
+            if (isset($row->conversion_time)) $row->conversion_time = $this->formatUtcToLocal($row->conversion_time);
+            if (isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
+            return $row;
+        });
 
         return [
             'module_name' => 'Conversions Report',
@@ -479,4 +610,167 @@ class AdminReportService extends BaseReportService
             'filters' => $request->all()
         ];
     }
+
+    /**
+     * Update conversion status (confirm or decline)
+     */
+    public function updateConversionStatus($id, $status): array
+    {
+        $conversion = \App\Models\Conversion::find($id);
+
+        if (!$conversion) {
+            return ['success' => false, 'message' => 'Conversion not found'];
+        }
+
+        $conversion->status = $status;
+        $conversion->save();
+
+        if ($status === 'confirmed') {
+            \App\Jobs\FireAffiliatePostbackJob::dispatch($conversion->id);
+        }
+
+        return ['success' => true, 'message' => 'Conversion status updated to ' . $status];
+    }
+
+
+    /**
+     * Update conversion status (confirm or decline)
+     */
+    public function updateConversionStatusUsingTid($tid, $status): array
+    {
+        $conversion = \App\Models\Conversion::where('tid', $tid)->first();
+
+        if (!$conversion) {
+            return ['success' => false, 'message' => 'Conversion not found'];
+        }
+
+        $conversion->status = $status;
+        $conversion->save();
+
+        if ($status === 'confirmed') {
+            \App\Jobs\FireAffiliatePostbackJob::dispatch($conversion->id);
+        }
+
+        return ['success' => true, 'message' => 'Conversion status updated to ' . $status];
+    }
+
+    /**
+     * Bulk update conversion statuses using parsed rows from a CSV/XLSX file.
+     *
+     * Each row accepts:
+     * - conversion_id (or id)
+     * - status (optional if $forcedStatus is provided)
+     */
+    public function bulkUpdateConversionStatuses(array $rows, ?string $forcedStatus = null): array
+    {
+        $normalizeStatus = function (?string $status): ?string {
+            if ($status === null) {
+                return null;
+            }
+
+            $status = strtolower(trim($status));
+            $map = [
+                'approve' => 'confirmed',
+                'approved' => 'confirmed',
+                'confirm' => 'confirmed',
+                'confirmed' => 'confirmed',
+                'reject' => 'declined',
+                'rejected' => 'declined',
+                'decline' => 'declined',
+                'declined' => 'declined',
+            ];
+
+            return $map[$status] ?? null;
+        };
+
+        $normalizedForcedStatus = $normalizeStatus($forcedStatus);
+        if ($forcedStatus !== null && $normalizedForcedStatus === null) {
+            return [
+                'success' => false,
+                'message' => 'Invalid forced status. Use confirmed/declined (or approve/reject aliases).',
+                'summary' => [
+                    'total_rows' => count($rows),
+                    'processed' => 0,
+                    'updated' => 0,
+                    'failed' => count($rows),
+                ],
+                'rows' => [],
+            ];
+        }
+
+        $results = [];
+        $updated = 0;
+        $failed = 0;
+
+        foreach ($rows as $row) {
+            $rowNumber = (int) ($row['row_number'] ?? 0);
+            $conversionIdRaw = trim((string) ($row['conversion_id'] ?? ''));
+            $rowStatusRaw = $row['status'] ?? null;
+
+            Log::info("RowNumber : ".$rowNumber);
+            Log::info("conversion Id : " .$conversionIdRaw);
+            Log::info("Row Status : " .$rowStatusRaw);
+
+            $requestedStatus = $normalizedForcedStatus ?? $normalizeStatus(is_string($rowStatusRaw) ? $rowStatusRaw : null);
+
+            if ($conversionIdRaw === '') {
+                $failed++;
+                $results[] = [
+                    'row' => $rowNumber,
+                    'conversion_id' => $conversionIdRaw,
+                    'requested_status' => $requestedStatus,
+                    'success' => false,
+                    'message' => 'Invalid conversion_id.',
+                ];
+                continue;
+            }
+
+            if (!$requestedStatus) {
+                $failed++;
+                $results[] = [
+                    'row' => $rowNumber,
+                    'conversion_id' => (int) $conversionIdRaw,
+                    'requested_status' => $rowStatusRaw,
+                    'success' => false,
+                    'message' => 'Missing or invalid status. Provide status column or send request status parameter.',
+                ];
+                continue;
+            }
+
+            Log::info("conversion Id : " .$conversionIdRaw);
+            Log::info("Row Status : " .$rowStatusRaw);
+
+            $response = $this->updateConversionStatusUsingTid($conversionIdRaw, $requestedStatus);
+            if (!($response['success'] ?? false)) {
+                $failed++;
+            } else {
+                $updated++;
+            }
+
+            $results[] = [
+                'row' => $rowNumber,
+                'conversion_id' => $conversionIdRaw,
+                'requested_status' => $requestedStatus,
+                'success' => (bool) ($response['success'] ?? false),
+                'message' => $response['message'] ?? 'Processed',
+            ];
+        }
+
+        $processed = count($results);
+
+        return [
+            'success' => $processed > 0 && $failed === 0,
+            'message' => $processed === 0
+                ? 'No data rows found in uploaded file.'
+                : "Processed {$processed} rows.",
+            'summary' => [
+                'total_rows' => count($rows),
+                'processed' => $processed,
+                'updated' => $updated,
+                'failed' => $failed,
+            ],
+            'rows' => $results,
+        ];
+    }
 }
+

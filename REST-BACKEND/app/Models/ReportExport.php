@@ -25,6 +25,7 @@ class ReportExport extends Model
         'status',
         'expires_at',
         'error',
+        'file_path',
     ];
 
     protected $casts = [

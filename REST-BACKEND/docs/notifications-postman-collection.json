@@ -1,0 +1,612 @@
+{
+  "info": {
+    "_postman_id": "af-notif-v1-collection-2026",
+    "name": "Affitrace — Notifications API (v1)",
+    "description": "Complete collection for the News & Notifications system.\n\n**Setup before running:**\n1. Set `BASE_URL` variable to your server root, e.g. `http://localhost/affitrace_agency/REST-BACKEND/public`\n2. Run the **Login (Admin)** request — it auto-sets `ADMIN_TOKEN`\n3. Run the **Login (User / Affiliate)** request — it auto-sets `USER_TOKEN`\n4. Set `AGENCY_ID` to the agency username/DB name used in your tenant (e.g. `agency_demo`)\n5. Set `NOTIFICATION_TRIGGER_SECRET` to match `NOTIFICATION_TRIGGER_SECRET` in your `.env`\n\n**Endpoint map:**\n- Group A — Inbox (5 endpoints): all authenticated users\n- Group B — Admin Sent Management (5 endpoints): admin middleware\n- Group C — System Triggers (3 endpoints): bearer auth + X-Notification-Secret header",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "BASE_URL",                    "value": "http://localhost/affitrace_agency/REST-BACKEND/public", "type": "string" },
+    { "key": "AGENCY_ID",                   "value": "agency_demo",    "type": "string" },
+    { "key": "ADMIN_TOKEN",                 "value": "",               "type": "string" },
+    { "key": "USER_TOKEN",                  "value": "",               "type": "string" },
+    { "key": "NOTIFICATION_TRIGGER_SECRET", "value": "your-secret-here", "type": "string" },
+    { "key": "NOTIF_ID",                    "value": "1",              "type": "string" },
+    { "key": "INBOX_ITEM_ID",               "value": "1",              "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "    pm.collectionVariables.set('ADMIN_TOKEN', json.access_token);",
+                  "    console.log('ADMIN_TOKEN saved:', json.access_token.slice(0,20) + '...');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" },
+              { "key": "X-Agency-ID",  "value": "{{AGENCY_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login (Affiliate / Regular User)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "    pm.collectionVariables.set('USER_TOKEN', json.access_token);",
+                  "    console.log('USER_TOKEN saved:', json.access_token.slice(0,20) + '...');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" },
+              { "key": "X-Agency-ID",  "value": "{{AGENCY_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"affiliate@example.com\",\n  \"password\": \"password\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "login"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Group B — Admin: Sent Management",
+      "description": "Routes: POST /api/admin/v1/notifications  |  GET/PUT/DELETE /api/admin/v1/notifications/sent/*\nRequires: auth:sanctum + admin middleware. Use ADMIN_TOKEN.",
+      "item": [
+
+        {
+          "name": "B1 — Send Notification (broadcast to all)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('success=true', () => pm.expect(json.success).to.be.true);",
+                  "if (json.data && json.data.id) {",
+                  "    pm.collectionVariables.set('NOTIF_ID', String(json.data.id));",
+                  "    console.log('NOTIF_ID set to:', json.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "X-Agency-ID",   "value": "{{AGENCY_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\":       \"New Offer Available!\",\n  \"message\":     \"Check out the latest offer added to Affitrace.\",\n  \"type\":        \"news\",\n  \"category\":    \"offer\",\n  \"priority\":    \"normal\",\n  \"target_role\": \"all\",\n  \"channel\":     \"in-app\",\n  \"is_active\":   true\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/admin/v1/notifications",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "admin", "v1", "notifications"]
+            }
+          }
+        },
+
+        {
+          "name": "B2 — Send Notification (to specific recipients)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('success=true', () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "X-Agency-ID",   "value": "{{AGENCY_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\":          \"Private Message\",\n  \"message\":        \"This notification was sent directly to you.\",\n  \"type\":           \"notification\",\n  \"category\":       \"general\",\n  \"priority\":       \"high\",\n  \"channel\":        \"in-app\",\n  \"is_active\":      true,\n  \"recipient_ids\":  [2, 3, 4]\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/admin/v1/notifications",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "admin", "v1", "notifications"]
+            }
+          }
+        },
+
+        {
+          "name": "B3 — Send Notification (scheduled, affiliates only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('success=true', () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "X-Agency-ID",   "value": "{{AGENCY_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\":        \"Scheduled Alert for Affiliates\",\n  \"message\":      \"This goes out 2 minutes from now — only to affiliates.\",\n  \"type\":         \"alert\",\n  \"category\":     \"general\",\n  \"priority\":     \"urgent\",\n  \"target_role\":  \"affiliate\",\n  \"channel\":      \"in-app\",\n  \"is_active\":    true,\n  \"scheduled_at\": \"2026-04-19T12:02:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/admin/v1/notifications",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "admin", "v1", "notifications"]
+            }
+          }
+        },
+
+        {
+          "name": "B4 — List Sent Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has meta', () => pm.expect(pm.response.json()).to.have.property('meta'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "X-Agency-ID",   "value": "{{AGENCY_ID}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/admin/v1/notifications/sent?per_page=10&category=offer&is_dispatched=true",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "admin", "v1", "notifications", "sent"],
+              "query": [
+                { "key": "per_page",     "value": "10" },
+                { "key": "category",     "value": "offer",  "description": "offer | payment | transaction | subscription | general" },
+                { "key": "type",         "value": "",       "disabled": true, "description": "notification | news | alert | broadcast" },
+                { "key": "is_dispatched","value": "true",   "disabled": false }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "B5 — Show Single Sent Notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "X-Agency-ID",   "value": "{{AGENCY_ID}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/admin/v1/notifications/sent/{{NOTIF_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "admin", "v1", "notifications", "sent", "{{NOTIF_ID}}"]
+            }
+          }
+        },
+
+        {
+          "name": "B6 — Update Sent Notification (pre-dispatch only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 or 422', () => pm.expect(pm.response.code).to.be.oneOf([200, 422]));",
+                  "var json = pm.response.json();",
+                  "if (pm.response.code === 422) {",
+                  "    pm.test('Already dispatched message', () => pm.expect(json.message).to.include('dispatched'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "X-Agency-ID",   "value": "{{AGENCY_ID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\":    \"Updated Title\",\n  \"message\":  \"Updated body text.\",\n  \"priority\": \"high\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/admin/v1/notifications/sent/{{NOTIF_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "admin", "v1", "notifications", "sent", "{{NOTIF_ID}}"]
+            }
+          }
+        },
+
+        {
+          "name": "B7 — Delete Sent Notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "X-Agency-ID",   "value": "{{AGENCY_ID}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/admin/v1/notifications/sent/{{NOTIF_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "admin", "v1", "notifications", "sent", "{{NOTIF_ID}}"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Group A — Inbox (All Authenticated Users)",
+      "description": "Routes: GET|PATCH /api/v1/notifications/inbox/*  |  GET /api/v1/notifications/unread-count\nRequires: auth:sanctum. Use USER_TOKEN (or ADMIN_TOKEN — any authenticated user).",
+      "item": [
+
+        {
+          "name": "A1 — Get Unread Count",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has unread_count', () => pm.expect(pm.response.json().data).to.have.property('unread_count'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{USER_TOKEN}}" },
+              { "key": "X-Agency-ID",   "value": "{{AGENCY_ID}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/notifications/unread-count",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "notifications", "unread-count"]
+            }
+          }
+        },
+
+        {
+          "name": "A2 — Inbox (paginated)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has meta', () => pm.expect(pm.response.json()).to.have.property('meta'));",
+                  "var items = pm.response.json().data;",
+                  "if (items && items.length) {",
+                  "    pm.collectionVariables.set('INBOX_ITEM_ID', String(items[0].id));",
+                  "    console.log('INBOX_ITEM_ID set to:', items[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{USER_TOKEN}}" },
+              { "key": "X-Agency-ID",   "value": "{{AGENCY_ID}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/notifications/inbox?per_page=15&is_read=false",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "notifications", "inbox"],
+              "query": [
+                { "key": "per_page", "value": "15" },
+                { "key": "is_read",  "value": "false",  "description": "true | false — filter by read status" },
+                { "key": "category", "value": "offer",  "disabled": true },
+                { "key": "type",     "value": "news",   "disabled": true },
+                { "key": "priority", "value": "urgent", "disabled": true }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "A3 — Show Single Inbox Item (auto-marks read)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{USER_TOKEN}}" },
+              { "key": "X-Agency-ID",   "value": "{{AGENCY_ID}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/notifications/inbox/{{INBOX_ITEM_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "notifications", "inbox", "{{INBOX_ITEM_ID}}"]
+            }
+          }
+        },
+
+        {
+          "name": "A4 — Mark One Inbox Item Read (PATCH)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 or 404', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{USER_TOKEN}}" },
+              { "key": "X-Agency-ID",   "value": "{{AGENCY_ID}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/notifications/inbox/{{INBOX_ITEM_ID}}/read",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "notifications", "inbox", "{{INBOX_ITEM_ID}}", "read"]
+            }
+          }
+        },
+
+        {
+          "name": "A5 — Mark ALL Inbox Read (PATCH)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('success=true', () => pm.expect(pm.response.json().success).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{USER_TOKEN}}" },
+              { "key": "X-Agency-ID",   "value": "{{AGENCY_ID}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/notifications/inbox/read-all",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "notifications", "inbox", "read-all"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Group C — System Triggers",
+      "description": "Routes: POST /api/v1/notifications/triggers/*\nRequires: auth:sanctum Bearer token + X-Notification-Secret header matching NOTIFICATION_TRIGGER_SECRET in .env.\nThese are called by internal cron / external scheduler.",
+      "item": [
+
+        {
+          "name": "C1 — Trigger Subscription Expiry",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 or 403', () => pm.expect(pm.response.code).to.be.oneOf([201, 403]));",
+                  "if (pm.response.code === 403) {",
+                  "    console.warn('403 — Check NOTIFICATION_TRIGGER_SECRET variable matches .env');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",             "value": "application/json" },
+              { "key": "Accept",                   "value": "application/json" },
+              { "key": "Authorization",             "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "X-Agency-ID",               "value": "{{AGENCY_ID}}" },
+              { "key": "X-Notification-Secret",     "value": "{{NOTIFICATION_TRIGGER_SECRET}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Your subscription expires in 3 days. Please renew now.\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/notifications/triggers/subscription-expiry",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "notifications", "triggers", "subscription-expiry"]
+            }
+          }
+        },
+
+        {
+          "name": "C2 — Trigger Payment Reminder",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 or 403', () => pm.expect(pm.response.code).to.be.oneOf([201, 403]));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",             "value": "application/json" },
+              { "key": "Accept",                   "value": "application/json" },
+              { "key": "Authorization",             "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "X-Agency-ID",               "value": "{{AGENCY_ID}}" },
+              { "key": "X-Notification-Secret",     "value": "{{NOTIFICATION_TRIGGER_SECRET}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\":     \"Invoice #1042 payment is overdue.\",\n  \"target_role\": \"advertiser\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/notifications/triggers/payment-reminder",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "notifications", "triggers", "payment-reminder"]
+            }
+          }
+        },
+
+        {
+          "name": "C3 — Trigger Custom Notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 or 403', () => pm.expect(pm.response.code).to.be.oneOf([201, 403]));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",             "value": "application/json" },
+              { "key": "Accept",                   "value": "application/json" },
+              { "key": "Authorization",             "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "X-Agency-ID",               "value": "{{AGENCY_ID}}" },
+              { "key": "X-Notification-Secret",     "value": "{{NOTIFICATION_TRIGGER_SECRET}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\":       \"Platform Maintenance Tonight\",\n  \"message\":     \"Scheduled maintenance from 02:00–04:00 UTC. Tracking may be briefly disrupted.\",\n  \"type\":        \"alert\",\n  \"category\":    \"general\",\n  \"priority\":    \"urgent\",\n  \"target_role\": \"all\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/notifications/triggers/custom",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "notifications", "triggers", "custom"]
+            }
+          }
+        }
+      ]
+    }
+
+  ]
+}

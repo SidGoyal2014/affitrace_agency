@@ -8,6 +8,7 @@ use App\DTOs\ReportFilterDTO;
 
 class AdvertiserReportService extends BaseReportService
 {
+    use \App\Http\Traits\TimezoneHelper;
     /**
      * Get summary report for advertiser (wrapper method for backward compatibility)
      * 
@@ -22,8 +23,36 @@ class AdvertiserReportService extends BaseReportService
             $filters = new ReportFilterDTO();
         }
 
-        // Use base class implementation with advertiser scoping
-        return parent::getSummaryReport($filters, $advertiser_id, 'advertiser');
+        $tz = $this->getUserTimezone();
+        $tzStr = "AT TIME ZONE 'UTC' AT TIME ZONE '{$tz}'";
+
+        $query = DB::table('offer_trackings')
+            ->select(
+                DB::raw("CAST(offer_trackings.created_at {$tzStr} AS DATE) as date"),
+                DB::raw("COUNT(DISTINCT offer_trackings.id) as clicks"),
+                DB::raw("COUNT(conversions.id) as conversions"),
+                DB::raw('SUM(COALESCE(conversions.revenue_usd, 0)) as cost')
+            )
+            ->leftJoin('offers', 'offer_trackings.offer_id', '=', 'offers.id')
+            ->leftJoin('categories', 'offers.category_id', '=', 'categories.id')
+            ->leftJoin('devices', 'offer_trackings.device_id', '=', 'devices.id')
+            ->leftJoin('conversions', 'offer_trackings.tid', '=', 'conversions.tid')
+            ->where('offers.advertiser_id', $advertiser_id);
+
+        // Apply filters (uses offer_trackings.* references locally in BaseReportService)
+        $query = $this->applyFilters($query, $filters);
+
+        $stats = $query
+            ->groupBy(DB::raw("CAST(offer_trackings.created_at {$tzStr} AS DATE)"))
+            ->orderBy('date', 'desc')
+            ->limit(30)
+            ->get();
+
+        return [
+            'module_name' => 'Summary Report',
+            'stats' => $stats,
+            'filters' => $filters->toArray()
+        ];
     }
 
     /**
@@ -35,8 +64,44 @@ class AdvertiserReportService extends BaseReportService
      */
     public function getClickConversionReportForAdvertiser($advertiser_id, ReportFilterDTO $filters): array
     {
-        // Use base class implementation with advertiser scoping
-        return parent::getClickConversionReport($filters, $advertiser_id, 'advertiser');
+        $query = DB::table('offer_trackings')
+            ->select(
+                'offer_trackings.*',
+                'offer_trackings.id as otid',
+                'offer_trackings.created_at as link_clicked_at',
+                'offer_trackings.country as ot_country',
+                'offer_trackings.os as ot_os',
+                'offer_trackings.browser as ot_browser',
+                'affis.id as aff_id',
+                'affis.name as aff_name',
+                'adverts.id as adv_id',
+                'adverts.name as advert_name',
+                'offers.id as offer_id',
+                'offers.offer_name',
+                'devices.device_name',
+                DB::raw("CASE WHEN conversions.id IS NOT NULL THEN 1 ELSE 0 END as is_conversion"),
+                'conversions.revenue_usd as revenue_usd',
+                'conversions.payout_usd as payout_usd',
+                'conversions.id as conversion_id'
+            )
+            ->leftJoin('offers', 'offer_trackings.offer_id', '=', 'offers.id')
+            ->leftJoin('categories', 'offers.category_id', '=', 'categories.id')
+            ->leftJoin('devices', 'offer_trackings.device_id', '=', 'devices.id')
+            ->leftJoin('users as affis', 'offer_trackings.aff_id', '=', 'affis.id')
+            ->leftJoin('users as adverts', 'offer_trackings.adv_id', '=', 'adverts.id')
+            ->leftJoin('conversions', 'offer_trackings.tid', '=', 'conversions.tid')
+            ->where('offers.advertiser_id', $advertiser_id);
+
+        $query = $this->applyFilters($query, $filters);
+        
+        $limit = $filters->limit ?? 50;
+        $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);
+
+        return [
+            'module_name' => 'Click & Conversion Report',
+            'data' => $results,
+            'filters' => $filters->toArray()
+        ];
     }
 
     /**
@@ -84,7 +149,10 @@ class AdvertiserReportService extends BaseReportService
             ->where('offers.advertiser_id', $advertiser_id);
 
         if ($request->from && $request->to) {
-            $query->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
+            $query->whereBetween('offer_trackings.created_at', [
+                $this->getUtcStartOfDay($request->from), 
+                $this->getUtcEndOfDay($request->to)
+            ]);
         }
         if ($request->offer_id) {
             $query->where('offers.id', $request->offer_id);
@@ -92,6 +160,12 @@ class AdvertiserReportService extends BaseReportService
 
         $limit = $request->limit ?? 50;
         $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);
+
+        $results->getCollection()->transform(function ($row) {
+            if(isset($row->link_clicked_at)) $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
+            if(isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
+            return $row;
+        });
 
         return [
             'module_name' => 'Clicks Report',
@@ -124,7 +198,10 @@ class AdvertiserReportService extends BaseReportService
             ->where('conversions.advertiser_id', $advertiser_id);
 
         if ($request->from && $request->to) {
-            $query->whereBetween('conversions.created_at', [$request->from, $request->to]);
+            $query->whereBetween('conversions.created_at', [
+                $this->getUtcStartOfDay($request->from), 
+                $this->getUtcEndOfDay($request->to)
+            ]);
         }
         if ($request->offer_id) {
             $query->where('conversions.offer_id', $request->offer_id);
@@ -132,6 +209,12 @@ class AdvertiserReportService extends BaseReportService
 
         $limit = $request->limit ?? 50;
         $results = $query->orderBy('conversions.id', 'desc')->paginate($limit);
+
+        $results->getCollection()->transform(function ($row) {
+            if(isset($row->conversion_time)) $row->conversion_time = $this->formatUtcToLocal($row->conversion_time);
+            if(isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
+            return $row;
+        });
 
         return [
             'module_name' => 'Conversions Report',

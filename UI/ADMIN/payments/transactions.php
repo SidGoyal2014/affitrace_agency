@@ -17,25 +17,19 @@ include $pathPrefix . '/includes/head.php';
             </div>
 
             <div class="card-modern">
-                <div class="card-header">
-                    <h6 class="m-0 font-weight-bold">All Transactions</h6>
-                </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-flush mb-0" id="dataTable">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>User</th>
-                                    <th>Amount</th>
                                     <th>Type</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
+                                    <th>From - To</th>
+                                    <th>Code</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
                                 <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">Loading...</td>
+                                    <td colspan="3" class="text-center py-4 text-muted">Loading...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -58,21 +52,32 @@ include $pathPrefix . '/includes/head.php';
             if (user) $('.user-name').text(user.name);
 
             try {
-                const response = await API.fetchWithAuth('admin/payments/transactions');
+                const response = await API.fetchWithAuth('admin/reports/transactions');
+                console.log(response);
                 let txns = response.data || [];
                 const tbody = $('#tableBody');
                 tbody.empty();
+
+                console.log(txns);
+
 
                 if (txns.length > 0) {
                     txns.forEach(t => {
                         tbody.append(`
                             <tr>
-                                <td>${t.id}</td>
-                                <td>${t.user_name || t.user_id}</td>
-                                <td><strong>$${formatDecimal(t.amount)}</strong></td>
-                                <td><span class="badge badge-info">${t.type || '-'}</span></td>
-                                <td><span class="badge badge-${t.status === 'completed' ? 'success' : 'warning'}">${t.status}</span></td>
-                                <td>${t.created_at || '-'}</td>
+                                <td>
+                                    <strong>Type: </strong>${ t.payment_type } <br> 
+                                    <strong>Mode: </strong>${ t.payment_mode } <br>                                     
+                                </td>
+                                <td>
+                                    <strong>From: </strong>${t.payment_from } <br> 
+                                    <strong>To: </strong>${t.payment_to } <br> 
+                                    <strong>Amount: </strong>${t.transaction_amount }
+                                </td>
+                                <td>
+                                    <strong>Transaction Code: </strong>${t.transaction_code } <br>
+                                    <strong>Manual Invoice No: </strong>${t.manual_invoice_no }
+                                </td>                                
                             </tr>
                         `);
                     });

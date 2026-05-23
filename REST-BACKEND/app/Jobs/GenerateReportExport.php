@@ -117,6 +117,7 @@ class GenerateReportExport implements ShouldQueue
             // Mark as processing
             $export->update(['status' => ReportExport::STATUS_PROCESSING]);
 
+            /*
             // Generate the report based on format
             if ($export->format === 'csv') {
                 $service->exportCSV($export);
@@ -126,6 +127,24 @@ class GenerateReportExport implements ShouldQueue
 
             // Mark as ready
             $export->update(['status' => ReportExport::STATUS_READY]);
+            */
+
+            // Generate the report based on format — capture the returned file path
+            if ($export->format === 'csv') {
+                $filePath = $service->exportCSV($export);
+            } else {
+                $filePath = $service->exportXLSX($export);
+            }
+
+            Log::info("filePath in GenerateReportExport.php: " . $filePath);
+
+            // Mark as ready and store file path for download
+            $export->update([
+                'status' => ReportExport::STATUS_READY,
+                'file_path' => $filePath,
+            ]);
+
+
 
             Log::info("Report export completed: {$this->exportId}");
 

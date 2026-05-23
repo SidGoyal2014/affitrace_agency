@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('advertiser_user_details', function (Blueprint $table) {
-            $table->renameColumn('timezone', 'time_zone');
-        });
+        if (Schema::hasColumn('advertiser_user_details', 'timezone')) {
+            Schema::table('advertiser_user_details', function (Blueprint $table) {
+                $table->renameColumn('timezone', 'time_zone');
+            });
+        }
     }
 
     /**
