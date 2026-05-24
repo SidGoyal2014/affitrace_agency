@@ -595,9 +595,7 @@ include $pathPrefix . '/includes/head.php';
                 // Categories
                 const catSelect = $('select[name="category_id"]');
                 catSelect.empty().append('<option value="">Select Category</option>');
-                (response.arrCategories || []).forEach(cat => {
-                    catSelect.append(`<option value="${cat.id}">${cat.category_name}</option>`);
-                });
+                renderCategoryOptions(catSelect, response.arrCategories || []);
 
                 // Ad Models
                 const adModelSelect = $('select[name="ad_model"]');

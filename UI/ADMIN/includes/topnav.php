@@ -54,42 +54,32 @@ function url($path)
             </div>
         </li>
 
-        <!-- Affiliates Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('affiliates', $activePage); ?> require-permission" data-module="affiliates">
+        <!-- Partners Dropdown -->
+        <li class="nav-item require-permission" data-module="partners">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-users"></i>
-                Affiliates
+                Partners
                 <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
             </a>
-            <div class="dropdown-menu">
-                <a class="dropdown-item" href="<?php echo url('affiliates/create.php'); ?>">Create Affiliate</a>
-                <a class="dropdown-item" href="<?php echo url('affiliates/list.php'); ?>">All Affiliates</a>
+            <div class="dropdown-menu">                
+                <a class="dropdown-item  <?php echo isActiveNav('affiliates', $activePage); ?>" href="<?php echo url('affiliates/list.php'); ?>">Affiliates</a>
+                <a class="dropdown-item  <?php echo isActiveNav('advertisers', $activePage); ?>" href="<?php echo url('advertisers/list.php'); ?>">All Advertisers</a>
             </div>
         </li>
 
-        <!-- Advertisers Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('advertisers', $activePage); ?> require-permission" data-module="advertisers">
-            <a class="nav-link" href="#" data-toggle="dropdown">
-                <i class="fas fa-handshake"></i>
-                Advertisers
-                <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
-            </a>
-            <div class="dropdown-menu">
-                <a class="dropdown-item" href="<?php echo url('advertisers/create.php'); ?>">Create Advertiser</a>
-                <a class="dropdown-item" href="<?php echo url('advertisers/list.php'); ?>">All Advertisers</a>
-            </div>
-        </li>
-
-        <!-- Invoices Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('invoices', $activePage); ?> require-permission" data-module="invoices">
+        <!-- Finance Dropdown -->
+        <li class="nav-item <?php echo isActiveNav('finance', $activePage); ?> require-permission" data-module="finance">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-file-invoice-dollar"></i>
-                Invoices
+                Finance
                 <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
             </a>
             <div class="dropdown-menu">
-                <a class="dropdown-item" href="<?php echo url('invoices/index.php'); ?>">All Invoices</a>
-                <a class="dropdown-item" href="<?php echo url('invoices/create.php'); ?>">Create Invoice</a>
+                <a class="dropdown-item" href="<?php echo url('invoices/index.php'); ?>">Invoices</a>
+                <a class="dropdown-item" href="<?php echo url('reports/payouts.php'); ?>">Payouts</a>
+                <a class="dropdown-item" href="<?php echo url('payments/plans.php'); ?>">Payment Plans</a>
+                <a class="dropdown-item" href="<?php echo url('payments/subscriptions.php'); ?>">Subscriptions</a>
+                <a class="dropdown-item" href="<?php echo url('payments/transactions.php'); ?>">Transactions</a>
             </div>
         </li>
 
@@ -103,9 +93,10 @@ function url($path)
             <div class="dropdown-menu">
                 <a class="dropdown-item" href="<?php echo url('reports/clicks_report.php'); ?>">Clicks</a>
                 <a class="dropdown-item" href="<?php echo url('reports/conversions_report.php'); ?>">Conversions</a>
-                <a class="dropdown-item" href="<?php echo url('reports/payouts.php'); ?>">Payouts</a>
+                
                 <a class="dropdown-item" href="<?php echo url('reports/logs.php'); ?>">System Logs</a>
                 <a class="dropdown-item" href="<?php echo url('reports/postback_logs.php'); ?>">Postback Logs</a>
+                <a class="dropdown-item" href="<?php echo url('impersonation/logs.php'); ?>">Impersonation Logs</a>                
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item" href="<?php echo url('reports/export_reports.php'); ?>">
                     <i class="fas fa-file-export mr-2"></i>Export Reports
@@ -116,18 +107,32 @@ function url($path)
         <!-- Settings Dropdown -->
         <li class="nav-item <?php echo isActiveNav('settings', $activePage); ?> require-permission" data-module="integrations">
             <a class="nav-link" href="#" data-toggle="dropdown">
-                <i class="fas fa-cog"></i>
+                <i class="fa fa-puzzle-piece"></i>
                 Integrations
                 <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
             </a>
             <div class="dropdown-menu">
                 <a class="dropdown-item" href="<?php echo url('mmp/platforms.php'); ?>">MMP Platforms</a>
                 <a class="dropdown-item" href="<?php echo url('integrations/data-integrations.php'); ?>">Data Integrations</a>
-                <a class="dropdown-item" href="<?php echo url('payments/plans.php'); ?>">Payment Plans</a>
-                <a class="dropdown-item" href="<?php echo url('payments/subscriptions.php'); ?>">Subscriptions</a>
-                <a class="dropdown-item" href="<?php echo url('payments/transactions.php'); ?>">Transactions</a>
+                </a>
             </div>
         </li>
+        <!-- Administration Dropdown -->
+        <li class="nav-item <?php echo isActiveNav('administration', $activePage); ?> require-permission" data-module="role_management">
+            <a class="nav-link" href="#" data-toggle="dropdown">
+                <i class="fas fa-user-shield"></i>
+                Administration
+                <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
+            </a>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" href="<?php echo url('employees/list.php'); ?>">Employees</a>
+                <a class="dropdown-item" href="<?php echo url('roles/list.php'); ?>">Roles</a>
+                <a class="dropdown-item" href="<?php echo url('designations/list.php'); ?>">Designations</a>
+                <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/notifications/sent_items.php">Notifications</a>
+                <a class="dropdown-item" href="<?php echo url('categories/list.php'); ?>">Categories</a>
+            </div>
+        </li>
+        <!-- Tools Dropdown -->
         <li class="nav-item <?php echo isActiveNav('tools', $activePage); ?> require-permission" data-module="tools">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-cog"></i>
@@ -136,22 +141,9 @@ function url($path)
             </a>
             <div class="dropdown-menu">
                 <a class="dropdown-item" href="<?php echo url('redirect_checker/index.php'); ?>">Redirect Checker</a>
+                <a class="dropdown-item" href="<?php echo url('custom_domains/list.php'); ?>">Custom Domains</a>                
             </div>
-        </li>
-        <!-- User Management Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('users', $activePage); ?> require-permission" data-module="role_management">
-            <a class="nav-link" href="#" data-toggle="dropdown">
-                <i class="fas fa-user-shield"></i>
-                Users & Roles
-                <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
-            </a>
-            <div class="dropdown-menu">
-                <a class="dropdown-item" href="<?php echo url('employees/list.php'); ?>">Employees</a>
-                <a class="dropdown-item" href="<?php echo url('roles/list.php'); ?>">Roles</a>
-                <a class="dropdown-item" href="<?php echo url('designations/list.php'); ?>">Designations</a>
-                <a class="dropdown-item" href="<?php echo url('impersonation/logs.php'); ?>">Impersonation Logs</a>
-            </div>
-        </li>
+        </li>        
     </ul>
 
     <!-- Script to toggle menus by permission -->
@@ -183,10 +175,6 @@ function url($path)
             <div class="dropdown-menu dropdown-menu-right">
                 <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/profile.php">
                     <i class="fas fa-user fa-sm fa-fw mr-2"></i> Profile
-                </a>
-                <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/notifications/sent_items.php">
-                    <i class="fas fa-bell fa-sm fa-fw mr-2"></i> Notifications
-                    <span id="notif-dropdown-badge" class="badge badge-danger ml-1" style="display:none;"></span>
                 </a>
                 <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/settings.php">
                     <i class="fas fa-cogs fa-sm fa-fw mr-2"></i> Settings

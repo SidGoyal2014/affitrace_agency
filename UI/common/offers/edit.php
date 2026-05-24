@@ -677,7 +677,10 @@ include $pathPrefix . '/includes/head.php';
 
                 // Dropdowns
                 populateSelect('advertiser_id', response.advertisers, 'id', 'name', offer.advertiser_id);
-                populateSelect('category_id', response.arrCategories, 'id', 'category_name', offer.category_id);
+                
+                const catSel = $('select[name="category_id"]').empty().append('<option value="">Select Category</option>');
+                renderCategoryOptions(catSel, response.arrCategories || [], offer.category_id);
+
                 populateSelect('ad_model', response.admodels, 'id', 'name', offer.ad_model);
                 populateSelect('aff_model', response.admodels, 'id', 'name', offer.aff_model);
 

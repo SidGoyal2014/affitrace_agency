@@ -42,7 +42,7 @@ class AdminOfferService
                 'arrEvents' => [],
                 'arrOA' => [],
                 'tracking_url' => '',
-                'arrCategories' => Category::all(),
+                'arrCategories' => Category::where('is_active', 'Y')->orderBy('category_name')->get(),                
                 'logged_in_user_type' => $logged_in_user_type
             ];
         } else {

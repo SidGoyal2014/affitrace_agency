@@ -186,6 +186,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('designations/{id}', [App\Http\Controllers\Admin\DesignationController::class, 'update']);
         Route::delete('designations/{id}', [App\Http\Controllers\Admin\DesignationController::class, 'destroy']);
 
+        // ─── Categories ───────────────────────────────────
+        Route::get('categories', [App\Http\Controllers\Admin\CategoryController::class, 'index']);
+        Route::get('categories/form-data', [App\Http\Controllers\Admin\CategoryController::class, 'formData']);
+        Route::get('categories/{id}', [App\Http\Controllers\Admin\CategoryController::class, 'show']);
+        Route::post('categories', [App\Http\Controllers\Admin\CategoryController::class, 'store']);
+        Route::put('categories/{id}', [App\Http\Controllers\Admin\CategoryController::class, 'update']);
+        Route::patch('categories/{id}/toggle-status', [App\Http\Controllers\Admin\CategoryController::class, 'toggleStatus']);
+
+
         // ─── Modules (read-only) ──────────────────────────
         Route::get('modules', [App\Http\Controllers\Admin\ModuleController::class, 'index']);
 
