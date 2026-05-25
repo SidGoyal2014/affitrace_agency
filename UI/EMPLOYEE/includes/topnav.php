@@ -1,6 +1,7 @@
 <?php
 // Top Navigation Component
 $pathPrefix = isset($pathPrefix) ? $pathPrefix : '.';
+$pathCommonPrefix = isset($pathCommonPrefix) ? $pathCommonPrefix : $pathPrefix . '/../common';
 $activePage = isset($activePage) ? $activePage : '';
 
 function isActiveNav($id, $activePage)
@@ -203,7 +204,7 @@ function url($path)
                     <span class="user-name mb-0" style="font-weight: 600; line-height: 1.2;">Employee</span>
                     <small class="user-role text-muted" style="font-size: 0.75rem; text-transform: capitalize;"></small>
                 </div>
-                <img class="user-avatar" src="<?php echo $pathPrefix; ?>/assets/img/undraw_profile.svg" alt="User">
+                <img class="user-avatar" src="<?php echo $pathCommonPrefix; ?>/assets/img/undraw_profile.svg" alt="User">
             </a>
             <div class="dropdown-menu dropdown-menu-right">
                 <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/profile.php">

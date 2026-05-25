@@ -45,8 +45,6 @@ include $pathPrefix . '/includes/head.php';
     <?php include $pathPrefix . '/includes/footer.php'; ?>
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
-    <script src="../assets/vendor/datatables/jquery.dataTables.min.js"></script>
-    <script src="../assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
 
     <script>
         $(document).ready(async function () {

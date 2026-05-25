@@ -53,8 +53,12 @@ include $pathPrefix . '/includes/head.php';
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
 
     <!-- DataTables -->
+     <?php
+     /*
     <script src="../assets/vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="../assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    */
+    ?>
 
     <script>
         // Helper function to format numbers to 2 decimal places

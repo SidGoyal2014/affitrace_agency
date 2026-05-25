@@ -15,7 +15,7 @@ include $pathPrefix . '/includes/head.php';
         <div class="container-fluid">
 
             <!-- Page Header -->
-            <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="page-header">
                 <h1>Postback Integration</h1>
             </div>
 

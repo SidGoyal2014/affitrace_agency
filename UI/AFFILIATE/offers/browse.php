@@ -12,7 +12,7 @@ include $pathPrefix . '/includes/head.php';
     <main id="main-content">
         <div class="container-fluid">
 
-            <div class="page-header d-flex justify-content-between align-items-center">
+            <div class="page-header">
                 <h1>Browse Offers</h1>
             </div>
 

@@ -46,8 +46,14 @@ include $pathPrefix . '/includes/head.php';
     <?php include $pathPrefix . '/includes/footer.php'; ?>
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
+    <?php
+    /*
+     * DataTables scripts are now included in the common scripts.php to ensure they're available on all
+
     <script src="../assets/vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="../assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    */
+    ?>
 
     <script>
         $(document).ready(async function () {

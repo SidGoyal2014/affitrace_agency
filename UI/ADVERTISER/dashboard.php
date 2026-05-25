@@ -1,5 +1,6 @@
 <?php
 $pathPrefix = '.';
+$pathCommonPrefix = $pathPrefix . '/../common';
 $activePage = 'dashboard';
 $pageTitle = 'Advertiser Dashboard';
 include $pathPrefix . '/includes/head.php';

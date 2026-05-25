@@ -1,5 +1,6 @@
 <?php
 $pathPrefix = '.';
+$pathCommonPrefix = $pathPrefix . '/../common';
 $activePage = 'dashboard';
 $pageTitle = 'Dashboard';
 include $pathPrefix . '/includes/head.php';
@@ -15,8 +16,8 @@ include $pathPrefix . '/includes/head.php';
         <div class="container-fluid">
 
             <!-- Page Header -->
-            <div class="page-header">
-                <h1>Dashboard</h1>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
                 <?php
                 /*
                 <a href="#" class="btn btn-primary">
@@ -238,9 +239,9 @@ include $pathPrefix . '/includes/head.php';
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
 
     <!-- Chart Plugins -->
-    <script src="assets/vendor/chart.js/Chart.min.js"></script>
-    <script src="assets/js/demo/chart-area-demo.js"></script>
-    <script src="assets/js/demo/chart-pie-demo.js"></script>
+    <script src="<?php echo $pathCommonPrefix; ?>/assets/vendor/chart.js/Chart.min.js"></script>
+    <script src="<?php echo $pathCommonPrefix; ?>/assets/js/demo/chart-area-demo.js"></script>
+    <script src="<?php echo $pathCommonPrefix; ?>/assets/js/demo/chart-pie-demo.js"></script>
 
     <script>
         // Format numbers to 2 decimal places

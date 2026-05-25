@@ -1,3 +1,6 @@
+<?php
+$pathCommonPrefix = 'common';
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -12,13 +15,13 @@
     <title>Login - Affitrace</title>
 
     <!-- Custom fonts for this template-->
-    <link href="ADMIN/assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Custom styles for this template-->
-    <link href="ADMIN/assets/css/sb-admin-2.css" rel="stylesheet">
-    <link href="ADMIN/assets/css/custom.css" rel="stylesheet">
-    <link href="ADMIN/assets/css/modern-theme.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/css/sb-admin-2.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/css/custom.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/css/modern-theme.css" rel="stylesheet">
 </head>
 
 <body
@@ -101,10 +104,10 @@
     </div>
 
     <!-- Bootstrap core JavaScript-->
-    <script src="ADMIN/assets/vendor/jquery/jquery.min.js"></script>
-    <script src="ADMIN/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="<?php echo $pathCommonPrefix; ?>/assets/vendor/jquery/jquery.min.js"></script>
+    <script src="<?php echo $pathCommonPrefix; ?>/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <!-- Use ADMIN's api.js -->
-    <script src="ADMIN/assets/js/api.js"></script>
+    <script src="<?php echo $pathCommonPrefix; ?>/assets/js/api.js"></script>
 
     <script>
         $(document).ready(function () {
