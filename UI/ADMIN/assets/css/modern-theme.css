@@ -304,7 +304,7 @@ nav.navbar.navbar-expand.topbar {
 }
 
 /* Page Header */
-.page-header {
+.page-header_OLD {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -313,11 +313,29 @@ nav.navbar.navbar-expand.topbar {
     border-bottom: 1px solid var(--border-light);
 }
 
-.page-header h1 {
+.page-header_OLD h1 {
     font-size: 1.75rem;
     font-weight: 700;
     margin: 0;
     color: var(--text-primary);
+}
+
+
+.page-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.page-header h1 {
+    line-height: 1.2;
+    font-size: 1.75rem;
+    font-weight: 400;
+    margin-bottom: 0 !important;
+    color: #5a5c69 !important;
 }
 
 /* ============================================

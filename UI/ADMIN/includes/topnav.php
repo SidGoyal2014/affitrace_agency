@@ -141,7 +141,8 @@ function url($path)
             </a>
             <div class="dropdown-menu">
                 <a class="dropdown-item" href="<?php echo url('redirect_checker/index.php'); ?>">Redirect Checker</a>
-                <a class="dropdown-item" href="<?php echo url('custom_domains/list.php'); ?>">Custom Domains</a>                
+                <a class="dropdown-item" href="<?php echo url('custom_domains/list.php'); ?>">Custom Domains</a>
+                <a class="dropdown-item" href="<?php echo url('tools/postback-simulator.php'); ?>">Postback Simulator</a>
             </div>
         </li>        
     </ul>

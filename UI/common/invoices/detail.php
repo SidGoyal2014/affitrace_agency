@@ -8,12 +8,12 @@ include $pathPrefix . '/includes/head.php';
     <main id="main-content">
         <div class="container-fluid">
             <!-- Header -->
-            <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <div class="page-header">
                 <div class="d-flex align-items-center">
                     <a href="index.php" class="btn btn-secondary btn-sm shadow-sm mr-3">
                         <i class="fas fa-arrow-left"></i>
                     </a>
-                    <h1 class="h3 mb-0 text-gray-800">Invoice: <span id="invoiceNumber">Loading...</span></h1>
+                    <h1>Invoice: <span id="invoiceNumber">Loading...</span></h1>
                     <span id="statusBadge" class="ml-3 badge badge-secondary" style="font-size: 1rem;">...</span>
                 </div>
                 <a href="#" class="btn btn-sm btn-info shadow-sm d-none" id="editLink">

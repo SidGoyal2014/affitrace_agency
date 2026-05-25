@@ -210,6 +210,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::put('sent/{id}',    [App\Http\Controllers\Api\V1\NotificationController::class, 'sentUpdate']);
             Route::delete('sent/{id}', [App\Http\Controllers\Api\V1\NotificationController::class, 'sentDestroy']);
         });
+
+        // ─── Postback Simulator Tool ───────────────────────────────────────────────
+        Route::prefix('tools/postback-simulator')->group(function () {
+            Route::get('recent-clicks',             [App\Http\Controllers\Admin\PostbackSimulatorController::class, 'recentClicks']);
+            Route::get('recent-conversions',        [App\Http\Controllers\Admin\PostbackSimulatorController::class, 'recentConversions']);
+            Route::post('fire-advertiser-postback', [App\Http\Controllers\Admin\PostbackSimulatorController::class, 'fireAdvertiserPostback']);
+            Route::post('fire-affiliate-postback',  [App\Http\Controllers\Admin\PostbackSimulatorController::class, 'fireAffiliatePostback']);
+        });
+
     });
 
     // Affiliate Routes
