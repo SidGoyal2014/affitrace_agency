@@ -182,11 +182,10 @@ include $pathPrefix . '/includes/head.php';
                     <div class="card-modern h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h6 class="m-0 font-weight-bold">Pending Offer Assignments</h6>
-                            <span class="badge badge-primary" id="request-count">0</span>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
-                                <table class="table table-flush mb-0">
+                                <table class="table table-flush mb-0" id="requests_table">
                                     <thead>
                                         <tr>
                                             <th>Request Details</th>
@@ -340,8 +339,21 @@ include $pathPrefix . '/includes/head.php';
                     });
                 } else {
                     $('#request-count').text('0');
-                    tbody.append('<tr><td class="text-center py-4 text-muted">No pending requests</td></tr>');
+                    //tbody.append('<tr><td class="text-center py-4 text-muted">No pending requests</td></tr>');
                 }
+
+                $('#requests_table').DataTable({
+                    pageLength: 5,
+                    lengthMenu: [5, 10, 25, 50],
+                    scrollY: '500px',
+                    scrollCollapse: true,
+                    language: {
+                        emptyTable: 'No pending requests',
+                        search: 'Search:',
+                        info: 'Showing _START_ to _END_ of _TOTAL_ requests',
+                        infoEmpty: 'No pending requests'
+                    }
+                });
 
                 if (window.initAreaChart) {
                     let monthlyRevenue = [];
