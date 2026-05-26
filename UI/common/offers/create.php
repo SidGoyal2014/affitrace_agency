@@ -108,6 +108,16 @@ include $pathPrefix . '/includes/head.php';
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="row mt-2">
+                                        <div class="col-md-12">
+                                            <small class="text-muted d-block mb-1">
+                                                <strong>Available Tokens:</strong> Click a token to insert it into the Offer URL
+                                            </small>
+                                            <div id="offerUrlTokensContainer" class="row">
+                                                <!-- Token buttons populated by JS -->
+                                            </div>
+                                        </div>
+                                    </div>                                    
                                 </div>
 
                                 <hr class="form-divider">
@@ -647,6 +657,24 @@ include $pathPrefix . '/includes/head.php';
                         mmpSelect.append(`<option value="${m.id}">${m.name}</option>`);
                     });
                 }
+
+                // Offer URL Tokens
+                const urlContainer = $('#offerUrlTokensContainer').empty();
+                const tokenLinks = (response.offerTokens || []).map(token =>
+                    `<a href="#" class="offer-url-token" style="color: #e83e8c;" data-macro="{${token.token_micro}}">{${token.token_micro}}</a>`
+                ).join(', ');
+                urlContainer.html(tokenLinks);
+
+                // Click-to-insert: appends token as query parameter to offer_url
+                $(document).off('click.offerToken').on('click.offerToken', '.offer-url-token', function (e) {
+                    e.preventDefault();
+                    const macro = $(this).data('macro');
+                    const key = macro.replace('{', '').replace('}', '');
+                    const textarea = $('textarea[name="offer_url"]')[0];
+                    const separator = textarea.value.includes('?') ? '&' : '?';
+                    textarea.value = textarea.value + separator + key + '=' + macro;
+                    textarea.focus();
+                });
 
                 // Initialize Select2 after all options loaded
                 initSelect2();
