@@ -573,11 +573,13 @@ include $pathPrefix . '/includes/head.php';
             // Initialize Select2 for ALL dropdowns (searchable)
             $('select.form-control').each(function () {
                 const $el = $(this);
+                if ($el.data('select2')) return;
                 const opts = {
                     theme: 'bootstrap4',
                     width: '100%',
                     allowClear: true,
-                    dropdownParent: $el.parent()
+                    dropdownParent: $(document.body)
+                    //dropdownParent: $el.parent()
                 };
 
                 const firstOpt = $el.find('option[value=""]');

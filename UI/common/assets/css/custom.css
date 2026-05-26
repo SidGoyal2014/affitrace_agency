@@ -201,12 +201,14 @@
 }
 
 .select2-dropdown--below {
-    top: 100% !important;
-    margin-top: 4px;
+    /*top: 100% !important;
+    margin-top: 4px;*/
+    margin-top: 2px;
 }
 
 .select2-dropdown--above {
-    top: auto !important;
+    /*top: auto !important;
     bottom: 100% !important;
-    margin-bottom: 4px;
+    margin-bottom: 4px;*/
+    margin-top: 2px;
 }

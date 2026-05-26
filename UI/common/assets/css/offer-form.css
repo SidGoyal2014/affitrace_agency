@@ -14,6 +14,7 @@
 }
 
 /* Ensure earlier sections stay above later ones for Select2 dropdowns */
+/*
 .offer-form-section:nth-of-type(1) {
     z-index: 6;
 }
@@ -33,6 +34,13 @@
 .offer-form-section:nth-of-type(5) {
     z-index: 2;
 }
+*/
+
+.offer-form-section:nth-child(1) { z-index: 6; }
+.offer-form-section:nth-child(2) { z-index: 5; }
+.offer-form-section:nth-child(3) { z-index: 4; }
+.offer-form-section:nth-child(4) { z-index: 3; }
+.offer-form-section:nth-child(5) { z-index: 2; }
 
 .offer-form-section .section-title {
     display: flex;
