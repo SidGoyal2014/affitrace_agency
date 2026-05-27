@@ -314,7 +314,7 @@ include $pathPrefix . '/includes/head.php';
                                     </div>
                                     <div class="targeting-value">
                                         <select name="target_country" class="form-control select2-country"
-                                            style="width: 100%;">
+                                            style="width: 100%;" multiple>
                                             <option value="">Global (All Countries)</option>
                                         </select>
                                     </div>
@@ -331,9 +331,8 @@ include $pathPrefix . '/includes/head.php';
                                             <option value="block">Block</option>
                                         </select>
                                     </div>
-                                    <div class="targeting-value">
-                                        <select name="target_state" class="form-control select2-state"
-                                            style="width: 100%;">
+                                    <div class="targeting-value" id="stateFieldWrapper">
+                                        <select name="target_state" id="stateSelect" class="form-control select2-state" style="width: 100%;" multiple>
                                             <option value="">All States</option>
                                         </select>
                                     </div>
@@ -611,10 +610,13 @@ include $pathPrefix . '/includes/head.php';
                 });
             });
 
+            // Force Select2 to sync with pre-selected values set before initialization
+            if ($('#stateSelect').length) {
+                $('#stateSelect').trigger('change');
+            }
+
             // Event Listeners for Cascading
-            $('select[name="target_country"]').on('change', function () {
-                populateStateDropdown($(this).val());
-            });
+            $('select[name="target_country"]').on('change', handleCountryChange);
 
             // ScrollSpy for Sections
             $(window).on('scroll', function () {
@@ -714,23 +716,30 @@ include $pathPrefix . '/includes/head.php';
                 });
 
                 // Pre-select values
-                if (offer.target_country) {
-                    let val = offer.target_country;
-                    if (val.includes(',')) {
-                        val = val.split(',')[0].trim();
-                    }
-                    countrySelect.val(val).trigger('change');
-                } else {
-                    countrySelect.val("").trigger('change');
-                }
+
+                const savedCountryCodes = offer.target_country
+                    ? offer.target_country.split(',').map(s => s.trim()).filter(s => s)
+                    : [];
+                countrySelect.val(savedCountryCodes).trigger('change');
+                // trigger('change') fires handleCountryChange which swaps state to input or select
+
                 $('select[name="state_permission"]').val(offer.state_permission || 'allow');
 
-                // Populate State and City
-                let savedState = offer.target_state ? offer.target_state.split(',')[0].trim() : '';
-                let savedCity = offer.target_city ? offer.target_city.split(',')[0].trim() : '';
+                const savedState = offer.target_state || '';
+                const savedCity  = offer.target_city  || '';
 
-                populateStateDropdown(countrySelect.val(), savedState);
+                if (savedCountryCodes.length > 1) {
+                    // State field is now a text input (swapped by handleCountryChange above)
+                    $('input[name="target_state"]').val(savedState);
+                } else {
+                    // State field is a select
+                    const stateValues = savedState ? savedState.split(',').map(s => s.trim()).filter(s => s) : [];
+                    populateStateDropdown(savedCountryCodes[0] || '', stateValues);
+                }
+
                 $('input[name="target_city"]').val(savedCity);
+
+
 
                 $('select[name="city_permission"]').val(offer.city_permission || 'allow');
                 $('select[name="device_permission"]').val(offer.device_permission || 'allow');
@@ -771,25 +780,77 @@ include $pathPrefix . '/includes/head.php';
             }
         }
 
-        function populateStateDropdown(countryCode, selectedState = null) {
-            const stateSelect = $('select[name="target_state"]');
-            if (selectedState === null) selectedState = stateSelect.val();
+function populateStateDropdown(countryCode, selectedStates = []) {
+    const $sel = $('#stateSelect');
+    if (!$sel.length) return;
 
-            stateSelect.empty().append('<option value="">All States</option>');
-
-            if (countryCode && typeof LOCATIONS !== 'undefined' && LOCATIONS[countryCode]) {
-                const states = Object.keys(LOCATIONS[countryCode]);
-                states.forEach(state => {
-                    stateSelect.append(new Option(state, state));
-                });
+    $sel.empty().append('<option value="">All States</option>');
+    if (countryCode && typeof LOCATIONS !== 'undefined' && LOCATIONS[countryCode]) {
+        Object.keys(LOCATIONS[countryCode]).forEach(stateName => {
+            $sel.append(new Option(stateName, stateName));
+        });
+    }
+    if (selectedStates && selectedStates.length) {
+        // Add any custom/saved values not in the dropdown list
+        selectedStates.forEach(v => {
+            if (v && !$sel.find('option[value="' + v + '"]').length) {
+                $sel.append(new Option(v, v));
             }
+        });
+        $sel.val(selectedStates).trigger('change');
+    }
+}
 
-            if (selectedState) {
-                stateSelect.val(selectedState).trigger('change.select2');
+function handleCountryChange() {
+    const selected = ($('select[name="target_country"]').val() || []).filter(v => v !== '');
+    const $wrapper = $('#stateFieldWrapper');
+
+    if (selected.length > 1) {
+        // Multiple countries — swap to text input
+        if ($('#stateSelect').length) {
+            if ($('#stateSelect').data('select2')) {
+                $('#stateSelect').select2('destroy');
             }
+            const prevVal = $('select[name="target_state"]').val();
+            const textVal = Array.isArray(prevVal) ? prevVal.filter(v=>v).join(',') : (prevVal || '');
+            $('#stateSelect').remove();
+            $wrapper.append(
+                '<input type="text" name="target_state" id="stateInput" class="form-control"' +
+                ' placeholder="e.g., Maharashtra, California (comma separated)" value="' + textVal + '">'
+            );
         }
-
-
+    } else {
+        // Single or no country — use select dropdown
+        const countryCode = selected[0] || '';
+        if ($('#stateInput').length) {
+            const prevVal = $('#stateInput').val();
+            $('#stateInput').remove();
+            $wrapper.append(
+                '<select name="target_state" id="stateSelect" class="form-control select2-state" style="width:100%;" multiple>' +
+                '<option value="">All States</option></select>'
+            );
+            $('#stateSelect').select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                allowClear: true,
+                dropdownParent: $(document.body),
+                placeholder: 'All States',
+                tags: true
+            });
+            populateStateDropdown(countryCode);
+            if (prevVal) {
+                prevVal.split(',').map(s => s.trim()).forEach(v => {
+                    if (v && !$('#stateSelect option[value="' + v + '"]').length) {
+                        $('#stateSelect').append(new Option(v, v));
+                    }
+                });
+                $('#stateSelect').val(prevVal.split(',').map(s => s.trim())).trigger('change');
+            }
+        } else {
+            populateStateDropdown(countryCode);
+        }
+    }
+}
 
         function loadAffiliates(affiliates, assignments, offer) {
             const assigned = {};
@@ -960,11 +1021,21 @@ function loadTokens(tokens) {
                     body: JSON.stringify({
                         offer_id: offerId,
                         country_permission: $('select[name="country_permission"]').val() || 'allow',
-                        target_country: $('select[name="target_country"]').val(),
+target_country: (() => {
+    const val = $('select[name="target_country"]').val() || [];
+    return val.filter(v => v !== '').join(',') || '';
+})(),
+
                         state_permission: $('select[name="state_permission"]').val(),
-                        target_state: $('select[name="target_state"]').val(),
+target_state: (() => {
+    const $input = $('input[name="target_state"]');
+    if ($input.length) return $input.val() || '';
+    const val = $('select[name="target_state"]').val();
+    return Array.isArray(val) ? val.filter(v => v !== '').join(',') : (val || '');
+})(),
+
                         city_permission: $('select[name="city_permission"]').val(),
-                        target_city: $('select[name="target_city"]').val(),
+                        target_city: $('input[name="target_city"]').val(),
                         device_permission: $('select[name="device_permission"]').val(),
                         target_device: $('select[name="target_device"]').val(),
                         browser_permission: $('select[name="browser_permission"]').val(),

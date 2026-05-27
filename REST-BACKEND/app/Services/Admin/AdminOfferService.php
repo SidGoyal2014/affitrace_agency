@@ -222,7 +222,10 @@ class AdminOfferService
 
         if (strlen(trim($request->target_country)) > 0) {
             $offer->country_permission = $request->country_permission;
-            $offer->target_country = $request->target_country;
+            //$offer->target_country = $request->target_country;
+            $val = $request->target_country;
+            $offer->target_country = is_array($val) ? implode(',', array_filter($val)) : $val;
+
         }
 
         if (isset($request->target_state) && strlen(trim($request->target_state)) > 0) {
