@@ -113,7 +113,7 @@ include $pathPrefix . '/includes/head.php';
                                             <small class="text-muted d-block mb-1">
                                                 <strong>Available Tokens:</strong> Click a token to insert it into the Offer URL
                                             </small>
-                                            <div id="offerUrlTokensContainer" class="row">
+                                            <div id="offerUrlTokensContainer" class="row" style="margin-left: 0px !important;">
                                                 <!-- Token buttons populated by JS -->
                                             </div>
                                         </div>
@@ -128,37 +128,32 @@ include $pathPrefix . '/includes/head.php';
                                         <div class="section-icon"><i class="fas fa-dollar-sign"></i></div>
                                         <h6>Pricing Model</h6>
                                     </div>
-
-                                    <div class="field-group">
-                                        <div class="field-group-label">
-                                            <i class="fas fa-chart-line"></i> Revenue & Payout
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="pricing-pair">
-                                                    <div class="form-group">
-                                                        <label>Ad Model <span class="required-dot"></span></label>
-                                                        <select name="ad_model" class="form-control" required></select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label>Revenue</label>
-                                                        <input type="number" name="ad_pricing" class="form-control"
-                                                            step="0.01" value="0.00" placeholder="0.00">
-                                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="pricing-pair">
+                                                <div class="form-group">
+                                                    <label>Select Model <span class="required-dot"></span></label>
+                                                    <select name="ad_model" class="form-control" required></select>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="pricing-pair">
-                                                    <div class="form-group">
-                                                        <label>Aff Model <span class="required-dot"></span></label>
-                                                        <select name="aff_model" class="form-control" required></select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label>Payout</label>
-                                                        <input type="number" name="aff_pricing" class="form-control"
-                                                            step="0.01" value="0.00" placeholder="0.00">
-                                                    </div>
+                                        </div>                                        
+                                        <div class="col-md-4">
+                                            <div class="pricing-pair">
+                                                <div class="form-group">
+                                                    <label>Revenue</label>
+                                                    <input type="number" name="ad_pricing" class="form-control"
+                                                        step="0.01" value="0.00" placeholder="0.00">
                                                 </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="pricing-pair">
+                                                <div class="form-group">
+                                                    <label>Payout</label>
+                                                    <input type="number" name="aff_pricing" class="form-control"
+                                                        step="0.01" value="0.00" placeholder="0.00">
+                                                </div>
+                                                <input type="hidden" name="aff_model" class="form-control" required></input>
                                             </div>
                                         </div>
                                     </div>
@@ -615,7 +610,7 @@ include $pathPrefix . '/includes/head.php';
                 });
 
                 // Aff Models
-                const affModelSelect = $('select[name="aff_model"]');
+                const affModelSelect = $('select[name="ad_model"]');
                 affModelSelect.empty().append('<option value="">Select Model</option>');
                 (response.admodels || []).forEach(model => {
                     affModelSelect.append(`<option value="${model.id}">${model.name}</option>`);
@@ -729,7 +724,7 @@ include $pathPrefix . '/includes/head.php';
                     offer_url: $('textarea[name="offer_url"]').val(),
                     preview_url: $('input[name="preview_url"]').val(),
                     ad_model: $('select[name="ad_model"]').val(),
-                    aff_model: $('select[name="aff_model"]').val(),
+                    aff_model: $('select[name="ad_model"]').val(),
                     ad_pricing: parseFloat($('input[name="ad_pricing"]').val()).toFixed(2),
                     aff_pricing: parseFloat($('input[name="aff_pricing"]').val()).toFixed(2),
                     currency: $('select[name="currency"]').val(),

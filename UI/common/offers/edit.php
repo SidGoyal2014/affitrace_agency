@@ -123,37 +123,32 @@ include $pathPrefix . '/includes/head.php';
                                         <div class="section-icon"><i class="fas fa-dollar-sign"></i></div>
                                         <h6>Pricing Model</h6>
                                     </div>
-
-                                    <div class="field-group">
-                                        <div class="field-group-label">
-                                            <i class="fas fa-chart-line"></i> Revenue & Payout
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="pricing-pair">
-                                                    <div class="form-group">
-                                                        <label>Ad Model</label>
-                                                        <select name="ad_model" class="form-control"></select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label>Revenue</label>
-                                                        <input type="number" name="ad_pricing" class="form-control"
-                                                            step="0.01">
-                                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="pricing-pair">
+                                                <div class="form-group">
+                                                    <label>Select Model <span class="required-dot"></span></label>
+                                                    <select name="ad_model" class="form-control" required></select>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="pricing-pair">
-                                                    <div class="form-group">
-                                                        <label>Aff Model</label>
-                                                        <select name="aff_model" class="form-control"></select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label>Payout</label>
-                                                        <input type="number" name="aff_pricing" class="form-control"
-                                                            step="0.01">
-                                                    </div>
+                                        </div>                                           
+                                        <div class="col-md-4">
+                                            <div class="pricing-pair">
+                                                <div class="form-group">
+                                                    <label>Revenue</label>
+                                                    <input type="number" name="ad_pricing" class="form-control"
+                                                        step="0.01">
                                                 </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="pricing-pair">
+                                                <div class="form-group">
+                                                    <label>Payout</label>
+                                                    <input type="number" name="aff_pricing" class="form-control"
+                                                        step="0.01">
+                                                </div>
+                                                <input type="hidden" name="aff_model" class="form-control" required></input>
                                             </div>
                                         </div>
                                     </div>
@@ -694,7 +689,7 @@ include $pathPrefix . '/includes/head.php';
                 renderCategoryOptions(catSel, response.arrCategories || [], offer.category_id);
 
                 populateSelect('ad_model', response.admodels, 'id', 'name', offer.ad_model);
-                populateSelect('aff_model', response.admodels, 'id', 'name', offer.aff_model);
+                populateSelect('aff_model', response.admodels, 'id', 'name', offer.ad_model);
 
                 const curSelect = $('select[name="currency"]').empty();
 
@@ -939,7 +934,7 @@ function loadTokens(tokens) {
                         offer_url: $('textarea[name="offer_url"]').val(),
                         ad_model: $('select[name="ad_model"]').val(),
                         ad_pricing: $('input[name="ad_pricing"]').val(),
-                        aff_model: $('select[name="aff_model"]').val(),
+                        aff_model: $('select[name="ad_model"]').val(),
                         aff_pricing: $('input[name="aff_pricing"]').val(),
                         currency: $('select[name="currency"]').val(),
                         campaign_start_date: $('input[name="campaign_start_date"]').val(),
