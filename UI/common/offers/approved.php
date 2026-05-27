@@ -18,7 +18,6 @@ include $pathPrefix . '/includes/head.php';
                     <i class="fas fa-plus mr-2"></i> Create Offer
                 </a>
             </div>
-
             <!-- Offers Table -->
             <div class="card-modern">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -54,14 +53,7 @@ include $pathPrefix . '/includes/head.php';
 
     <!-- Footer -->
     <?php include $pathPrefix . '/includes/footer.php'; ?>
-
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
-
-    <!-- DataTables -->
-     <?php /*
-    <script src="../assets/vendor/datatables/jquery.dataTables.min.js"></script>
-    <script src="../assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
-    */?>
 
     <script>
         $(document).ready(async function () {
@@ -99,6 +91,7 @@ include $pathPrefix . '/includes/head.php';
                                 <td>
                                     <a href="../reports/click_conversion_report.php?offer_id=${offer.id}" class="btn btn-sm btn-outline-primary mr-1">Reports</a>
                                     <a href="edit.php?id=${offer.id}" class="btn btn-sm btn-outline-secondary mr-1">Edit</a>
+                                    <button onclick="cloneOffer(${offer.id})" class="btn btn-sm btn-outline-warning mr-1">Clone</button>
                                     <button onclick="deleteOffer(${offer.id})" class="btn btn-sm btn-outline-danger">Delete</button>
                                 </td>
                             </tr>
@@ -132,6 +125,25 @@ include $pathPrefix . '/includes/head.php';
                     location.reload();
                 } else {
                     Toast.error('Delete Failed', response.error || 'Failed to delete offer');
+                }
+            } catch (error) {
+                Toast.error('Error', error.message);
+            }
+        }
+
+        async function cloneOffer(id) {
+            if (!confirm("Are you sure you want to clone this offer?")) return;
+
+            try {
+                const response = await API.fetchWithAuth(`<?php echo $user_type;?>/offer/clone/${id}`, {
+                    method: 'POST'
+                });
+
+                if (response.status === 1) {
+                    Toast.success('Cloned', 'Offer has been cloned');
+                    location.reload();
+                } else {
+                    Toast.error('Clone Failed', response.error || 'Failed to clone offer');
                 }
             } catch (error) {
                 Toast.error('Error', error.message);

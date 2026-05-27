@@ -477,4 +477,31 @@ class AdminOfferService
             return ['status' => 0, 'error' => 'Failed: ' . $e->getMessage(), 'code' => 500];
         }
     }
+
+
+    public function cloneOffer($id)
+    {
+        $source = Offer::find($id);
+        if (!$source) {
+            return ['status' => 0, 'error' => 'Offer not found', 'code' => 404];
+        }
+
+        $clone = $source->replicate();          // copies all Eloquent attributes
+        $clone->offer_name        = $source->offer_name . ' (Copy)';
+        $clone->offer_status      = 'pending';  // requires re-approval
+        $clone->clicks_cap        = null;       // reset usage caps
+        $clone->conversions_cap   = null;
+        $clone->attribution_link  = null;       // reset generated tracking link
+        $clone->save();
+
+        return [
+            'status'   => 1,
+            'msg'      => 'Offer cloned successfully',
+            'offer_id' => $clone->id,
+            'code'     => 200
+        ];
+    }
+
+
+
 }

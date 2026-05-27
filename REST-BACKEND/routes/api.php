@@ -81,6 +81,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('offer/update_offer', [App\Http\Controllers\Admin\OfferController::class, 'update_offer']);
         Route::delete('offer/delete/{id}', [App\Http\Controllers\Admin\OfferController::class, 'delete_offer']);
         Route::post('offer/restore/{id}', [App\Http\Controllers\Admin\OfferController::class, 'restore_offer']);
+        Route::post('offer/clone/{id}', [App\Http\Controllers\Admin\OfferController::class, 'clone_offer']);        
         Route::get('offer/approved', [App\Http\Controllers\Admin\OfferController::class, 'offers_approved']);
         Route::get('offer/pending', [App\Http\Controllers\Admin\OfferController::class, 'offers_pending']);
         Route::get('offer/ended', [App\Http\Controllers\Admin\OfferController::class, 'offers_ended']);

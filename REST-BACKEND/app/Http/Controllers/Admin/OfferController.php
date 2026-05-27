@@ -204,4 +204,11 @@ class OfferController extends Controller
 	}//destroy
 
 
+	public function clone_offer(string $id)
+	{
+		$result = $this->offerService->cloneOffer($id);
+		return response()->json($result, $result['code'] ?? 200);
+	}
+
+
 }//OfferController
