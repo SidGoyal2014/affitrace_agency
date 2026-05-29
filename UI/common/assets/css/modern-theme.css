@@ -188,6 +188,9 @@ main {
 .top-navbar .nav-item {
     position: relative;
     margin: 0 var(--spacing-xs);
+    height: var(--navbar-height);   /* ← ADD: fill full 64px navbar height */
+    display: flex;                  /* ← ADD: needed to center nav-link inside */
+    align-items: center;            /* ← ADD: keep nav-link text vertically centered */    
 }
 
 .top-navbar .nav-link {
@@ -223,6 +226,7 @@ main {
     position: absolute;
     top: 100%;
     left: 0;
+    margin-top: 0;
     background: var(--bg-dropdown);
     border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
