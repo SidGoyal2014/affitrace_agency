@@ -281,6 +281,14 @@
     font-size: 0.875rem;
 }
 
+.offer-scroll-nav .nav-link.nav-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+    color: var(--text-muted);
+}
+
+
 /* ============================================
    SECTION CARDS — Each scrollable section
    ============================================ */
@@ -292,6 +300,11 @@
     margin-bottom: 2.5rem !important;
     scroll-margin-top: 140px;
 }
+
+.offer-sections .offer-section.section-locked {
+    display: none !important;
+}
+
 
 /* ============================================
    TARGETING ROWS — Cleaner filter layout

@@ -27,22 +27,22 @@ include $pathPrefix . '/includes/head.php';
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#tabTargeting">
+                    <a class="nav-link nav-disabled" href="#tabTargeting">
                         <i class="fas fa-crosshairs"></i> Targeting
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#tabAffiliates">
+                    <a class="nav-link nav-disabled" href="#tabAffiliates">
                         <i class="fas fa-users"></i> Affiliates
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#tabEvents">
+                    <a class="nav-link nav-disabled" href="#tabEvents">
                         <i class="fas fa-bullseye"></i> Events/Goals
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#tabMMP">
+                    <a class="nav-link nav-disabled" href="#tabMMP">
                         <i class="fas fa-share-alt"></i> MMP Config
                     </a>
                 </li>

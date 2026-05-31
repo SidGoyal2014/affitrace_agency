@@ -199,7 +199,7 @@ include $pathPrefix . '/includes/head.php';
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formObj)
                 });
-console.log(response);
+//console.log(response);
                 renderTable(response);
 
             } catch (error) {
@@ -210,6 +210,8 @@ console.log(response);
 
 
         function renderTable(response) {
+            if (dtInstance) { dtInstance.destroy(); dtInstance = null; }  // ← destroy FIRST
+
             const tbody = $('#reportTableBody');
             tbody.empty();
 
