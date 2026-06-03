@@ -532,6 +532,7 @@ class WeeklyPayoutService extends BaseReportService
             ->where('c.affiliate_id', $assignment->affiliate_id)
             ->whereBetween('c.created_at', [$monthStartUtc, $monthEndUtc])
             ->whereIn('c.status', $this->eligibleConversionStatuses())
+            ->where('c.payout_usd', '>', 0)
             ->groupBy(DB::raw($weekExpr))
             ->get()
             ->map(function ($row) use ($assignment) {

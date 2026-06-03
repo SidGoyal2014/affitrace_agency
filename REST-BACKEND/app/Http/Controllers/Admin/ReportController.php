@@ -73,10 +73,15 @@ class ReportController extends Controller
 		return response()->json($this->reportService->getClickConversionReportForAdmin($request));
 	}
 
-	public function all_payouts()
+    public function all_payouts(Request $request)
+    {
+        return response()->json($this->reportService->allPayouts($request));
+    }
+	
+	/*public function all_payouts()
 	{
 		return response()->json($this->reportService->allPayouts());
-	}
+	}*/
 
 	public function search_all_payouts(Request $request)
 	{

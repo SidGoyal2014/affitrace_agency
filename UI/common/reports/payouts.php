@@ -65,7 +65,9 @@ include $pathPrefix . '/includes/head.php';
                         </div>
                         <div class="col-md-3 mb-3">
                             <button class="btn btn-primary" id="btnRefreshWeekly">
-                                <i class="fas fa-sync-alt mr-1"></i> Refresh
+                                <span id="btnRefreshSpinner" class="spinner-border spinner-border-sm mr-1 d-none" role="status" aria-hidden="true"></span>
+                                <i class="fas fa-sync-alt mr-1"></i>
+                                <span id="btnRefreshText">Refresh</span>
                             </button>
                         </div>
                         <div class="col-md-6 mb-3 text-md-right">
@@ -123,6 +125,7 @@ include $pathPrefix . '/includes/head.php';
                                     <th>Offer</th>
                                     <th>Amount</th>
                                     <th>Currency</th>
+                                    <th>Amount (USD)</th>
                                     <th>Status</th>
                                     <th>Date</th>
                                 </tr>
@@ -224,32 +227,99 @@ include $pathPrefix . '/includes/head.php';
             refreshBulkButton();
         }
 
+        function setWeeklyLoading(isLoading) {
+            if (isLoading) {
+                $('#filterMonth').prop('disabled', true);
+                $('#btnRefreshWeekly').prop('disabled', true);
+                $('#btnRefreshSpinner').removeClass('d-none');
+                $('#btnRefreshIcon').addClass('d-none');
+                $('#btnRefreshText').text('Loading...');
+                $('#weeklyTableBody').html('<tr><td colspan="9" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm mr-2"></span>Fetching data, please wait...</td></tr>');
+                $('#statPending, #statPaid, #statRejected').text('...');
+            } else {
+                $('#filterMonth').prop('disabled', false);
+                $('#btnRefreshWeekly').prop('disabled', false);
+                $('#btnRefreshSpinner').addClass('d-none');
+                $('#btnRefreshIcon').removeClass('d-none');
+                $('#btnRefreshText').text('Refresh');
+            }
+        }
+
         async function loadWeeklyData() {
             const month = String($('#filterMonth').val() || '').trim();
             console.log('Loading weekly payouts data for month:', month);
 
-            const [dataRes, statsRes] = await Promise.all([
-                API.fetchWithAuth('<?php echo $user_type;?>/reports/weekly-payouts?month=' + encodeURIComponent(month) + '&sync=1'),
-                API.fetchWithAuth('<?php echo $user_type;?>/reports/weekly-payouts/stats?month=' + encodeURIComponent(month))
-            ]);
+            setWeeklyLoading(true);
+            try {
+                const [dataRes, statsRes] = await Promise.all([
+                    API.fetchWithAuth('<?php echo $user_type;?>/reports/weekly-payouts?month=' + encodeURIComponent(month) + '&sync=1'),
+                    API.fetchWithAuth('<?php echo $user_type;?>/reports/weekly-payouts/stats?month=' + encodeURIComponent(month))
+                ]);
 
-            weeklyRows = Array.isArray(dataRes.data) ? dataRes.data : [];
-            renderWeeklyRows(weeklyRows);
+                weeklyRows = Array.isArray(dataRes.data) ? dataRes.data : [];
+                renderWeeklyRows(weeklyRows);
 
-            const stats = (statsRes && statsRes.stats) || {};
-            $('#statPending').text((stats.pending_count || 0) + ' / $' + formatDecimal(stats.pending_amount));
-            $('#statPaid').text((stats.paid_count || 0) + ' / $' + formatDecimal(stats.paid_amount));
-            $('#statRejected').text((stats.rejected_count || 0) + ' / $' + formatDecimal(stats.rejected_amount));
+                const stats = (statsRes && statsRes.stats) || {};
+                $('#statPending').text((stats.pending_count || 0) + ' / $' + formatDecimal(stats.pending_amount));
+                $('#statPaid').text((stats.paid_count || 0) + ' / $' + formatDecimal(stats.paid_amount));
+                $('#statRejected').text((stats.rejected_count || 0) + ' / $' + formatDecimal(stats.rejected_amount));
+
+            } finally {
+                setWeeklyLoading(false);
+            }
+
 
         }
 
         async function loadLegacyPayouts() {
-            const response = await API.fetchWithAuth('<?php echo $user_type;?>/reports/all-payouts');
+            //const response = await API.fetchWithAuth('<?php echo $user_type;?>/reports/all-payouts');
+            const month = String($('#filterMonth').val() || '').trim();
+            const monthParam = month ? '?month=' + encodeURIComponent(month) : '';
+            const response = await API.fetchWithAuth('<?php echo $user_type;?>/reports/all-payouts' + monthParam);            
+            
             const payouts = response.data?.data || response.data || [];
             const tbody = $('#legacyTableBody');
             tbody.empty();
 
             if (payouts.length > 0) {
+                // Group rows by affiliate so per-affiliate subtotals match weekly rows
+                const grouped = {};
+                payouts.forEach(p => {
+                    const key = p.aid;
+                    if (!grouped[key]) {
+                        grouped[key] = { name: p.affiliate_name || ('Aff #' + p.aid), rows: [], subtotal: 0 };
+                    }
+                    grouped[key].rows.push(p);
+                    grouped[key].subtotal += parseFloat(p.payout_usd || 0);
+                });
+
+                Object.values(grouped).forEach(group => {
+                    group.rows.forEach(p => {
+                        tbody.append(`
+                            <tr>
+                                <td>${p.affiliate_name || p.aid}</td>
+                                <td>${p.offer_name || p.oid}</td>
+                                <td><strong>${formatDecimal(p.amount)}</strong></td>
+                                <td><strong>${p.currency}</strong></td>
+                                <td><strong>${formatDecimal(p.payout_usd)}</strong></td>
+                                <td><strong>${p.status}</strong></td>
+                                <td>${p.created_at || '-'}</td>
+                            </tr>
+                        `);
+                    });
+                    tbody.append(`
+                        <tr class="table-active font-weight-bold">
+                            <td colspan="4" class="text-right">Subtotal — ${group.name}</td>
+                            <td>$${formatDecimal(group.subtotal)}</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    `);
+                });
+            } else {
+                tbody.html('<tr><td colspan="7" class="text-center py-4 text-muted">No payouts found for selected month</td></tr>');
+            }
+
+            /*if (payouts.length > 0) {
                 payouts.forEach(p => {
                     tbody.append(`
                         <tr>
@@ -257,6 +327,7 @@ include $pathPrefix . '/includes/head.php';
                             <td>${p.offer_name || p.oid}</td>
                             <td><strong>${formatDecimal(p.amount)}</strong></td>
                             <td><strong>${(p.currency)}</strong></td>
+                            <td><strong>${(p.payout_usd)}</strong></td>
                             <td><strong>${(p.status)}</strong></td>
                             <td>${p.created_at || '-'}</td>
                         </tr>
@@ -270,6 +341,13 @@ include $pathPrefix . '/includes/head.php';
                 legacyTable.destroy();
             }
             legacyTable = $('#legacyDataTable').DataTable({ pageLength: 25 });
+            */
+
+            if (legacyTable) {
+                legacyTable.destroy();
+                legacyTable = null;
+            }            
+
         }
 
         async function rejectRow(id) {
@@ -385,13 +463,21 @@ include $pathPrefix . '/includes/head.php';
                 }
             });
 
-            $('#filterMonth').on('change', async function () {
+            /*$('#filterMonth').on('change', async function () {
                 try {
                     await loadWeeklyData();
                 } catch (error) {
                     Toast.error('Filter Failed', error.message || 'Unable to load data for selected month.');
                 }
-            });
+            });*/
+
+            $('#filterMonth').on('change', async function () {
+                try {
+                    await Promise.all([loadWeeklyData(), loadLegacyPayouts()]);
+                } catch (error) {
+                    Toast.error('Filter Failed', error.message || 'Unable to load data for selected month.');
+                }
+            });            
 
             try {
                 const feature = await API.fetchWithAuth('<?php echo $user_type;?>/reports/weekly-payouts/feature-status');

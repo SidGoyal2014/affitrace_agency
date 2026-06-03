@@ -274,7 +274,44 @@ class AdminReportService extends BaseReportService
     /**
      * Get all payouts (from conversions table)
      */
-    public function allPayouts()
+
+    public function allPayouts($request = null)
+    {
+        $query = DB::table('conversions as C')
+            ->leftJoin('offers as O', 'C.offer_id', '=', 'O.id')
+            ->leftJoin('users as U', 'C.affiliate_id', '=', 'U.id')
+            ->select(
+                'C.id',
+                'C.affiliate_id as aid',
+                'U.name as affiliate_name',
+                'C.offer_id as oid',
+                'O.offer_name',
+                'C.payout as amount',
+                'C.status',
+                'C.currency',
+                'C.payout_usd',
+                'C.created_at'
+            );
+
+        if ($request && $request->month) {
+            $fromUtc = $this->getUtcStartOfDay(
+                \Carbon\Carbon::createFromFormat('Y-m', $request->month)->startOfMonth()->toDateString()
+            );
+            $toUtc = $this->getUtcEndOfDay(
+                \Carbon\Carbon::createFromFormat('Y-m', $request->month)->endOfMonth()->toDateString()
+            );
+            $query->whereBetween('C.created_at', [$fromUtc, $toUtc]);
+        }
+
+        $data = $query->orderBy('C.created_at', 'desc')->get();
+
+        return [
+            'module_name' => "Payouts Report",
+            'data' => $data
+        ];
+    }
+
+    /*public function allPayouts_OLD()
     {
         $data = DB::table('conversions as C')
             ->leftJoin('offers as O', 'C.offer_id', '=', 'O.id')
@@ -288,6 +325,7 @@ class AdminReportService extends BaseReportService
                 'C.payout as amount',
                 'C.status',
                 'C.currency',
+                'C.payout_usd',
                 'C.created_at'
             )
             ->orderBy('C.created_at', 'desc')
@@ -297,7 +335,7 @@ class AdminReportService extends BaseReportService
             'module_name' => "Payouts Report",
             'data' => $data
         ];
-    }
+    }*/
 
     /**
      * Search all payouts (from conversions table)
@@ -315,6 +353,8 @@ class AdminReportService extends BaseReportService
                 'O.offer_name',
                 'C.payout as amount',
                 'C.currency',
+                'C.payout_usd',
+                'C.status',
                 'C.created_at'
             );
 
