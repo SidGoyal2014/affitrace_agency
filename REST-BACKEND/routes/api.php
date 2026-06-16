@@ -220,6 +220,43 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('fire-affiliate-postback',  [App\Http\Controllers\Admin\PostbackSimulatorController::class, 'fireAffiliatePostback']);
         });
 
+        // ─── Fraud Detection ───────────────────────────────────────────────────────
+        Route::prefix('fraud')->group(function () {
+            // Dashboard & Reporting
+            Route::get('dashboard',    [App\Http\Controllers\Admin\FraudController::class, 'dashboard']);
+            Route::get('alerts',       [App\Http\Controllers\Admin\FraudController::class, 'alerts']);
+            Route::get('click-scores', [App\Http\Controllers\Admin\FraudController::class, 'clickScores']);
+            Route::post('bulk-block',  [App\Http\Controllers\Admin\FraudController::class, 'bulkBlock']);
+
+            // Rules
+            Route::get('rules',               [App\Http\Controllers\Admin\FraudController::class, 'listRules']);
+            Route::get('rules/{id}',          [App\Http\Controllers\Admin\FraudController::class, 'getRule']);
+            Route::post('rules',              [App\Http\Controllers\Admin\FraudController::class, 'createRule']);
+            Route::put('rules/{id}',          [App\Http\Controllers\Admin\FraudController::class, 'updateRule']);
+            Route::delete('rules/{id}',       [App\Http\Controllers\Admin\FraudController::class, 'deleteRule']);
+            Route::patch('rules/{id}/toggle', [App\Http\Controllers\Admin\FraudController::class, 'toggleRule']);
+
+            // IP Blacklist
+            Route::get('blacklist/ip',         [App\Http\Controllers\Admin\FraudController::class, 'listIpBlacklist']);
+            Route::post('blacklist/ip',        [App\Http\Controllers\Admin\FraudController::class, 'addIpBlacklist']);
+            Route::post('blacklist/ip/import', [App\Http\Controllers\Admin\FraudController::class, 'importIpBlacklist']);
+            Route::delete('blacklist/ip/{id}', [App\Http\Controllers\Admin\FraudController::class, 'removeIpBlacklist']);
+
+            // IP Whitelist
+            Route::get('whitelist/ip',          [App\Http\Controllers\Admin\FraudController::class, 'listIpWhitelist']);
+            Route::post('whitelist/ip',         [App\Http\Controllers\Admin\FraudController::class, 'addIpWhitelist']);
+            Route::delete('whitelist/ip/{id}',  [App\Http\Controllers\Admin\FraudController::class, 'removeIpWhitelist']);
+
+            // Device Blacklist
+            Route::get('blacklist/device',         [App\Http\Controllers\Admin\FraudController::class, 'listDeviceBlacklist']);
+            Route::post('blacklist/device',        [App\Http\Controllers\Admin\FraudController::class, 'addDeviceBlacklist']);
+            Route::delete('blacklist/device/{id}', [App\Http\Controllers\Admin\FraudController::class, 'removeDeviceBlacklist']);
+
+            // Third-Party Config
+            Route::get('third-party-config', [App\Http\Controllers\Admin\FraudController::class, 'getThirdPartyConfig']);
+            Route::put('third-party-config', [App\Http\Controllers\Admin\FraudController::class, 'updateThirdPartyConfig']);
+        });
+
     });
 
     // Affiliate Routes
