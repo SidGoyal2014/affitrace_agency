@@ -30,26 +30,36 @@ include $pathPrefix . '/includes/head.php';
             <!-- Click Limit Status -->
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="card-modern shadow-sm">
-                        <div class="card-body">
-                            <h6 class="font-weight-bold text-primary mb-3">Plan Usage: Clicks Consumed</h6>
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="small font-weight-bold" id="clicks_status_text">Loading...</span>
-                                <span class="small font-weight-bold" id="clicks_percentage_text">0%</span>
+                    <div class="card-modern shadow-sm py-2 px-3">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between">
+                            <!-- Title & Progress Bar inline -->
+                            <div class="d-flex align-items-center flex-grow-1 mr-md-4 mb-2 mb-md-0"
+                                style="min-width: 280px;">
+                                <h6 class="font-weight-bold text-primary mb-0 mr-3 text-nowrap">Plan Usage: Clicks
+                                    Consumed</h6>
+                                <div class="progress flex-grow-1" style="height: 12px; min-width: 150px;">
+                                    <div class="progress-bar bg-info" role="progressbar" id="clicks_progress_bar"
+                                        style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
                             </div>
-                            <div class="progress" style="height: 20px;">
-                                <div class="progress-bar bg-info" role="progressbar" id="clicks_progress_bar"
-                                    style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            <!-- Status Values inline -->
+                            <div class="d-flex align-items-center">
+                                <span class="small font-weight-bold text-muted mr-3"
+                                    id="clicks_status_text">Loading...</span>
+                                <span class="badge badge-info" id="clicks_percentage_text">0%</span>
                             </div>
-                            <div id="clicks_warning_alert" class="alert alert-danger mt-3 d-none">
-                                <i class="fas fa-exclamation-triangle mr-2"></i> <span id="clicks_warning_msg"></span>
-                            </div>
+                        </div>
+                        <!-- Warning Alert below, if triggered -->
+                        <div id="clicks_warning_alert" class="alert alert-danger py-1 px-3 mt-2 mb-0 small d-none">
+                            <i class="fas fa-exclamation-triangle mr-2"></i> <span id="clicks_warning_msg"></span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Stats Grid -->
+            <!-- Row 1: Setup & Margin -->
             <div class="row">
                 <!-- Total Offers -->
                 <div class="col-xl-3 col-md-6 mb-4">
@@ -65,6 +75,86 @@ include $pathPrefix . '/includes/head.php';
                         </div>
                     </div>
                 </div>
+
+                <!-- Total Advertisers -->
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card-modern h-100">
+                        <div class="stat-card">
+                            <div class="stat-icon info">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Advertisers</div>
+                                <div class="stat-value" id="total_advertisers">...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Affiliates -->
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card-modern h-100">
+                        <div class="stat-card">
+                            <div class="stat-icon info">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Affiliates</div>
+                                <div class="stat-value" id="total_affiliates">...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Margin -->
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card-modern h-100">
+                        <div class="stat-card">
+                            <div class="stat-icon success">
+                                <i class="fas fa-percent"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Margin</div>
+                                <div class="stat-value" id="total_margin">...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Volume & Finance -->
+            <div class="row">
+                <!-- Total Clicks -->
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card-modern h-100">
+                        <div class="stat-card">
+                            <div class="stat-icon warning">
+                                <i class="fas fa-mouse-pointer"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Clicks</div>
+                                <div class="stat-value" id="total_clicks">...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Conversions -->
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card-modern h-100">
+                        <div class="stat-card">
+                            <div class="stat-icon success">
+                                <i class="fas fa-check-double"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Total Conversions</div>
+                                <div class="stat-value" id="total_conversions">...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
 
                 <!-- Total Revenue -->
                 <div class="col-xl-3 col-md-6 mb-4">
@@ -96,23 +186,9 @@ include $pathPrefix . '/includes/head.php';
                     </div>
                 </div>
 
-                <!-- Total Affiliates -->
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card-modern h-100">
-                        <div class="stat-card">
-                            <div class="stat-icon info">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <div class="stat-content">
-                                <div class="stat-label">Total Affiliates</div>
-                                <div class="stat-value" id="total_affiliates">...</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
-            <!-- Secondary Stats -->
+            <!-- Row 3: Averages -->
             <div class="row">
                 <!-- Avg Rev / Offer -->
                 <div class="col-xl-3 col-md-6 mb-4">
@@ -230,6 +306,41 @@ include $pathPrefix . '/includes/head.php';
                 </div>
             </div>
 
+            <!-- Revenue vs Payout Chart -->
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <div class="card-modern">
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                            <h6 class="m-0 font-weight-bold">Revenue vs Payout</h6>
+                            <div class="d-flex align-items-center flex-wrap mt-2 mt-md-0">
+                                <!-- Period toggle buttons -->
+                                <div class="btn-group btn-group-sm mr-3" id="revPayoutPeriodToggle">
+                                    <button class="btn btn-outline-primary" data-period="daily">Daily</button>
+                                    <button class="btn btn-outline-primary" data-period="weekly">Weekly</button>
+                                    <button class="btn btn-primary" data-period="monthly">Monthly</button>
+                                    <button class="btn btn-outline-primary" data-period="custom">Custom</button>
+                                </div>
+                                <!-- Custom date range controls (hidden by default) -->
+                                <div id="customRangeControls" class="d-none d-flex align-items-center flex-wrap">
+                                    <input type="date" id="rev_from" class="form-control form-control-sm mr-1"
+                                        style="width:140px;">
+                                    <span class="mx-1 text-muted small">to</span>
+                                    <input type="date" id="rev_to" class="form-control form-control-sm mr-2"
+                                        style="width:140px;">
+                                    <button id="applyCustomRange" class="btn btn-sm btn-success">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="rev-chart-error" class="alert alert-danger d-none"></div>
+                            <div class="chart-area">
+                                <canvas id="revenuePayoutChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -241,6 +352,7 @@ include $pathPrefix . '/includes/head.php';
     <script src="<?php echo $pathCommonPrefix; ?>/assets/vendor/chart.js/Chart.min.js"></script>
     <script src="<?php echo $pathCommonPrefix; ?>/assets/js/demo/chart-area-demo.js"></script>
     <script src="<?php echo $pathCommonPrefix; ?>/assets/js/demo/chart-pie-demo.js"></script>
+    <script src="<?php echo $pathCommonPrefix; ?>/assets/js/demo/chart-revenue-payout-demo.js"></script>
 
     <script>
         // Format numbers to 2 decimal places
@@ -264,9 +376,14 @@ include $pathPrefix . '/includes/head.php';
                 const data = await API.fetchWithAuth('admin/dashboard');
 
                 $('#total_offers').text(data.total_offers);
-                $('#total_revenue').text(formatDecimal(data.total_revenue));
-                $('#total_payouts').text(formatDecimal(data.total_payouts));
+                $('#total_advertisers').text(data.total_no_of_advertisers);
                 $('#total_affiliates').text(data.total_no_of_affiliates);
+                $('#total_margin').text(formatDecimal(data.total_margin));
+
+                $('#total_clicks').text(data.overall_clicks);
+                $('#total_conversions').text(data.overall_conversions);
+                $('#total_payouts').text(formatDecimal(data.total_payouts));
+                $('#total_revenue').text(formatDecimal(data.total_revenue));
 
                 $('#avg_rev_offer').text(formatDecimal(data.average_revenue_per_offer));
                 $('#avg_rev_aff').text(formatDecimal(data.average_revenue_per_affiliate));
@@ -397,6 +514,73 @@ include $pathPrefix . '/includes/head.php';
                 Toast.error('Action Failed', error.message || 'Could not approve request');
             }
         }
+
+        // ── Revenue vs Payout Chart ──────────────────────────────────────────
+
+        function formatDate(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        async function loadRevenuePayoutChart(period, from = null, to = null) {
+            let url = `admin/dashboard/revenue-payout-chart?period=${period}`;
+            if (from && to) {
+                url += `&from=${from}&to=${to}`;
+            }
+            try {
+                const data = await API.fetchWithAuth(url);
+                if (data.status === 0) {
+                    $('#rev-chart-error').removeClass('d-none').text(data.error || 'Failed to load chart data.');
+                    return;
+                }
+                $('#rev-chart-error').addClass('d-none');
+                if (window.initRevenuePayoutChart) {
+                    window.initRevenuePayoutChart(data.labels, data.revenue, data.payout);
+                }
+            } catch (e) {
+                $('#rev-chart-error').removeClass('d-none').text('Failed to load Revenue vs Payout chart.');
+                console.error('Revenue Payout Chart Error:', e);
+            }
+        }
+
+        // Period toggle buttons
+        $('#revPayoutPeriodToggle button').on('click', function () {
+            const period = $(this).data('period');
+            $('#revPayoutPeriodToggle button').removeClass('btn-primary').addClass('btn-outline-primary');
+            $(this).removeClass('btn-outline-primary').addClass('btn-primary');
+
+            if (period === 'custom') {
+                const today = new Date();
+                const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                $('#rev_from').val(formatDate(firstOfMonth));
+                $('#rev_to').val(formatDate(today));
+                $('#customRangeControls').removeClass('d-none');
+            } else {
+                $('#customRangeControls').addClass('d-none');
+                loadRevenuePayoutChart(period);
+            }
+        });
+
+        // Apply custom date range
+        $('#applyCustomRange').on('click', function () {
+            const from = $('#rev_from').val();
+            const to = $('#rev_to').val();
+            if (!from || !to) {
+                $('#rev-chart-error').removeClass('d-none').text('Please select both From and To dates.');
+                return;
+            }
+            if (from > to) {
+                $('#rev-chart-error').removeClass('d-none').text('From date must be before or equal to To date.');
+                return;
+            }
+            $('#rev-chart-error').addClass('d-none');
+            loadRevenuePayoutChart('custom', from, to);
+        });
+
+        // Load default (monthly) on page ready — called after DOM is ready
+        loadRevenuePayoutChart('monthly');
     </script>
 </body>
 

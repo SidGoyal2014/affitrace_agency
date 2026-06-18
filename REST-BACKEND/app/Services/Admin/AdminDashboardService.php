@@ -37,9 +37,13 @@ class AdminDashboardService
             'clicks_consumed' => $this->get_total_clicks(),
             'clicks_limit' => $this->get_settings("num_clicks"),
             'total_offers' => $this->get_total_offers(),
+            'total_no_of_advertisers' => $this->get_total_no_of_advertisers(),
+            'total_no_of_affiliates' => $this->get_total_no_of_affiliates(),
+            'total_margin' => $this->get_total_revenue() - $this->get_total_payouts(),
+            'overall_clicks' => $this->get_overall_clicks(),
+            'overall_conversions' => $this->get_overall_conversions(),
             'total_revenue' => $this->get_total_revenue(),
             'total_payouts' => $this->get_total_payouts(),
-            'total_no_of_affiliates' => $this->get_total_no_of_affiliates(),
             'all_requests' => $this->get_offer_assign_requests(),
             'average_revenue_per_offer' => $this->get_average_revenue_per_offer(),
             'average_revenue_per_affiliate' => $this->get_average_revenue_per_affiliate(),
@@ -183,6 +187,21 @@ class AdminDashboardService
         return User::where('user_type', \App\Enums\UserType::Affiliate->value)->count();
     }
 
+    private function get_total_no_of_advertisers()
+    {
+        return User::where('user_type', \App\Enums\UserType::Advertiser->value)->count();
+    }
+
+    private function get_overall_clicks()
+    {
+        return OfferTracking::distinct('tid')->count('tid');
+    }
+
+    private function get_overall_conversions()
+    {
+        return Conversion::count();
+    }
+
     private function get_average_revenue_per_offer()
     {
         return ($this->get_total_offers() > 0) ? $this->get_total_revenue() / $this->get_total_offers() : '0';
@@ -224,5 +243,185 @@ class AdminDashboardService
                     request_status = 'Pending'
             ";
         return DB::select($sql);
+    }
+
+    public function getRevenuePayoutChartData(string $period, ?string $from = null, ?string $to = null): array
+    {
+        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        if ($period === 'daily') {
+            if ($driver === 'pgsql') {
+                $sql = "SELECT date as label,
+                               SUM(revenue_usd) as revenue,
+                               SUM(payout_usd) as payout
+                        FROM conversions
+                        WHERE date >= CURRENT_DATE - INTERVAL '30 days'
+                        GROUP BY date
+                        ORDER BY label ASC";
+            } else {
+                $sql = "SELECT DATE(date) as label,
+                               SUM(revenue_usd) as revenue,
+                               SUM(payout_usd) as payout
+                        FROM conversions
+                        WHERE date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                        GROUP BY DATE(date)
+                        ORDER BY label ASC";
+            }
+            $rows = DB::select($sql);
+            return $this->buildChartArrays($rows, $this->generateDailyLabels(30));
+        }
+
+        if ($period === 'weekly') {
+            if ($driver === 'pgsql') {
+                $sql = "SELECT CAST(TO_CHAR(date, 'IYYYIW') AS INTEGER) as yw,
+                               SUM(revenue_usd) as revenue,
+                               SUM(payout_usd) as payout
+                        FROM conversions
+                        WHERE date >= CURRENT_DATE - INTERVAL '12 weeks'
+                        GROUP BY yw
+                        ORDER BY yw ASC";
+            } else {
+                $sql = "SELECT YEARWEEK(date, 1) as yw,
+                               SUM(revenue_usd) as revenue,
+                               SUM(payout_usd) as payout
+                        FROM conversions
+                        WHERE date >= DATE_SUB(CURDATE(), INTERVAL 12 WEEK)
+                        GROUP BY yw
+                        ORDER BY yw ASC";
+            }
+            $rows = DB::select($sql);
+            return $this->buildWeeklyChartArrays($rows);
+        }
+
+        if ($period === 'custom' && $from && $to) {
+            if ($driver === 'pgsql') {
+                $sql = "SELECT date as label,
+                               SUM(revenue_usd) as revenue,
+                               SUM(payout_usd) as payout
+                        FROM conversions
+                        WHERE date BETWEEN ? AND ?
+                        GROUP BY date
+                        ORDER BY label ASC";
+            } else {
+                $sql = "SELECT DATE(date) as label,
+                               SUM(revenue_usd) as revenue,
+                               SUM(payout_usd) as payout
+                        FROM conversions
+                        WHERE date BETWEEN ? AND ?
+                        GROUP BY DATE(date)
+                        ORDER BY label ASC";
+            }
+            $rows = DB::select($sql, [$from, $to]);
+            return $this->buildChartArrays($rows, $this->generateCustomDailyLabels($from, $to));
+        }
+
+        // Default: monthly (last 12 months)
+        if ($driver === 'pgsql') {
+            $sql = "SELECT TO_CHAR(date, 'YYYY-MM') as label,
+                           SUM(revenue_usd) as revenue,
+                           SUM(payout_usd) as payout
+                    FROM conversions
+                    WHERE date >= CURRENT_DATE - INTERVAL '12 months'
+                    GROUP BY label
+                    ORDER BY label ASC";
+        } else {
+            $sql = "SELECT DATE_FORMAT(date, '%Y-%m') as label,
+                           SUM(revenue_usd) as revenue,
+                           SUM(payout_usd) as payout
+                    FROM conversions
+                    WHERE date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+                    GROUP BY label
+                    ORDER BY label ASC";
+        }
+        $rows = DB::select($sql);
+        return $this->buildChartArrays($rows, $this->generateMonthlyLabels(12));
+    }
+
+    private function buildChartArrays(array $rows, array $expectedLabels): array
+    {
+        $map = [];
+        foreach ($rows as $row) {
+            $map[(string) $row->label] = [
+                'revenue' => (float) ($row->revenue ?? 0),
+                'payout' => (float) ($row->payout ?? 0),
+            ];
+        }
+
+        $labels = [];
+        $revenue = [];
+        $payout = [];
+
+        foreach ($expectedLabels as $label) {
+            $labels[] = $label;
+            $revenue[] = $map[$label]['revenue'] ?? 0.00;
+            $payout[] = $map[$label]['payout'] ?? 0.00;
+        }
+
+        return compact('labels', 'revenue', 'payout');
+    }
+
+    private function buildWeeklyChartArrays(array $rows): array
+    {
+        // Build a map keyed by YEARWEEK integer (e.g. 202620)
+        $map = [];
+        foreach ($rows as $row) {
+            $map[(int) $row->yw] = [
+                'revenue' => (float) ($row->revenue ?? 0),
+                'payout' => (float) ($row->payout ?? 0),
+            ];
+        }
+
+        // Generate the last 12 ISO week keys
+        $expectedWeeks = [];
+        $dt = new \DateTime();
+        $dt->modify('monday this week');
+        for ($i = 11; $i >= 0; $i--) {
+            $weekDt = clone $dt;
+            $weekDt->modify("-{$i} weeks");
+            $yw = (int) $weekDt->format('oW'); // ISO year + week number, e.g. 202620
+            $label = $weekDt->format('o') . '-W' . $weekDt->format('W'); // e.g. 2026-W20
+            $expectedWeeks[$yw] = $label;
+        }
+
+        $labels = [];
+        $revenue = [];
+        $payout = [];
+
+        foreach ($expectedWeeks as $yw => $label) {
+            $labels[] = $label;
+            $revenue[] = $map[$yw]['revenue'] ?? 0.00;
+            $payout[] = $map[$yw]['payout'] ?? 0.00;
+        }
+
+        return compact('labels', 'revenue', 'payout');
+    }
+
+    private function generateDailyLabels(int $days): array
+    {
+        $labels = [];
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $labels[] = date('Y-m-d', strtotime("-{$i} days"));
+        }
+        return $labels;
+    }
+
+    private function generateCustomDailyLabels(string $from, string $to): array
+    {
+        $labels = [];
+        $current = new \DateTime($from);
+        $end = new \DateTime($to);
+        while ($current <= $end) {
+            $labels[] = $current->format('Y-m-d');
+            $current->modify('+1 day');
+        }
+        return $labels;
+    }
+
+    private function generateMonthlyLabels(int $months): array
+    {
+        $labels = [];
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $labels[] = date('Y-m', strtotime("first day of -{$i} months"));
+        }
+        return $labels;
     }
 }

@@ -43,6 +43,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Admin Routes
     Route::prefix('admin')->middleware(['admin'])->group(function () {
         Route::get('dashboard', [App\Http\Controllers\Admin\AdminDashboardController::class, 'dashboard']);
+        Route::get('dashboard/revenue-payout-chart', [App\Http\Controllers\Admin\AdminDashboardController::class, 'revenuePayoutChart']);
 
         // General Admin
         Route::get('profile', [App\Http\Controllers\Admin\AdminController::class, 'profile']);

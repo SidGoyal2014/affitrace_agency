@@ -50,4 +50,32 @@ class AdminDashboardController extends Controller
 		$result = $this->dashboardService->approveOfferAssignRequest($oaid);
 		return response()->json($result, $result['code'] ?? 200);
 	}
+
+	public function revenuePayoutChart(Request $request)
+	{
+		$from   = $request->query('from');
+		$to     = $request->query('to');
+		$period = $request->query('period', 'monthly');
+
+		// Custom range mode
+		if ($from !== null || $to !== null) {
+			if (!$from || !$to) {
+				return response()->json(['status' => 0, 'error' => 'Both from and to dates are required for a custom range.', 'code' => 422], 422);
+			}
+			if (!strtotime($from) || !strtotime($to)) {
+				return response()->json(['status' => 0, 'error' => 'Invalid date format. Use Y-m-d.', 'code' => 422], 422);
+			}
+			if ($from > $to) {
+				return response()->json(['status' => 0, 'error' => "'from' date must be before or equal to 'to' date.", 'code' => 422], 422);
+			}
+			$period = 'custom';
+		} else {
+			if (!in_array($period, ['daily', 'weekly', 'monthly'])) {
+				return response()->json(['status' => 0, 'error' => "Invalid period. Allowed: daily, weekly, monthly.", 'code' => 422], 422);
+			}
+		}
+
+		$result = $this->dashboardService->getRevenuePayoutChartData($period, $from, $to);
+		return response()->json($result);
+	}
 }
