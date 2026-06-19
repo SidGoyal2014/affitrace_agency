@@ -149,9 +149,15 @@ trait CommonProfileFunctions
             if ($request->has('zipcode'))
                 $user->zipcode = $request->zipcode;
 
-            // Allow Admin to update status
-            if ($request->user()->user_type === \App\Enums\UserType::Admin->value && $request->has('status')) {
-                $user->status = \App\Enums\UserStatus::tryFrom($request->status) ?? $user->status;
+            // Allow Admin & Employee to update status & manager
+            $currentUserType = strtolower($request->user()->user_type);
+            if ($currentUserType === 'admin' || $currentUserType === 'employee') {
+                if ($request->has('status')) {
+                    $user->status = \App\Enums\UserStatus::tryFrom($request->status) ?? $user->status;
+                }
+                if ($request->has('employee_id')) {
+                    $user->employee_id = $request->filled('employee_id') ? (string)$request->employee_id : null;
+                }
             }
 
             if ($request->has('timezone')) $user->timezone = $request->timezone;
@@ -182,7 +188,43 @@ trait CommonProfileFunctions
             if ($request->has('add_tax'))
                 $aud->add_tax = $request->add_tax;
 
+            // Save new fields
+            if ($request->has('website'))
+                $aud->website = $request->website;
+            if ($request->has('traffic_source'))
+                $aud->traffic_source = $request->traffic_source;
+            if ($request->has('global_clicks_cap'))
+                $aud->global_clicks_cap = $request->filled('global_clicks_cap') ? (int)$request->global_clicks_cap : null;
+            if ($request->has('global_conversions_cap'))
+                $aud->global_conversions_cap = $request->filled('global_conversions_cap') ? (int)$request->global_conversions_cap : null;
+            if ($request->has('tags'))
+                $aud->tags = $request->tags;
+            if ($request->has('referred_by'))
+                $aud->referred_by = $request->filled('referred_by') ? (int)$request->referred_by : null;
+            if ($request->has('private_note'))
+                $aud->private_note = $request->private_note;
+
             $aud->save();
+
+            // Save postback configuration if provided
+            if ($request->has('pb_url')) {
+                \Illuminate\Support\Facades\DB::table('affiliate_postback_columns')->updateOrInsert(
+                    ['uid' => $uid],
+                    [
+                        'url' => $request->pb_url,
+                        'tid' => $request->pb_tid,
+                        'aff_id' => $request->pb_aff_id,
+                        'event_id' => $request->pb_event_id,
+                        'sub_aff_id' => $request->pb_sub_aff_id,
+                        'aff_sub1' => $request->pb_aff_sub1,
+                        'aff_sub2' => $request->pb_aff_sub2,
+                        'aff_sub3' => $request->pb_aff_sub3,
+                        'aff_sub4' => $request->pb_aff_sub4,
+                        'aff_sub5' => $request->pb_aff_sub5,
+                        'updated_at' => now()
+                    ]
+                );
+            }
 
             return response()->json(['status' => 1, 'msg' => 'Profile Updated']);
 

@@ -31,13 +31,56 @@ class AdminService
         ];
     }
 
-    public function listAffiliates()
+    public function listAffiliates($request = null)
     {
-        $data = DB::table('users')
-            ->select('*', 'users.id as uid')
+        $query = DB::table('users')
+            ->select(
+                'users.name',
+                'users.email',
+                'users.phone',
+                'users.company',
+                'users.country',
+                'users.status',
+                'users.created_at',
+                'users.id as uid',
+                'users.employee_id',
+                'affiliate_user_details.website',
+                'affiliate_user_details.traffic_source',
+                'affiliate_user_details.global_clicks_cap',
+                'affiliate_user_details.global_conversions_cap',
+                'affiliate_user_details.tags',
+                'affiliate_user_details.referred_by',
+                'affiliate_user_details.status_reason',
+                'affiliate_user_details.private_note',
+                'managers.name as manager_name',
+                'managers.id as manager_id'
+            )
             ->leftJoin('affiliate_user_details', 'users.id', '=', 'affiliate_user_details.user_id')
-            ->where('user_type', \App\Enums\UserType::Affiliate->value)
-            ->get();
+            ->leftJoin('users as managers', DB::raw("CAST(NULLIF(users.employee_id, '') AS BIGINT)"), '=', 'managers.id')
+            ->where('users.user_type', \App\Enums\UserType::Affiliate->value);
+
+        if ($request) {
+            if ($request->filled('status')) {
+                $query->where('users.status', $request->status);
+            }
+            if ($request->filled('manager_id')) {
+                $query->where('users.employee_id', (string)$request->manager_id);
+            }
+            if ($request->filled('country')) {
+                $query->where('users.country', $request->country);
+            }
+            if ($request->filled('traffic_source')) {
+                $query->where('affiliate_user_details.traffic_source', 'LIKE', '%' . $request->traffic_source . '%');
+            }
+            if ($request->filled('signup_start') && $request->filled('signup_end')) {
+                $query->whereBetween('users.created_at', [
+                    \Carbon\Carbon::parse($request->signup_start)->startOfDay(),
+                    \Carbon\Carbon::parse($request->signup_end)->endOfDay()
+                ]);
+            }
+        }
+
+        $data = $query->orderBy('users.id', 'desc')->get();
 
         return [
             'module_name' => "List Affiliates",
@@ -48,7 +91,7 @@ class AdminService
     public function listEmployees()
     {
         $data = DB::table('users')
-            ->select('users.*', 'roles.name as role_name', 'designations.name as designation_name')
+            ->select('users.id', 'users.name', 'users.email', 'users.phone', 'users.status', 'users.created_at', 'users.role_id', 'users.designation_id', 'roles.name as role_name', 'designations.name as designation_name')
             ->leftJoin('roles', 'users.role_id', '=', 'roles.id')
             ->leftJoin('designations', 'users.designation_id', '=', 'designations.id')
             ->where('users.user_type', \App\Enums\UserType::Employee->value)
@@ -145,11 +188,27 @@ class AdminService
             $aud->add_tax = '';
         }
 
+        $payoutOverrides = DB::table('payout_rules')
+            ->where('event_id', 0)
+            ->where(function ($q) use ($id) {
+                $q->where('affiliate_id', (string)$id)
+                  ->orWhere('affiliate_id', 'LIKE', $id . ',%')
+                  ->orWhere('affiliate_id', 'LIKE', '%,' . $id . ',%')
+                  ->orWhere('affiliate_id', 'LIKE', '%,' . $id);
+            })
+            ->get();
+
+        $postbackCols = DB::table('affiliate_postback_columns')
+            ->where('uid', $id)
+            ->first();
+
         $responseData = [
             'module_name' => 'Profile',
             'title' => ucfirst($user_type) . ' Profile',
             'user' => $user->toArray(),
             'aud' => $aud->toArray(),
+            'payout_overrides' => $payoutOverrides->toArray(),
+            'postback_cols' => $postbackCols ? (array)$postbackCols : null,
             'uid' => $id,
             'arrTimeZone' => $this->getTimeZone(),
             'pmtArray' => $this->getPaymentMethod(),
@@ -356,5 +415,165 @@ class AdminService
             return $data;
         }
         return $data;
+    }
+
+    public function updateAffiliateStatus($id, $status, $reason = null)
+    {
+        $user = User::findOrFail($id);
+        $user->status = \App\Enums\UserStatus::tryFrom($status) ?? $user->status;
+        $user->save();
+
+        if ($reason !== null) {
+            $aud = AffiliateUserDetail::where('user_id', $id)->first();
+            if (!$aud) {
+                $aud = new AffiliateUserDetail();
+                $aud->user_id = $id;
+            }
+            $aud->status_reason = $reason;
+            $aud->save();
+        }
+
+        return ['success' => true, 'msg' => 'Affiliate status updated successfully'];
+    }
+
+    public function bulkAffiliatesStatus($ids, $status, $reason = null)
+    {
+        foreach ($ids as $id) {
+            $this->updateAffiliateStatus($id, $status, $reason);
+        }
+        return ['success' => true, 'msg' => 'Affiliates status updated successfully'];
+    }
+
+    public function deleteAffiliate($id)
+    {
+        User::where('id', $id)->delete();
+        AffiliateUserDetail::where('user_id', $id)->delete();
+        return ['success' => true, 'msg' => 'Affiliate account deleted successfully'];
+    }
+
+    public function assignAffiliateManager($id, $employee_id = null)
+    {
+        $user = User::findOrFail($id);
+        $user->employee_id = $employee_id ? (string)$employee_id : null;
+        $user->save();
+        return ['success' => true, 'msg' => 'Affiliate manager assigned successfully'];
+    }
+
+    public function getAffiliateStats($id)
+    {
+        $totalClicks = DB::table('offer_trackings')->where('aff_id', $id)->count();
+
+        $conversionsQuery = DB::table('conversions')->where('affiliate_id', $id);
+        
+        $stats = [
+            'total_clicks' => $totalClicks,
+            'approved_conversions' => (clone $conversionsQuery)->where('status', 'confirmed')->count(),
+            'pending_conversions' => (clone $conversionsQuery)->where('status', 'pending')->count(),
+            'rejected_conversions' => (clone $conversionsQuery)->where('status', 'declined')->count(),
+            'total_revenue' => (clone $conversionsQuery)->where('status', 'confirmed')->sum('revenue'),
+            'total_payout' => (clone $conversionsQuery)->where('status', 'confirmed')->sum('payout'),
+        ];
+
+        $stats['total_profit'] = $stats['total_revenue'] - $stats['total_payout'];
+        $stats['cr'] = $totalClicks > 0 ? round(($stats['approved_conversions'] / $totalClicks) * 100, 2) : 0;
+        $stats['epc'] = $totalClicks > 0 ? round($stats['total_payout'] / $totalClicks, 2) : 0;
+
+        return ['success' => true, 'stats' => $stats];
+    }
+
+    public function savePayoutOverride($request)
+    {
+        \App\Models\PayoutRule::updateOrCreate(
+            [
+                'offer_id' => $request->offer_id,
+                'event_id' => 0, // 0 indicates the default offer event
+                'affiliate_id' => (string) $request->affiliate_id
+            ],
+            [
+                'rule_name' => 'Override for Affiliate #' . $request->affiliate_id,
+                'payout_pricing' => $request->payout,
+                'revenue_pricing' => $request->revenue,
+                'payout_model' => 'cpa',
+                'revenue_model' => 'cpa',
+                'currency' => 'USD',
+                'payout_usd' => $this->getNewCurrencyValue($request->payout, 'USD'),
+                'revenue_usd' => $this->getNewCurrencyValue($request->revenue, 'USD')
+            ]
+        );
+
+        return ['success' => true, 'msg' => 'Payout override saved successfully'];
+    }
+
+    public function getAffiliateReferrals($id)
+    {
+        $referrals = DB::table('users')
+            ->join('affiliate_user_details', 'users.id', '=', 'affiliate_user_details.user_id')
+            ->select('users.id', 'users.name', 'users.email', 'users.company', 'users.created_at')
+            ->where('affiliate_user_details.referred_by', $id)
+            ->get();
+
+        return ['success' => true, 'referrals' => $referrals];
+    }
+
+    public function exportAffiliates($request)
+    {
+        $res = $this->listAffiliates($request);
+        $data = $res['data'];
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=affiliates_export_" . date('Ymd_His') . ".csv",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = ['ID', 'Name', 'Email', 'Company', 'Phone', 'Country', 'Status', 'Website', 'Traffic Source', 'Manager', 'Signup Date'];
+
+        $callback = function() use($data, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($data as $aff) {
+                fputcsv($file, [
+                    $aff->uid,
+                    $aff->name,
+                    $aff->email,
+                    $aff->company ?? '-',
+                    $aff->phone ?? '-',
+                    $aff->country ?? '-',
+                    $aff->status,
+                    $aff->website ?? '-',
+                    $aff->traffic_source ?? '-',
+                    $aff->manager_name ?? '-',
+                    $aff->created_at
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function uploadAffiliateDoc($request)
+    {
+        $uid = $request->uid;
+        $file = $request->file('doc');
+        
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $file->storeAs('public/affiliate_docs/' . $uid, $fileName);
+
+        $aud = AffiliateUserDetail::where('user_id', $uid)->first();
+        if (!$aud) {
+            $aud = new AffiliateUserDetail();
+            $aud->user_id = $uid;
+        }
+        $existingDocs = json_decode($aud->docs, true) ?: [];
+        $existingDocs[] = $fileName;
+        $aud->docs = json_encode($existingDocs);
+        $aud->save();
+
+        return ['success' => true, 'msg' => 'Document uploaded successfully', 'file_name' => $fileName];
     }
 }

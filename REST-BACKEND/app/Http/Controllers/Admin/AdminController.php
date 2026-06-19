@@ -20,9 +20,9 @@ class AdminController extends Controller
 		return response()->json($this->adminService->listAdvertisers());
 	}
 
-	public function list_affiliates()
+	public function list_affiliates(Request $request)
 	{
-		return response()->json($this->adminService->listAffiliates());
+		return response()->json($this->adminService->listAffiliates($request));
 	}
 
 	public function list_employees()
@@ -144,4 +144,73 @@ class AdminController extends Controller
 		return $this->adminService->updateEmployeeProfile($request);
 	}
 
+	public function update_affiliate_status(Request $request, $id)
+	{
+		$request->validate([
+			'status' => 'required|string|in:active,pending,rejected,suspended',
+			'reason' => 'nullable|string'
+		]);
+		return response()->json($this->adminService->updateAffiliateStatus($id, $request->status, $request->reason));
+	}
+
+	public function bulk_affiliates_status(Request $request)
+	{
+		$request->validate([
+			'ids' => 'required|array',
+			'ids.*' => 'integer',
+			'status' => 'required|string|in:active,pending,rejected,suspended',
+			'reason' => 'nullable|string'
+		]);
+		return response()->json($this->adminService->bulkAffiliatesStatus($request->ids, $request->status, $request->reason));
+	}
+
+	public function delete_affiliate($id)
+	{
+		return response()->json($this->adminService->deleteAffiliate($id));
+	}
+
+	public function assign_affiliate_manager(Request $request, $id)
+	{
+		$request->validate([
+			'employee_id' => 'nullable|integer'
+		]);
+		return response()->json($this->adminService->assignAffiliateManager($id, $request->employee_id));
+	}
+
+	public function get_affiliate_stats($id)
+	{
+		return response()->json($this->adminService->getAffiliateStats($id));
+	}
+
+	public function save_payout_override(Request $request)
+	{
+		$request->validate([
+			'offer_id' => 'required|integer',
+			'affiliate_id' => 'required|integer',
+			'payout' => 'nullable|numeric|min:0',
+			'revenue' => 'nullable|numeric|min:0'
+		]);
+		return response()->json($this->adminService->savePayoutOverride($request));
+	}
+
+	public function get_affiliate_referrals($id)
+	{
+		return response()->json($this->adminService->getAffiliateReferrals($id));
+	}
+
+	public function export_affiliates(Request $request)
+	{
+		return $this->adminService->exportAffiliates($request);
+	}
+
+	public function upload_affiliate_doc(Request $request)
+	{
+		$request->validate([
+			'uid' => 'required|integer',
+			'doc' => 'required|file|max:10240'
+		]);
+		return response()->json($this->adminService->uploadAffiliateDoc($request));
+	}
+
 }
+

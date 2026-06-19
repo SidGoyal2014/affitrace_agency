@@ -28,13 +28,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // ─── Notifications: Inbox (all authenticated users) ───────────────────────
     Route::prefix('v1/notifications')->group(function () {
-        Route::get('inbox',              [App\Http\Controllers\Api\V1\NotificationController::class, 'inbox']);
-        Route::post('inbox/read-all',   [App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead']);
-        Route::get('inbox/{id}',         [App\Http\Controllers\Api\V1\NotificationController::class, 'inboxShow']);
+        Route::get('inbox', [App\Http\Controllers\Api\V1\NotificationController::class, 'inbox']);
+        Route::post('inbox/read-all', [App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead']);
+        Route::get('inbox/{id}', [App\Http\Controllers\Api\V1\NotificationController::class, 'inboxShow']);
         Route::patch('inbox/{id}/read', [App\Http\Controllers\Api\V1\NotificationController::class, 'markRead']);
-        Route::get('unread-count',      [App\Http\Controllers\Api\V1\NotificationController::class, 'unreadCount']);
-        Route::post('send',              [App\Http\Controllers\Api\V1\NotificationController::class, 'send']);
-        Route::get('sent',               [App\Http\Controllers\Api\V1\NotificationController::class, 'sentIndex']);
+        Route::get('unread-count', [App\Http\Controllers\Api\V1\NotificationController::class, 'unreadCount']);
+        Route::post('send', [App\Http\Controllers\Api\V1\NotificationController::class, 'send']);
+        Route::get('sent', [App\Http\Controllers\Api\V1\NotificationController::class, 'sentIndex']);
     });
 
     // Impersonation Exit (Must be outside 'admin' middleware so impersonated users can call it)
@@ -60,6 +60,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('affiliates/save', [App\Http\Controllers\Admin\AdminController::class, 'save_affiliate']);
         Route::get('affiliates/edit/{id}', [App\Http\Controllers\Admin\AdminController::class, 'edit_affiliate']);
         Route::post('affiliates/update', [App\Http\Controllers\Admin\AdminController::class, 'update_affiliate']);
+        Route::post('affiliates/{id}/status', [App\Http\Controllers\Admin\AdminController::class, 'update_affiliate_status']);
+        Route::post('affiliates/bulk-status', [App\Http\Controllers\Admin\AdminController::class, 'bulk_affiliates_status']);
+        Route::delete('affiliates/{id}', [App\Http\Controllers\Admin\AdminController::class, 'delete_affiliate']);
+        Route::post('affiliates/{id}/assign-manager', [App\Http\Controllers\Admin\AdminController::class, 'assign_affiliate_manager']);
+        Route::get('affiliates/{id}/stats', [App\Http\Controllers\Admin\AdminController::class, 'get_affiliate_stats']);
+        Route::post('affiliates/payout-override', [App\Http\Controllers\Admin\AdminController::class, 'save_payout_override']);
+        Route::get('affiliates/{id}/referrals', [App\Http\Controllers\Admin\AdminController::class, 'get_affiliate_referrals']);
+        Route::get('affiliates/export', [App\Http\Controllers\Admin\AdminController::class, 'export_affiliates']);
+        Route::post('affiliates/upload-doc', [App\Http\Controllers\Admin\AdminController::class, 'upload_affiliate_doc']);
 
         Route::get('employees/list', [App\Http\Controllers\Admin\AdminController::class, 'list_employees']);
         Route::get('users/search', [App\Http\Controllers\Admin\AdminController::class, 'search_users']);
@@ -82,7 +91,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('offer/update_offer', [App\Http\Controllers\Admin\OfferController::class, 'update_offer']);
         Route::delete('offer/delete/{id}', [App\Http\Controllers\Admin\OfferController::class, 'delete_offer']);
         Route::post('offer/restore/{id}', [App\Http\Controllers\Admin\OfferController::class, 'restore_offer']);
-        Route::post('offer/clone/{id}', [App\Http\Controllers\Admin\OfferController::class, 'clone_offer']);        
+        Route::post('offer/clone/{id}', [App\Http\Controllers\Admin\OfferController::class, 'clone_offer']);
         Route::get('offer/approved', [App\Http\Controllers\Admin\OfferController::class, 'offers_approved']);
         Route::get('offer/pending', [App\Http\Controllers\Admin\OfferController::class, 'offers_pending']);
         Route::get('offer/ended', [App\Http\Controllers\Admin\OfferController::class, 'offers_ended']);
@@ -206,51 +215,51 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         // ─── Notifications: Sent management (admin only) ──
         Route::prefix('v1/notifications')->group(function () {
-            Route::post('',            [App\Http\Controllers\Api\V1\NotificationController::class, 'send']);
-            Route::get('sent',         [App\Http\Controllers\Api\V1\NotificationController::class, 'sentIndex']);
-            Route::get('sent/{id}',    [App\Http\Controllers\Api\V1\NotificationController::class, 'sentShow']);
-            Route::put('sent/{id}',    [App\Http\Controllers\Api\V1\NotificationController::class, 'sentUpdate']);
+            Route::post('', [App\Http\Controllers\Api\V1\NotificationController::class, 'send']);
+            Route::get('sent', [App\Http\Controllers\Api\V1\NotificationController::class, 'sentIndex']);
+            Route::get('sent/{id}', [App\Http\Controllers\Api\V1\NotificationController::class, 'sentShow']);
+            Route::put('sent/{id}', [App\Http\Controllers\Api\V1\NotificationController::class, 'sentUpdate']);
             Route::delete('sent/{id}', [App\Http\Controllers\Api\V1\NotificationController::class, 'sentDestroy']);
         });
 
         // ─── Postback Simulator Tool ───────────────────────────────────────────────
         Route::prefix('tools/postback-simulator')->group(function () {
-            Route::get('recent-clicks',             [App\Http\Controllers\Admin\PostbackSimulatorController::class, 'recentClicks']);
-            Route::get('recent-conversions',        [App\Http\Controllers\Admin\PostbackSimulatorController::class, 'recentConversions']);
+            Route::get('recent-clicks', [App\Http\Controllers\Admin\PostbackSimulatorController::class, 'recentClicks']);
+            Route::get('recent-conversions', [App\Http\Controllers\Admin\PostbackSimulatorController::class, 'recentConversions']);
             Route::post('fire-advertiser-postback', [App\Http\Controllers\Admin\PostbackSimulatorController::class, 'fireAdvertiserPostback']);
-            Route::post('fire-affiliate-postback',  [App\Http\Controllers\Admin\PostbackSimulatorController::class, 'fireAffiliatePostback']);
+            Route::post('fire-affiliate-postback', [App\Http\Controllers\Admin\PostbackSimulatorController::class, 'fireAffiliatePostback']);
         });
 
         // ─── Fraud Detection ───────────────────────────────────────────────────────
         Route::prefix('fraud')->group(function () {
             // Dashboard & Reporting
-            Route::get('dashboard',    [App\Http\Controllers\Admin\FraudController::class, 'dashboard']);
-            Route::get('alerts',       [App\Http\Controllers\Admin\FraudController::class, 'alerts']);
+            Route::get('dashboard', [App\Http\Controllers\Admin\FraudController::class, 'dashboard']);
+            Route::get('alerts', [App\Http\Controllers\Admin\FraudController::class, 'alerts']);
             Route::get('click-scores', [App\Http\Controllers\Admin\FraudController::class, 'clickScores']);
-            Route::post('bulk-block',  [App\Http\Controllers\Admin\FraudController::class, 'bulkBlock']);
+            Route::post('bulk-block', [App\Http\Controllers\Admin\FraudController::class, 'bulkBlock']);
 
             // Rules
-            Route::get('rules',               [App\Http\Controllers\Admin\FraudController::class, 'listRules']);
-            Route::get('rules/{id}',          [App\Http\Controllers\Admin\FraudController::class, 'getRule']);
-            Route::post('rules',              [App\Http\Controllers\Admin\FraudController::class, 'createRule']);
-            Route::put('rules/{id}',          [App\Http\Controllers\Admin\FraudController::class, 'updateRule']);
-            Route::delete('rules/{id}',       [App\Http\Controllers\Admin\FraudController::class, 'deleteRule']);
+            Route::get('rules', [App\Http\Controllers\Admin\FraudController::class, 'listRules']);
+            Route::get('rules/{id}', [App\Http\Controllers\Admin\FraudController::class, 'getRule']);
+            Route::post('rules', [App\Http\Controllers\Admin\FraudController::class, 'createRule']);
+            Route::put('rules/{id}', [App\Http\Controllers\Admin\FraudController::class, 'updateRule']);
+            Route::delete('rules/{id}', [App\Http\Controllers\Admin\FraudController::class, 'deleteRule']);
             Route::patch('rules/{id}/toggle', [App\Http\Controllers\Admin\FraudController::class, 'toggleRule']);
 
             // IP Blacklist
-            Route::get('blacklist/ip',         [App\Http\Controllers\Admin\FraudController::class, 'listIpBlacklist']);
-            Route::post('blacklist/ip',        [App\Http\Controllers\Admin\FraudController::class, 'addIpBlacklist']);
+            Route::get('blacklist/ip', [App\Http\Controllers\Admin\FraudController::class, 'listIpBlacklist']);
+            Route::post('blacklist/ip', [App\Http\Controllers\Admin\FraudController::class, 'addIpBlacklist']);
             Route::post('blacklist/ip/import', [App\Http\Controllers\Admin\FraudController::class, 'importIpBlacklist']);
             Route::delete('blacklist/ip/{id}', [App\Http\Controllers\Admin\FraudController::class, 'removeIpBlacklist']);
 
             // IP Whitelist
-            Route::get('whitelist/ip',          [App\Http\Controllers\Admin\FraudController::class, 'listIpWhitelist']);
-            Route::post('whitelist/ip',         [App\Http\Controllers\Admin\FraudController::class, 'addIpWhitelist']);
-            Route::delete('whitelist/ip/{id}',  [App\Http\Controllers\Admin\FraudController::class, 'removeIpWhitelist']);
+            Route::get('whitelist/ip', [App\Http\Controllers\Admin\FraudController::class, 'listIpWhitelist']);
+            Route::post('whitelist/ip', [App\Http\Controllers\Admin\FraudController::class, 'addIpWhitelist']);
+            Route::delete('whitelist/ip/{id}', [App\Http\Controllers\Admin\FraudController::class, 'removeIpWhitelist']);
 
             // Device Blacklist
-            Route::get('blacklist/device',         [App\Http\Controllers\Admin\FraudController::class, 'listDeviceBlacklist']);
-            Route::post('blacklist/device',        [App\Http\Controllers\Admin\FraudController::class, 'addDeviceBlacklist']);
+            Route::get('blacklist/device', [App\Http\Controllers\Admin\FraudController::class, 'listDeviceBlacklist']);
+            Route::post('blacklist/device', [App\Http\Controllers\Admin\FraudController::class, 'addDeviceBlacklist']);
             Route::delete('blacklist/device/{id}', [App\Http\Controllers\Admin\FraudController::class, 'removeDeviceBlacklist']);
 
             // Third-Party Config
@@ -323,6 +332,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::middleware(['module.access:affiliates,can_view'])->group(function () {
             Route::get('affiliates/list', [App\Http\Controllers\Admin\AdminController::class, 'list_affiliates']);
             Route::get('affiliates/edit/{id}', [App\Http\Controllers\Admin\AdminController::class, 'edit_affiliate']);
+            Route::get('affiliates/{id}/stats', [App\Http\Controllers\Admin\AdminController::class, 'get_affiliate_stats']);
+            Route::get('affiliates/{id}/referrals', [App\Http\Controllers\Admin\AdminController::class, 'get_affiliate_referrals']);
+            Route::get('affiliates/export', [App\Http\Controllers\Admin\AdminController::class, 'export_affiliates']);
+            Route::get('employees/list', [App\Http\Controllers\Admin\AdminController::class, 'list_employees']);
+            Route::get('reports/offers-assigned/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'get_offers_assigned_to_affiliate']);
+            Route::get('reports/affiliate-payouts/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'affiliate_payouts']);
         });
         Route::middleware(['module.access:affiliates,can_create'])->group(function () {
             Route::get('affiliates/create', [App\Http\Controllers\Admin\AdminController::class, 'create_affiliate']);
@@ -330,6 +345,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
         Route::middleware(['module.access:affiliates,can_edit'])->group(function () {
             Route::post('affiliates/update', [App\Http\Controllers\Admin\AdminController::class, 'update_affiliate']);
+            Route::post('affiliates/{id}/status', [App\Http\Controllers\Admin\AdminController::class, 'update_affiliate_status']);
+            Route::post('affiliates/bulk-status', [App\Http\Controllers\Admin\AdminController::class, 'bulk_affiliates_status']);
+            Route::delete('affiliates/{id}', [App\Http\Controllers\Admin\AdminController::class, 'delete_affiliate']);
+            Route::post('affiliates/{id}/assign-manager', [App\Http\Controllers\Admin\AdminController::class, 'assign_affiliate_manager']);
+            Route::post('affiliates/payout-override', [App\Http\Controllers\Admin\AdminController::class, 'save_payout_override']);
+            Route::post('affiliates/upload-doc', [App\Http\Controllers\Admin\AdminController::class, 'upload_affiliate_doc']);
         });
 
         // ── Advertisers ──
@@ -493,8 +514,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // NOTIFICATION_TRIGGER_SECRET in .env. No additional role middleware is needed.
     Route::prefix('v1/notifications/triggers')->group(function () {
         Route::post('subscription-expiry', [App\Http\Controllers\Api\V1\NotificationController::class, 'triggerSubscriptionExpiry']);
-        Route::post('payment-reminder',    [App\Http\Controllers\Api\V1\NotificationController::class, 'triggerPaymentReminder']);
-        Route::post('custom',              [App\Http\Controllers\Api\V1\NotificationController::class, 'triggerCustom']);
+        Route::post('payment-reminder', [App\Http\Controllers\Api\V1\NotificationController::class, 'triggerPaymentReminder']);
+        Route::post('custom', [App\Http\Controllers\Api\V1\NotificationController::class, 'triggerCustom']);
     });
 
 });
