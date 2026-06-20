@@ -40,7 +40,7 @@ class AdminReportService extends BaseReportService
 
     /**
      * Get subscription payment details
-    */
+     */
     public function getSubscriptionPaymentDetails($sub_id)
     {
         $data = DB::table('subscriptions')
@@ -360,7 +360,7 @@ class AdminReportService extends BaseReportService
 
         if ($request->from && $request->to) {
             $fromUtc = $this->getUtcStartOfDay($request->from);
-            $toUtc   = $this->getUtcEndOfDay($request->to);
+            $toUtc = $this->getUtcEndOfDay($request->to);
             $query->whereBetween('C.created_at', [$fromUtc, $toUtc]);
         }
 
@@ -512,7 +512,7 @@ class AdminReportService extends BaseReportService
     public function getClicksReport($request): array
     {
 
-//\Log::info('Request Submitted Array', $request->all());
+        //\Log::info('Request Submitted Array', $request->all());
 
 
         $query = DB::table('offer_trackings')
@@ -522,29 +522,29 @@ class AdminReportService extends BaseReportService
                 'offer_trackings.created_at as link_clicked_at',
                 'offer_trackings.sub1',
                 'affis.id as aff_id',
-                'affis.name as aff_name', 
-                'adverts.id as adv_id', 
+                'affis.name as aff_name',
+                'adverts.id as adv_id',
                 'adverts.name as advert_name',
-                'offer_trackings.country as ot_country', 
-                'offer_trackings.os as ot_os', 
+                'offer_trackings.country as ot_country',
+                'offer_trackings.os as ot_os',
                 'offer_trackings.browser as ot_browser'
             )
-            ->join('offers', 'offer_trackings.offer_id','=', 'offers.id')
-            ->leftJoin('devices', 'offer_trackings.device_id','=', 'devices.id')
-            ->join('users as affis', 'offer_trackings.aff_id','=', 'affis.id')
-            ->join('users as adverts', 'offer_trackings.adv_id','=', 'adverts.id');
+            ->join('offers', 'offer_trackings.offer_id', '=', 'offers.id')
+            ->leftJoin('devices', 'offer_trackings.device_id', '=', 'devices.id')
+            ->join('users as affis', 'offer_trackings.aff_id', '=', 'affis.id')
+            ->join('users as adverts', 'offer_trackings.adv_id', '=', 'adverts.id');
 
         // Apply filters
-		if($request->from != "" && $request->to != "" && $request->from != $request->to){
-			$query = $query->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
+        if ($request->from != "" && $request->to != "" && $request->from != $request->to) {
+            $query = $query->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
 
-		}elseif($request->from != "" && $request->to != "" && $request->from == $request->to){
-			$query = $query->where('offer_trackings.created_at', $request->from);
+        } elseif ($request->from != "" && $request->to != "" && $request->from == $request->to) {
+            $query = $query->where('offer_trackings.created_at', $request->from);
 
-		}
+        }
 
 
-        
+
         if ($request->device) {
             $query = $query->where('offer_trackings.device_id', $request->device);
         }
@@ -552,24 +552,24 @@ class AdminReportService extends BaseReportService
 
             $query = $query->where('offer_trackings.browser', $request->browser);
         }
-        
-		if($request->os != ""){
-			$query = $query->where('offer_trackings.os', 'LIKE', "%{$request->os}%");
 
-		}
+        if ($request->os != "") {
+            $query = $query->where('offer_trackings.os', 'LIKE', "%{$request->os}%");
+
+        }
 
         $arrC = $this->getCountry();
-		if(isset($request->country) && $request->country != ""){
+        if (isset($request->country) && $request->country != "") {
             $query = $query->where('offer_trackings.country', $arrC[$request->country]);
 
-		}/**/
+        }/**/
 
-       
+
         /*$limit = min((int) ($request->limit ?? 50), 500);
         $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);*/
 
         $results = $query->orderBy('offer_trackings.id', 'desc')
-				->get();
+            ->get();
 
 
 
@@ -577,8 +577,10 @@ class AdminReportService extends BaseReportService
 
         // Convert UTC timestamps to user's configured timezone
         $results->transform(function ($row) {
-            if (isset($row->link_clicked_at)) $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
-            if (isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
+            if (isset($row->link_clicked_at))
+                $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
+            if (isset($row->created_at))
+                $row->created_at = $this->formatUtcToLocal($row->created_at);
             return $row;
         });
 
@@ -619,7 +621,7 @@ class AdminReportService extends BaseReportService
         // Apply filters
         if ($request->from && $request->to) {
             $fromUtc = $this->getUtcStartOfDay($request->from);
-            $toUtc   = $this->getUtcEndOfDay($request->to);
+            $toUtc = $this->getUtcEndOfDay($request->to);
             $query->whereBetween('conversions.created_at', [$fromUtc, $toUtc]);
         }
         if ($request->offer_id) {
@@ -639,8 +641,10 @@ class AdminReportService extends BaseReportService
 
         // Convert UTC timestamps to user's configured timezone
         $results->transform(function ($row) {
-            if (isset($row->conversion_time)) $row->conversion_time = $this->formatUtcToLocal($row->conversion_time);
-            if (isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
+            if (isset($row->conversion_time))
+                $row->conversion_time = $this->formatUtcToLocal($row->conversion_time);
+            if (isset($row->created_at))
+                $row->created_at = $this->formatUtcToLocal($row->created_at);
             return $row;
         });
 
@@ -649,6 +653,79 @@ class AdminReportService extends BaseReportService
             'data' => $results,
             'filters' => $request->all()
         ];
+    }
+
+    /**
+     * Get dropdown data for filters: statuses, offers, affiliates, advertisers
+     */
+    public function getDropdownData(): array
+    {
+        // Distinct statuses from conversions
+        // Distinct statuses from conversions
+        $statuses = DB::table('conversions')
+            ->distinct()
+            ->pluck('status')
+            ->toArray();
+
+        // Offers list
+        $offers = DB::table('offers')
+            ->select('id', 'offer_name')
+            ->orderBy('offer_name')
+            ->get();
+
+        // Affiliates list (users with role affiliate)
+        $affiliates = DB::table('users')
+            ->where('user_type', 'affiliate')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        // Advertisers list (users with role advertiser)
+        $advertisers = DB::table('users')
+            ->where('user_type', 'advertiser')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return [
+            'statuses' => $statuses,
+            'offers' => $offers,
+            'affiliates' => $affiliates,
+            'advertisers' => $advertisers,
+        ];
+    }
+
+    /**
+     * Get detailed conversion information by ID
+     */
+    public function getConversionDetail($id): array
+    {
+        $conversion = DB::table('conversions')
+            ->select(
+                'conversions.*',
+                'offers.offer_name',
+                'affis.name as affiliate_name',
+                'adverts.name as advertiser_name'
+            )
+            ->leftJoin('offers', 'conversions.offer_id', '=', 'offers.id')
+            ->leftJoin('users as affis', 'conversions.affiliate_id', '=', 'affis.id')
+            ->leftJoin('users as adverts', 'conversions.advertiser_id', '=', 'adverts.id')
+            ->where('conversions.id', $id)
+            ->first();
+
+        if (!$conversion) {
+            return ['success' => false, 'message' => 'Conversion not found'];
+        }
+
+        // Convert timestamps to local timezone if present
+        if (isset($conversion->conversion_time)) {
+            $conversion->conversion_time = $this->formatUtcToLocal($conversion->conversion_time);
+        }
+        if (isset($conversion->created_at)) {
+            $conversion->created_at = $this->formatUtcToLocal($conversion->created_at);
+        }
+
+        return ['success' => true, 'data' => $conversion];
     }
 
     /**
@@ -747,9 +824,9 @@ class AdminReportService extends BaseReportService
             $conversionIdRaw = trim((string) ($row['conversion_id'] ?? ''));
             $rowStatusRaw = $row['status'] ?? null;
 
-            Log::info("RowNumber : ".$rowNumber);
-            Log::info("conversion Id : " .$conversionIdRaw);
-            Log::info("Row Status : " .$rowStatusRaw);
+            Log::info("RowNumber : " . $rowNumber);
+            Log::info("conversion Id : " . $conversionIdRaw);
+            Log::info("Row Status : " . $rowStatusRaw);
 
             $requestedStatus = $normalizedForcedStatus ?? $normalizeStatus(is_string($rowStatusRaw) ? $rowStatusRaw : null);
 
@@ -777,8 +854,8 @@ class AdminReportService extends BaseReportService
                 continue;
             }
 
-            Log::info("conversion Id : " .$conversionIdRaw);
-            Log::info("Row Status : " .$rowStatusRaw);
+            Log::info("conversion Id : " . $conversionIdRaw);
+            Log::info("Row Status : " . $rowStatusRaw);
 
             $response = $this->updateConversionStatusUsingTid($conversionIdRaw, $requestedStatus);
             if (!($response['success'] ?? false)) {

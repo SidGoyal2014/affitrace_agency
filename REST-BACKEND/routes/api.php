@@ -151,6 +151,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('reports/click-conversion-report', [App\Http\Controllers\Admin\ReportController::class, 'click_conversion_report']);
         Route::post('reports/clicks', [App\Http\Controllers\Admin\ReportController::class, 'clicks_report']);
         Route::post('reports/conversions', [App\Http\Controllers\Admin\ReportController::class, 'conversions_report']);
+        // New endpoints for UI enhancements
+        Route::get('reports/conversions-dropdown-data', [App\Http\Controllers\Admin\ReportController::class, 'dropdown_data']);
+        Route::get('reports/conversion-detail/{id}', [App\Http\Controllers\Admin\ReportController::class, 'conversion_detail']);
+        Route::get('reports/click-detail/{id}', [App\Http\Controllers\Admin\ReportController::class, 'click_detail']);
         Route::get('reports/conversion/bulk-template', [App\Http\Controllers\Admin\ReportController::class, 'download_bulk_conversion_template']);
         Route::post('reports/conversion/update-status', [App\Http\Controllers\Admin\ReportController::class, 'update_conversion_status']);
         Route::post('reports/conversion/bulk-update-status', [App\Http\Controllers\Admin\ReportController::class, 'bulk_update_conversion_status']);
@@ -283,6 +287,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('reports/payouts/search', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'search_affiliate_payouts']);
         Route::post('reports/clicks', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'clicks_report']);
         Route::post('reports/conversions', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'conversions_report']);
+        Route::get('reports/click-detail/{id}', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'click_detail']);
 
 
         // Offers
@@ -315,6 +320,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('reports/clicks-conversions', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'clickConversionReport']);
         Route::post('reports/clicks', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'clicks_report']);
         Route::post('reports/conversions', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'conversions_report']);
+        Route::get('reports/click-detail/{id}', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'click_detail']);
         Route::get('invoices', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'invoices']);
         Route::get('invoices/{id}/download', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'downloadInvoice']);
     });
@@ -427,6 +433,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('reports/click-conversion-report', [App\Http\Controllers\Admin\ReportController::class, 'click_conversion_report']);
             Route::post('reports/clicks', [App\Http\Controllers\Admin\ReportController::class, 'clicks_report']);
             Route::post('reports/conversions', [App\Http\Controllers\Admin\ReportController::class, 'conversions_report']);
+            Route::get('reports/click-detail/{id}', [App\Http\Controllers\Admin\ReportController::class, 'click_detail']);
             Route::get('reports/conversion/bulk-template', [App\Http\Controllers\Admin\ReportController::class, 'download_bulk_conversion_template']);
             Route::get('reports/transactions', [App\Http\Controllers\Admin\ReportController::class, 'list_transactions']);
             Route::get('reports/logs', [App\Http\Controllers\Admin\ReportController::class, 'logs']);

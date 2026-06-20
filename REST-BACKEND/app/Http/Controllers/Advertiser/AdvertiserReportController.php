@@ -90,5 +90,10 @@ class AdvertiserReportController extends Controller
     {
         return response()->json($service->getConversionsReport($request, Auth::id()));
     }
+
+    public function click_detail($id, AdvertiserReportService $service)
+    {
+        return response()->json($service->getClickDetail($id, Auth::id(), 'advertiser'));
+    }
 }
 

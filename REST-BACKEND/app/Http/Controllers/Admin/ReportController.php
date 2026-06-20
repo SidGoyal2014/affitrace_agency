@@ -123,6 +123,25 @@ class ReportController extends Controller
 		return response()->json($this->reportService->getConversionsReport($request));
 	}
 
+    // New endpoint: dropdown data for filters
+    public function dropdown_data()
+    {
+        return response()->json($this->reportService->getDropdownData());
+    }
+
+    // New endpoint: detailed conversion info
+    public function conversion_detail($id)
+    {
+        return response()->json($this->reportService->getConversionDetail($id));
+    }
+
+    // New endpoint: detailed click info
+    public function click_detail($id)
+    {
+        return response()->json($this->reportService->getClickDetail($id));
+    }
+
+
 	protected function weeklyPayoutsFeatureEnabled(): bool
 	{
 		return (bool) config('reports.weekly_payouts_management_enabled', false);

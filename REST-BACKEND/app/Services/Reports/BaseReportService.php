@@ -187,4 +187,57 @@ class BaseReportService
             'filters' => $filters->toArray()
         ];
     }
+
+    /**
+     * Get detailed click information by transaction ID (tid)
+     * 
+     * @param string $tid Transaction ID
+     * @param int|null $scopeUserId User ID to scope results to
+     * @param string|null $scopeType Type of scoping: 'advertiser' or 'affiliate'
+     * @return array
+     */
+    public function getClickDetail(string $tid, ?int $scopeUserId = null, ?string $scopeType = null): array
+    {
+        $query = DB::table('offer_trackings')
+            ->select(
+                'offer_trackings.*',
+                'offer_trackings.id as otid',
+                'offer_trackings.created_at as link_clicked_at',
+                'offer_trackings.country as ot_country',
+                'offer_trackings.os as ot_os',
+                'offer_trackings.browser as ot_browser',
+                'offers.offer_name',
+                'affis.name as aff_name',
+                'adverts.name as advert_name',
+                'devices.device_name'
+            )
+            ->join('offers', 'offer_trackings.offer_id', '=', 'offers.id')
+            ->leftJoin('devices', 'offer_trackings.device_id', '=', 'devices.id')
+            ->join('users as affis', 'offer_trackings.aff_id', '=', 'affis.id')
+            ->join('users as adverts', 'offer_trackings.adv_id', '=', 'adverts.id')
+            ->where('offer_trackings.tid', $tid);
+
+        // Apply scoping based on user type
+        if ($scopeType === 'advertiser' && $scopeUserId) {
+            $query->where('offers.advertiser_id', $scopeUserId);
+        } elseif ($scopeType === 'affiliate' && $scopeUserId) {
+            $query->where('offer_trackings.aff_id', $scopeUserId);
+        }
+
+        $click = $query->first();
+
+        if (!$click) {
+            return ['success' => false, 'message' => 'Click record not found'];
+        }
+
+        // Convert timestamps to local timezone if present
+        if (isset($click->link_clicked_at)) {
+            $click->link_clicked_at = $this->formatUtcToLocal($click->link_clicked_at);
+        }
+        if (isset($click->created_at)) {
+            $click->created_at = $this->formatUtcToLocal($click->created_at);
+        }
+
+        return ['success' => true, 'data' => $click];
+    }
 }

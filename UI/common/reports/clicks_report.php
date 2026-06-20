@@ -51,7 +51,7 @@ include $pathPrefix . '/includes/head.php';
                                 <select class="form-control" id="os" name="os">
                                     <option value="">Select Operating System</option>
                                 </select>
-                            </div>                            
+                            </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-3">
@@ -90,6 +90,7 @@ include $pathPrefix . '/includes/head.php';
                             <thead>
                                 <tr>
                                     <th>Click ID</th>
+                                    <th>Actions</th>
                                     <th>Click Time</th>
                                     <th>Offer</th>
                                     <th>Affiliate</th>
@@ -144,12 +145,12 @@ include $pathPrefix . '/includes/head.php';
 
 
             // Populate Device dropdown
-            API.fetchWithAuth('<?php echo $user_type;?>/reports/devices').then(function(res) {
+            API.fetchWithAuth('<?php echo $user_type; ?>/reports/devices').then(function (res) {
                 const sel = $('#device');
-                (res.data || []).forEach(function(d) {
+                (res.data || []).forEach(function (d) {
                     sel.append('<option value="' + d.id + '">' + d.device_name + '</option>');
                 });
-            }).catch(function(err) {
+            }).catch(function (err) {
                 console.warn('Could not load devices:', err);
             });
 
@@ -159,21 +160,21 @@ include $pathPrefix . '/includes/head.php';
                 Object.entries(COUNTRIES).forEach(([code, name]) => {
                     countrySelect.append(new Option(name, code));
                 });
-            } catch(e) { console.error("Failed to load countries"); }
+            } catch (e) { console.error("Failed to load countries"); }
 
             try {
                 const browserSelect = $('select[name="browser"]');
                 Object.entries(BROWSERS).forEach(([code, name]) => {
                     browserSelect.append(new Option(name, name));
                 });
-            } catch(e) { console.error("Failed to load browsers"); }
+            } catch (e) { console.error("Failed to load browsers"); }
 
             try {
                 const osSelect = $('select[name="os"]');
                 Object.entries(OPERATING_SYSTEMS).forEach(([code, name]) => {
                     osSelect.append(new Option(name, name));
                 });
-            } catch(e) { console.error("Failed to load operating systems"); }
+            } catch (e) { console.error("Failed to load operating systems"); }
 
             loadReport();
 
@@ -194,12 +195,12 @@ include $pathPrefix . '/includes/head.php';
                 const formObj = Object.fromEntries(formData.entries());
 
 
-                const response = await API.fetchWithAuth('<?php echo $user_type;?>/reports/clicks', {
+                const response = await API.fetchWithAuth('<?php echo $user_type; ?>/reports/clicks', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formObj)
                 });
-//console.log(response);
+                //console.log(response);
                 renderTable(response);
 
             } catch (error) {
@@ -228,6 +229,9 @@ include $pathPrefix . '/includes/head.php';
                 const tr = `
                     <tr>
                         <td>${row.tid}</td>
+                        <td>
+                            <button class="btn btn-info btn-sm view-details" data-id="${row.tid}">View Details</button>
+                        </td>                        
                         <td><small>${dateStr}</small></td>
                         <td>
                             <a href="../offers/edit.php?id=${row.offer_id}" title="${row.offer_name || ''}">
@@ -261,14 +265,14 @@ include $pathPrefix . '/includes/head.php';
 
             if (dtInstance) { dtInstance.destroy(); }
             dtInstance = $('#reportTable').DataTable({
-                paging:   true,
+                paging: true,
                 searching: true,
-                info:     true,
+                info: true,
                 ordering: true,
                 autoWidth: false
             });
         }
-        
+
 
         function truncate(str, n) {
             return (str && str.length > n) ? str.substr(0, n - 1) + '&hellip;' : str;
@@ -328,7 +332,7 @@ include $pathPrefix . '/includes/head.php';
                     affiliate_id: formData.get('affiliate_id')
                 };
 
-                const response = await API.fetchWithAuth('<?php echo $user_type;?>/reports/export', {
+                const response = await API.fetchWithAuth('<?php echo $user_type; ?>/reports/export', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -352,7 +356,79 @@ include $pathPrefix . '/includes/head.php';
                 btn.innerHTML = originalHtml;
             }
         }
-    </script>
+    // ---------- New Code ----------
+async function fetchClickDetails(id) {
+    try {
+        const response = await API.fetchWithAuth('<?php echo $user_type; ?>/reports/click-detail/' + id);
+        if (response.success && response.data) {
+            populateDetailsModal(response.data);
+            $('#detailsModal').modal('show');
+        } else {
+            Toast.error('Error', response.message || 'Failed to load details');
+        }
+    } catch (err) {
+        console.error('Click details fetch error:', err);
+        Toast.error('Error', 'Unable to retrieve click details');
+    }
+}
+
+function populateDetailsModal(record) {
+    const tbody = $('#detailsTable');
+    tbody.empty();
+    const fields = {
+        'Click ID': record.tid,
+        'Click Time': record.link_clicked_at,
+        'Offer': record.offer_name,
+        'Affiliate': record.aff_name,
+        'Advertiser': record.advert_name,
+        'Country': record.ot_country,
+        'IP': record.ip,
+        'Device': record.device_name,
+        'OS': record.ot_os,
+        'Browser': record.ot_browser,
+        'User Agent': record.user_agent,
+        'Brand': record.brand,
+        'Currency': record.currency,
+        'Payout': record.payout,
+        'Revenue': record.revenue
+    };
+    for (const [label, value] of Object.entries(fields)) {
+        tbody.append(`<tr><th>${label}</th><td>${value ?? '-'}</td></tr>`);
+    }
+}
+
+// Event delegation for dynamically generated buttons
+$(document).on('click', '.view-details', function () {
+    const id = $(this).data('id');
+    if (id) {
+        fetchClickDetails(id);
+    }
+});
+</script>
+
+    <!-- Details Modal -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailsModalLabel">Click Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-sm table-borderless" id="detailsTable">
+                        <!-- Rows will be populated via JavaScript -->
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

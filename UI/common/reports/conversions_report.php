@@ -41,6 +41,27 @@ include $pathPrefix . '/includes/head.php';
                                     <option value="declined">Declined</option>
                                 </select>
                             </div>
+                            <div class="form-group col-md-3">
+                                <label for="offer_id">Offer</label>
+                                <select class="form-control" id="offer_id" name="offer_id">
+                                    <option value="">All</option>
+                                    <!-- options will be populated via JS -->
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="affiliate_id">Affiliate</label>
+                                <select class="form-control" id="affiliate_id" name="affiliate_id">
+                                    <option value="">All</option>
+                                    <!-- options will be populated via JS -->
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="advertiser_id">Advertiser</label>
+                                <select class="form-control" id="advertiser_id" name="advertiser_id">
+                                    <option value="">All</option>
+                                    <!-- options will be populated via JS -->
+                                </select>
+                            </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-2 d-flex align-items-end">
@@ -72,7 +93,7 @@ include $pathPrefix . '/includes/head.php';
                                 <tr>
                                     <th>Conversion ID</th>
                                     <th>Status</th>
-                                    <th>Actions</th>                                    
+                                    <th>Actions</th>
                                     <th>Conversion Time</th>
                                     <th>Offer</th>
                                     <th>Affiliate</th>
@@ -107,6 +128,8 @@ include $pathPrefix . '/includes/head.php';
             const formatDate = (d) => d.toISOString().split('T')[0];
 
             const urlParams = new URLSearchParams(window.location.search);
+            // Initialize filter dropdowns
+            loadDropdowns();
             if (urlParams.get('offer_id')) $('#offer_id').val(urlParams.get('offer_id'));
             if (urlParams.get('affiliate_id')) $('#affiliate_id').val(urlParams.get('affiliate_id'));
             if (urlParams.get('advertiser_id')) $('#advertiser_id').val(urlParams.get('advertiser_id'));
@@ -178,18 +201,18 @@ include $pathPrefix . '/includes/head.php';
                         data: 'revenue', title: 'Revenue',
                         render: function (data, type, row) {
                             if (type !== 'display') return parseFloat(row.revenue || 0);
-                            return '<span class="text-success font-weight-bold">$' + parseFloat(row.revenue || 0).toFixed(2) + '</span>';
+                            return '<span class="text-success font-weight-bold">' + row.currency + ' ' + parseFloat(row.revenue || 0).toFixed(2) + '</span>';
                         }
                     },
                     {
                         data: 'payout', title: 'Payout',
                         render: function (data, type, row) {
                             if (type !== 'display') return parseFloat(row.payout || 0);
-                            return '<span class="text-primary font-weight-bold">$' + parseFloat(row.payout || 0).toFixed(2) + '</span>';
+                            return '<span class="text-primary font-weight-bold">' + row.currency + ' ' + parseFloat(row.payout || 0).toFixed(2) + '</span>';
                         }
                     },
                     { data: 'country', title: 'Country', defaultContent: '-' },
-                    { data: 'device',  title: 'Device',  defaultContent: '-' }
+                    { data: 'device', title: 'Device', defaultContent: '-' }
                 ],
                 order: [[0, 'desc']],
                 pageLength: 25
@@ -204,29 +227,107 @@ include $pathPrefix . '/includes/head.php';
 
         });
 
+        async function loadDropdowns() {
+            // Load all dropdown data in a single request
+
+            try {
+                const resp = await API.fetchWithAuth('admin/reports/conversions-dropdown-data');
+                //if (resp.success) {
+                //const { offers, affiliates, advertisers } = resp.data;
+                const offers = resp.offers;
+                const affiliates = resp.affiliates;
+                const advertisers = resp.advertisers;
+                const offerSelect = $('#offer_id');
+                offers.forEach(o => offerSelect.append(`<option value="${o.id}">${o.offer_name}</option>`));
+                const affSelect = $('#affiliate_id');
+                affiliates.forEach(a => affSelect.append(`<option value="${a.id}">${a.name}</option>`));
+                const advSelect = $('#advertiser_id');
+                advertisers.forEach(a => advSelect.append(`<option value="${a.id}">${a.name}</option>`));
+                //}
+            } catch (e) {
+                console.error('Dropdown load error', e);
+            }
+        }
+
+        async function showConversionDetail(id) {
+            try {
+                const response = await API.fetchWithAuth(`admin/reports/conversion-detail/${id}`);
+                if (response.success) {
+                    // Build HTML details
+                    let html = '<div class="detail-container">';
+                    let rowContent = '';
+                    let pairCount = 0;
+                    for (const [key, value] of Object.entries(response.data)) {
+                        if (value != null && value != '' && !['id', 'offer_id', 'affiliate_id', 'advertiser_id', 'device_id', 'created_at', 'updated_at'].includes(key)) {
+                            rowContent += `<dt class="col-sm-2 text-capitalize">${key.replace('_', ' ')}</dt><dd class="col-sm-4">${value}</dd>`;
+                            pairCount++;
+                            if (pairCount === 2) {
+                                html += `<div class="detail-row row">${rowContent}</div>`;
+                                rowContent = '';
+                                pairCount = 0;
+                            }
+                        }
+                    }
+                    if (rowContent) {
+                        html += `<div class="detail-row row">${rowContent}</div>`;
+                    }
+                    html += '</div>';
+                    // Ensure modal exists
+                    if (!$('#conversionDetailModal').length) {
+                        const modalHtml = `<style>.detail-row:nth-child(odd){background:#f9f9f9;}.detail-row:nth-child(even){background:#ffffff;}</style>
+<div class="modal fade" id="conversionDetailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document" style="max-width: 1200px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detailModalLabel">Conversion Detail</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="detailModalBody"></div>
+    </div>
+  </div>
+</div>`;
+                        $('body').append(modalHtml);
+                    }
+                    $('#detailModalBody').html(html);
+                    $('#conversionDetailModal').modal('show');
+                } else {
+                    Toast.error('Error', response.message || 'Failed to load detail');
+                }
+            } catch (e) {
+                console.error(e);
+                Toast.error('Error', 'Unable to fetch conversion detail');
+            }
+        }
+
         function getStatusBadge(status) {
             const map = {
-                'pending':   '<span class="badge badge-warning">Pending</span>',
+                'pending': '<span class="badge badge-warning">Pending</span>',
                 'confirmed': '<span class="badge badge-success">Confirmed</span>',
-                'declined':  '<span class="badge badge-danger">Declined</span>',
+                'declined': '<span class="badge badge-danger">Declined</span>',
             };
             return map[status] || `<span class="badge badge-secondary">${status || 'N/A'}</span>`;
         }
 
         function getActionButtons(row) {
-            if (row.status !== 'pending') {
-                return '<span class="text-muted">—</span>';
-            }
-            return `
+            let actions = `
                 <div class="btn-group btn-group-sm" role="group">
+                    <button class="btn btn-info btn-sm" onclick="showConversionDetail(${row.id || row.conv_id})" title="Details">
+                        <i class="fas fa-eye"></i>
+                    </button>`;
+
+            if (row.status === 'pending') {
+                actions += `
                     <button class="btn btn-success btn-sm" onclick="updateConversionStatus(${row.conv_id || row.id}, 'confirmed')" title="Confirm">
                         <i class="fas fa-check"></i>
                     </button>
                     <button class="btn btn-danger btn-sm" onclick="updateConversionStatus(${row.conv_id || row.id}, 'declined')" title="Decline">
                         <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
+                    </button>`;
+            }
+            actions += `</div>`;
+            return actions;
         }
 
         async function updateConversionStatus(id, status) {
