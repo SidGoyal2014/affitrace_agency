@@ -20,9 +20,15 @@ class AdminService
     public function listAdvertisers()
     {
         $data = DB::table('users')
-            ->select('*', 'users.id as uid')
+            ->select(
+                'users.*',
+                'users.id as uid',
+                'advertiser_user_details.*',
+                'managers.name as manager_name'
+            )
             ->leftJoin('advertiser_user_details', 'users.id', '=', 'advertiser_user_details.user_id')
-            ->where('user_type', \App\Enums\UserType::Advertiser->value)
+            ->leftJoin('users as managers', DB::raw("CAST(NULLIF(users.employee_id, '') AS BIGINT)"), '=', 'managers.id')
+            ->where('users.user_type', \App\Enums\UserType::Advertiser->value)
             ->get();
 
         return [
@@ -64,7 +70,7 @@ class AdminService
                 $query->where('users.status', $request->status);
             }
             if ($request->filled('manager_id')) {
-                $query->where('users.employee_id', (string)$request->manager_id);
+                $query->where('users.employee_id', (string) $request->manager_id);
             }
             if ($request->filled('country')) {
                 $query->where('users.country', $request->country);
@@ -106,7 +112,7 @@ class AdminService
     public function searchUsers(string $q, int $limit = 20)
     {
         $limit = min($limit, 50);
-        $like  = '%' . $q . '%';
+        $like = '%' . $q . '%';
 
         $data = DB::table('users')
             ->select('id', 'name', 'email', 'user_type')
@@ -149,7 +155,7 @@ class AdminService
         $user->name = $request->name;
         $user->email = $request->email;
         $user->phone = $request->phone;
-        
+
         if ($request->has('timezone')) {
             $user->timezone = $request->timezone;
         }
@@ -191,10 +197,10 @@ class AdminService
         $payoutOverrides = DB::table('payout_rules')
             ->where('event_id', 0)
             ->where(function ($q) use ($id) {
-                $q->where('affiliate_id', (string)$id)
-                  ->orWhere('affiliate_id', 'LIKE', $id . ',%')
-                  ->orWhere('affiliate_id', 'LIKE', '%,' . $id . ',%')
-                  ->orWhere('affiliate_id', 'LIKE', '%,' . $id);
+                $q->where('affiliate_id', (string) $id)
+                    ->orWhere('affiliate_id', 'LIKE', $id . ',%')
+                    ->orWhere('affiliate_id', 'LIKE', '%,' . $id . ',%')
+                    ->orWhere('affiliate_id', 'LIKE', '%,' . $id);
             })
             ->get();
 
@@ -208,7 +214,7 @@ class AdminService
             'user' => $user->toArray(),
             'aud' => $aud->toArray(),
             'payout_overrides' => $payoutOverrides->toArray(),
-            'postback_cols' => $postbackCols ? (array)$postbackCols : null,
+            'postback_cols' => $postbackCols ? (array) $postbackCols : null,
             'uid' => $id,
             'arrTimeZone' => $this->getTimeZone(),
             'pmtArray' => $this->getPaymentMethod(),
@@ -454,7 +460,7 @@ class AdminService
     public function assignAffiliateManager($id, $employee_id = null)
     {
         $user = User::findOrFail($id);
-        $user->employee_id = $employee_id ? (string)$employee_id : null;
+        $user->employee_id = $employee_id ? (string) $employee_id : null;
         $user->save();
         return ['success' => true, 'msg' => 'Affiliate manager assigned successfully'];
     }
@@ -464,7 +470,7 @@ class AdminService
         $totalClicks = DB::table('offer_trackings')->where('aff_id', $id)->count();
 
         $conversionsQuery = DB::table('conversions')->where('affiliate_id', $id);
-        
+
         $stats = [
             'total_clicks' => $totalClicks,
             'approved_conversions' => (clone $conversionsQuery)->where('status', 'confirmed')->count(),
@@ -521,16 +527,16 @@ class AdminService
         $data = $res['data'];
 
         $headers = [
-            "Content-type"        => "text/csv",
+            "Content-type" => "text/csv",
             "Content-Disposition" => "attachment; filename=affiliates_export_" . date('Ymd_His') . ".csv",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
         ];
 
         $columns = ['ID', 'Name', 'Email', 'Company', 'Phone', 'Country', 'Status', 'Website', 'Traffic Source', 'Manager', 'Signup Date'];
 
-        $callback = function() use($data, $columns) {
+        $callback = function () use ($data, $columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
 
@@ -560,7 +566,7 @@ class AdminService
     {
         $uid = $request->uid;
         $file = $request->file('doc');
-        
+
         $fileName = time() . '_' . $file->getClientOriginalName();
         $file->storeAs('public/affiliate_docs/' . $uid, $fileName);
 

@@ -1,4 +1,5 @@
 <?php
+$rolePrefix = isset($api_link_to_edit_advertiser) ? explode('/', $api_link_to_edit_advertiser)[0] : 'admin';
 include $pathPrefix . '/includes/head.php';
 ?>
 <script src="../../common/js/countries.js"></script>
@@ -49,11 +50,19 @@ include $pathPrefix . '/includes/head.php';
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>Email *</label>
-                                            <input type="email" name="email" id="email" class="form-control" placeholder=" " required>
+                                            <label>Name </label>
+                                            <input type="text" name="name" id="name" class="form-control"
+                                                placeholder=" " required>
                                         </div>
                                     </div>
-                                </div>                                
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Email *</label>
+                                            <input type="email" name="email" id="email" class="form-control"
+                                                placeholder=" " required>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
@@ -64,7 +73,8 @@ include $pathPrefix . '/includes/head.php';
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Confirm Password *</label>
-                                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
+                                            <input type="password" name="password_confirmation"
+                                                id="password_confirmation" class="form-control">
                                         </div>
                                     </div>
                                 </div>
@@ -73,28 +83,32 @@ include $pathPrefix . '/includes/head.php';
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label>Name </label>
-                                            <input type="text" name="name" id="name" class="form-control" placeholder=" " required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
                                             <label>Phone *</label>
                                             <input type="text" name="phone" id="phone" class="form-control" required>
                                         </div>
                                     </div>
+                                    <div class="col-lg-6">
+                                        <label><strong>Assigned Manager:</strong></label>
+                                        <select name="employee_id" class="form-control" id="employee_id">
+                                            <option value="">(No Manager)</option>
+                                        </select>
+                                    </div>
                                 </div>
+
+
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Instant Messenger Name </label>
-                                            <input type="text" name="instant_messenger_name" id="instant_messenger_name" class="form-control">
+                                            <input type="text" name="instant_messenger_name" id="instant_messenger_name"
+                                                class="form-control">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Instant Messenger Value</label>
-                                            <input type="text" name="instant_messenger_value" id="instant_messenger_value" class="form-control" >
+                                            <input type="text" name="instant_messenger_value"
+                                                id="instant_messenger_value" class="form-control">
                                         </div>
                                     </div>
                                 </div>
@@ -102,13 +116,15 @@ include $pathPrefix . '/includes/head.php';
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Company </label>
-                                            <input type="text" name="company" id="company" class="form-control" placeholder=" " required>
+                                            <input type="text" name="company" id="company" class="form-control"
+                                                placeholder=" " required>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Address</label>
-                                            <input type="text" name="address" id="address" class="form-control" placeholder=" " >
+                                            <input type="text" name="address" id="address" class="form-control"
+                                                placeholder=" ">
                                         </div>
                                     </div>
                                 </div>
@@ -116,21 +132,24 @@ include $pathPrefix . '/includes/head.php';
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>City </label>
-                                            <input type="text" name="city" id="city" class="form-control" placeholder=" " >
+                                            <input type="text" name="city" id="city" class="form-control"
+                                                placeholder=" ">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>State</label>
-                                            <input type="text" name="state" id="state" class="form-control" placeholder=" " >
+                                            <input type="text" name="state" id="state" class="form-control"
+                                                placeholder=" ">
                                         </div>
                                     </div>
-                                </div>                                
+                                </div>
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>ZipCode </label>
-                                            <input type="text" name="zipcode" id="zipcode" class="form-control" placeholder=" " >
+                                            <input type="text" name="zipcode" id="zipcode" class="form-control"
+                                                placeholder=" ">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -165,13 +184,15 @@ include $pathPrefix . '/includes/head.php';
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Affiliate Block </label>
-                                            <input type="text" name="affiliate_block" id="affiliate_block" class="form-control" placeholder="">
+                                            <input type="text" name="affiliate_block" id="affiliate_block"
+                                                class="form-control" placeholder="">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Affiliate whitelist</label>
-                                            <input type="text" name="affiliate_whitelist" id="affiliate_whitelist" class="form-control" placeholder="">
+                                            <input type="text" name="affiliate_whitelist" id="affiliate_whitelist"
+                                                class="form-control" placeholder="">
                                         </div>
                                     </div>
                                 </div>
@@ -179,13 +200,15 @@ include $pathPrefix . '/includes/head.php';
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Private Note </label>
-                                            <textarea name="private_note" id="private_note" class="form-control" placeholder=""></textarea>
+                                            <textarea name="private_note" id="private_note" class="form-control"
+                                                placeholder=""></textarea>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Additional Info</label>
-                                            <textarea name="additional_info" id="additional_info" class="form-control" placeholder=""></textarea>
+                                            <textarea name="additional_info" id="additional_info" class="form-control"
+                                                placeholder=""></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -193,13 +216,15 @@ include $pathPrefix . '/includes/head.php';
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Postback IP Whitelist </label>
-                                            <input type="text" name="postback_ip_whitelist" id="postback_ip_whitelist" class="form-control" placeholder="">
+                                            <input type="text" name="postback_ip_whitelist" id="postback_ip_whitelist"
+                                                class="form-control" placeholder="">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Tax Details</label>
-                                            <input type="text" name="tax_details" id="tax_details" class="form-control" placeholder="">
+                                            <input type="text" name="tax_details" id="tax_details" class="form-control"
+                                                placeholder="">
                                         </div>
                                     </div>
                                 </div>
@@ -220,6 +245,7 @@ include $pathPrefix . '/includes/head.php';
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
 
     <script>
+        const rolePrefix = '<?php echo $rolePrefix; ?>';
         let advertiserId = null;
 
         $(document).ready(async function () {
@@ -232,14 +258,14 @@ include $pathPrefix . '/includes/head.php';
                 Object.entries(COUNTRIES).forEach(([code, name]) => {
                     countrySelect.append(new Option(name, code));
                 });
-            } catch(e) { console.error("Failed to load countries"); }
+            } catch (e) { console.error("Failed to load countries"); }
 
             try {
                 const currencySelect = $('select[name="currency"]');
                 Object.entries(CURRENCIES).forEach(([code, name]) => {
                     currencySelect.append(new Option(name, code));
                 });
-            } catch(e) { console.error("Failed to load currencies"); }
+            } catch (e) { console.error("Failed to load currencies"); }
 
             try {
                 const timeZoneSelect = $('select[name="time_zone"]');
@@ -247,7 +273,7 @@ include $pathPrefix . '/includes/head.php';
                     timeZoneSelect.append(new Option(name, code));
                 });
 
-            } catch(e) { console.error("Failed to load time zones"); }
+            } catch (e) { console.error("Failed to load time zones"); }
 
             // Get ID from URL
             const urlParams = new URLSearchParams(window.location.search);
@@ -260,13 +286,26 @@ include $pathPrefix . '/includes/head.php';
 
             $('#userIdBadge').text('ID: ' + advertiserId);
 
+
+            // Load managers list dynamically
+            try {
+                const empResponse = await API.fetchWithAuth(`${rolePrefix}/employees/list`);
+                const managers = empResponse.data;
+                const employeeSelect = $('#employee_id');
+                managers.forEach(m => {
+                    employeeSelect.append(new Option(m.name, m.id));
+                });
+            } catch (err) {
+                console.error("Failed to load managers", err);
+            }
+
             // Load data
             try {
-                const response = await API.fetchWithAuth(`<?php echo $api_link_to_edit_advertiser;?>/${advertiserId}`);
+                const response = await API.fetchWithAuth(`<?php echo $api_link_to_edit_advertiser; ?>/${advertiserId}`);
                 const data = response.user;
                 const dataAdud = response.adud;
 
-                console.log(response)
+                //console.log(response)
 
 
                 if (data) {
@@ -281,6 +320,7 @@ include $pathPrefix . '/includes/head.php';
                     $('#city').val(data.city || '');
                     $('#state').val(data.state || '');
                     $('#zipcode').val(data.zipcode || '');
+                    $('#employee_id').val(data.employee_id || '');
 
 
                     $('#phone').val(data.phone || '');
@@ -325,13 +365,14 @@ include $pathPrefix . '/includes/head.php';
                     uid: advertiserId,
                     name: $('#name').val(),
                     email: $('#email').val(),
-                    instant_messenger_name:$('#instant_messenger_name').val(),
+                    instant_messenger_name: $('#instant_messenger_name').val(),
                     instant_messenger_value: $('#instant_messenger_value').val(),
                     company: $('#company').val(),
                     address: $('#address').val(),
                     city: $('#city').val(),
                     state: $('#state').val(),
-                    zipcode: $('#zipcode').val(),                    
+                    zipcode: $('#zipcode').val(),
+                    employee_id: $('#employee_id').val(),
                     phone: $('#phone').val(),
                     country: $('#country').val(),
                     user_type: 'advertiser',
@@ -353,7 +394,7 @@ include $pathPrefix . '/includes/head.php';
                 }
 
                 try {
-                    const response = await API.fetchWithAuth(`<?php echo $api_link_to_update_advertiser;?>`, {
+                    const response = await API.fetchWithAuth(`<?php echo $api_link_to_update_advertiser; ?>`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)

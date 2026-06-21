@@ -1,4 +1,5 @@
 <?php
+$rolePrefix = isset($api_link_to_list_advertisers) ? explode('/', $api_link_to_list_advertisers)[0] : 'admin';
 include $pathPrefix . '/includes/head.php';
 ?>
 
@@ -26,6 +27,7 @@ include $pathPrefix . '/includes/head.php';
                             <thead>
                                 <tr>
                                     <th>Name</th>
+                                    <th>Manager</th>
                                     <th>Email</th>
                                     <th>Company</th>
                                     <th>Actions</th>
@@ -62,7 +64,7 @@ include $pathPrefix . '/includes/head.php';
             if (user) $('.user-name').text(user.name);
 
             try {
-                const response = await API.fetchWithAuth('<?php echo $api_link_to_list_advertisers;?>');
+                const response = await API.fetchWithAuth('<?php echo $api_link_to_list_advertisers; ?>');
                 const data = response.data || [];
                 const tbody = $('#table_body');
                 tbody.empty();
@@ -72,6 +74,7 @@ include $pathPrefix . '/includes/head.php';
                         tbody.append(`
                             <tr>
                                 <td>${adv.name}</td>
+                                <td>${adv.manager_name || '<span class="text-muted small">Unassigned</span>'}</td>
                                 <td>${adv.email}</td>
                                 <td>${adv.company || '-'}</td>
                                 <td>
@@ -92,20 +95,20 @@ include $pathPrefix . '/includes/head.php';
         });
 
         async function impersonateUser(id) {
-            if(!confirm("Are you sure you want to log in as this advertiser?")) return;
+            if (!confirm("Are you sure you want to log in as this advertiser?")) return;
             try {
-                const res = await API.fetchWithAuth(`<?php echo $api_link_for_impersonate;?>/${id}`, { method: 'POST' });
-                
+                const res = await API.fetchWithAuth(`<?php echo $api_link_for_impersonate; ?>/${id}`, { method: 'POST' });
+
                 // Save admin state
                 localStorage.setItem('admin_access_token', localStorage.getItem('access_token'));
                 localStorage.setItem('admin_user', localStorage.getItem('user'));
-                
+
                 // Set impersonated state
                 localStorage.setItem('access_token', res.token);
                 localStorage.setItem('user', JSON.stringify(res.user));
                 localStorage.setItem('is_impersonating', 'true');
                 localStorage.setItem('impersonator', JSON.stringify(res.impersonator));
-                
+
                 window.location.href = '../../ADVERTISER/dashboard.php';
             } catch (e) {
                 alert('Failed to start impersonation: ' + (typeof e.message === 'object' ? Object.values(e.message).flat().join(' ') : e.message));
