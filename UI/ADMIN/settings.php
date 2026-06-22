@@ -53,6 +53,40 @@ include $pathPrefix . '/includes/head.php';
                         </div>
                     </div>
                 </div>
+
+                <!-- Currency Settings Card -->
+                <div class="col-lg-6">
+                    <div class="card-modern">
+                        <div class="card-header d-flex align-items-center">
+                            <i class="fas fa-coins mr-2 text-primary"></i>
+                            <h6 class="m-0 font-weight-bold">Default Currency Preference</h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="cur-alert-container"></div>
+
+                            <p class="text-muted mb-3" style="font-size:0.9rem;">
+                                Set your default currency. All financial stats across the dashboard 
+                                (margin, revenue, payouts) will be displayed in this currency.
+                            </p>
+
+                            <div class="form-group">
+                                <label><strong>Default Currency</strong></label>
+                                <select name="default_currency" id="default_currency" class="form-control">
+                                    <option value="">Loading...</option>
+                                </select>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between mt-4">
+                                <small class="text-muted" id="cur-current-display">
+                                    <i class="fas fa-money-bill-wave mr-1"></i> Current: <span id="cur-current-label">—</span>
+                                </small>
+                                <button type="button" class="btn btn-primary" id="btnSaveCurrency">
+                                    <i class="fas fa-save mr-1"></i> Save Currency
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -111,6 +145,58 @@ include $pathPrefix . '/includes/head.php';
             } catch (err) {
                 console.error('[Timezone Settings] Failed to load user timezone:', err);
             }
+
+            // Load settings and currencies
+            const $curSelect = $('#default_currency');
+            try {
+                console.log('[Settings] Fetching current settings and currencies...');
+                const data = await API.fetchWithAuth('admin/settings');
+                console.log('[Settings] GET settings response:', data);
+
+                $curSelect.empty().append('<option value="">Select default currency...</option>');
+                Object.entries(data.currencies || {}).forEach(([key, val]) => {
+                    $curSelect.append(`<option value="${key}">${key} - ${val}</option>`);
+                });
+
+                if (data.default_currency) {
+                    $curSelect.val(data.default_currency).trigger('change');
+                    $('#cur-current-label').text(data.default_currency);
+                }
+            } catch (err) {
+                console.error('[Settings] Failed to load settings:', err);
+            }
+
+            // Save currency button handler
+            $('#btnSaveCurrency').on('click', async function () {
+                const cur = $curSelect.val();
+                if (!cur) {
+                    $('#cur-alert-container').html('<div class="alert alert-warning">Please select a currency.</div>');
+                    return;
+                }
+
+                $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Saving...');
+                $('#cur-alert-container').empty();
+
+                try {
+                    const result = await API.fetchWithAuth('admin/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ default_currency: cur })
+                    });
+
+                    if (result.status === 1) {
+                        $('#cur-current-label').text(cur);
+                        $('#cur-alert-container').html('<div class="alert alert-success"><i class="fas fa-check-circle mr-1"></i> Default currency updated successfully!</div>');
+                    } else {
+                        throw new Error(result.msg || 'Update failed');
+                    }
+                } catch (err) {
+                    console.error('[Settings] Currency update failed:', err);
+                    $('#cur-alert-container').html(`<div class="alert alert-danger"><i class="fas fa-times-circle mr-1"></i> ${err.message || 'Failed to update default currency.'}</div>`);
+                } finally {
+                    $(this).prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Save Currency');
+                }
+            });
 
             // Save button handler
             $('#btnSaveTimezone').on('click', async function () {

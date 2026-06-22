@@ -26,13 +26,14 @@ class AdminDashboardService
 
         foreach ($arr as $obj) {
             $arrCats[] = $obj->category_name;
-            $arrRevenue[] = $obj->revenue;
+            $arrRevenue[] = \App\Utils\CurrencyUtils::convertFromUsdToDefault($obj->revenue);
         }
 
         return [
             'title' => ucfirst($logged_in_user_type) . ' Dashboard',
             'module_name' => ucfirst($logged_in_user_type) . ' Dashboard',
             'logged_in_user_type' => $logged_in_user_type,
+            'default_currency' => \App\Models\Setting::find(1)->default_currency ?? 'USD',
             'click_message' => $this->get_clicks_message(),
             'clicks_consumed' => $this->get_total_clicks(),
             'clicks_limit' => $this->get_settings("num_clicks"),
@@ -72,9 +73,13 @@ class AdminDashboardService
     public function top_affiliates($dod = "Y")
     {
         $strLimit = ($dod == "Y") ? " LIMIT 5 OFFSET 0" : "";
-        $sql = "SELECT U.id as uid, C.affiliate_id as aff_id, U.name, sum(C.payout) as payout FROM users U INNER JOIN conversions C ON U.id=C.affiliate_id GROUP BY C.affiliate_id, U.id, U.name ORDER BY payout DESC" . $strLimit;
+        $sql = "SELECT U.id as uid, C.affiliate_id as aff_id, U.name, sum(C.payout_usd) as payout FROM users U INNER JOIN conversions C ON U.id=C.affiliate_id GROUP BY C.affiliate_id, U.id, U.name ORDER BY payout DESC" . $strLimit;
 
         $data = DB::select($sql);
+
+        foreach ($data as $row) {
+            $row->payout = \App\Utils\CurrencyUtils::convertFromUsdToDefault($row->payout);
+        }
 
         return [
             'module_name' => 'Top Affiliates',
@@ -84,9 +89,13 @@ class AdminDashboardService
 
     public function top_offers($dod = "Y")
     {
-        $sql = "SELECT C.offer_id, O.offer_name, sum(C.revenue) as revenue, O.offer_status FROM offers O INNER JOIN conversions C ON O.id=C.offer_id GROUP BY C.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 5 OFFSET 0";
+        $sql = "SELECT C.offer_id, O.offer_name, sum(C.revenue_usd) as revenue, O.offer_status FROM offers O INNER JOIN conversions C ON O.id=C.offer_id GROUP BY C.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 5 OFFSET 0";
 
         $data = DB::select($sql);
+
+        foreach ($data as $row) {
+            $row->revenue = \App\Utils\CurrencyUtils::convertFromUsdToDefault($row->revenue);
+        }
 
         return [
             'module_name' => 'Top Offers',
@@ -151,7 +160,7 @@ class AdminDashboardService
 
         foreach ($arr as $obj) {
             $month = (trim($obj->month) == "") ? 0 : $obj->month;
-            $arrSTR[$month] = $obj->revenue;
+            $arrSTR[$month] = \App\Utils\CurrencyUtils::convertFromUsdToDefault($obj->revenue);
         }
 
         for ($index = 1; $index < 12; $index++) {
@@ -172,14 +181,16 @@ class AdminDashboardService
     {
         $total_rev = Conversion::select(DB::raw('SUM(revenue_usd) as total'))
             ->get()->toArray();
-        return $total_rev[0]['total'] ?? 0;
+        $usdAmount = $total_rev[0]['total'] ?? 0;
+        return \App\Utils\CurrencyUtils::convertFromUsdToDefault($usdAmount);
     }
 
     private function get_total_payouts()
     {
         $to_payout = Conversion::select(DB::raw('SUM(payout_usd) as total'))
             ->get()->toArray();
-        return $to_payout[0]['total'] ?? 0;
+        $usdAmount = $to_payout[0]['total'] ?? 0;
+        return \App\Utils\CurrencyUtils::convertFromUsdToDefault($usdAmount);
     }
 
     private function get_total_no_of_affiliates()
@@ -352,8 +363,10 @@ class AdminDashboardService
 
         foreach ($expectedLabels as $label) {
             $labels[] = $label;
-            $revenue[] = $map[$label]['revenue'] ?? 0.00;
-            $payout[] = $map[$label]['payout'] ?? 0.00;
+            $revUsd = $map[$label]['revenue'] ?? 0.00;
+            $payUsd = $map[$label]['payout'] ?? 0.00;
+            $revenue[] = \App\Utils\CurrencyUtils::convertFromUsdToDefault($revUsd);
+            $payout[] = \App\Utils\CurrencyUtils::convertFromUsdToDefault($payUsd);
         }
 
         return compact('labels', 'revenue', 'payout');
@@ -388,8 +401,10 @@ class AdminDashboardService
 
         foreach ($expectedWeeks as $yw => $label) {
             $labels[] = $label;
-            $revenue[] = $map[$yw]['revenue'] ?? 0.00;
-            $payout[] = $map[$yw]['payout'] ?? 0.00;
+            $revUsd = $map[$yw]['revenue'] ?? 0.00;
+            $payUsd = $map[$yw]['payout'] ?? 0.00;
+            $revenue[] = \App\Utils\CurrencyUtils::convertFromUsdToDefault($revUsd);
+            $payout[] = \App\Utils\CurrencyUtils::convertFromUsdToDefault($payUsd);
         }
 
         return compact('labels', 'revenue', 'payout');

@@ -374,22 +374,22 @@ include $pathPrefix . '/includes/head.php';
 
             try {
                 const data = await API.fetchWithAuth('admin/dashboard');
+                const cur = data.default_currency || 'USD';
 
                 $('#total_offers').text(data.total_offers);
                 $('#total_advertisers').text(data.total_no_of_advertisers);
                 $('#total_affiliates').text(data.total_no_of_affiliates);
-                $('#total_margin').text(formatDecimal(data.total_margin));
+                $('#total_margin').text(`${formatDecimal(data.total_margin)} ${cur}`);
 
                 $('#total_clicks').text(data.overall_clicks);
                 $('#total_conversions').text(data.overall_conversions);
-                $('#total_payouts').text(formatDecimal(data.total_payouts));
-                $('#total_revenue').text(formatDecimal(data.total_revenue));
+                $('#total_payouts').text(`${formatDecimal(data.total_payouts)} ${cur}`);
+                $('#total_revenue').text(`${formatDecimal(data.total_revenue)} ${cur}`);
 
-                $('#avg_rev_offer').text(formatDecimal(data.average_revenue_per_offer));
-                $('#avg_rev_aff').text(formatDecimal(data.average_revenue_per_affiliate));
-                $('#avg_payout_offer').text(formatDecimal(data.average_payout_per_offer));
-                $('#avg_payout_offer').text(formatDecimal(data.average_payout_per_offer));
-                $('#avg_payout_aff').text(formatDecimal(data.average_payout_per_affiliate));
+                $('#avg_rev_offer').text(`${formatDecimal(data.average_revenue_per_offer)} ${cur}`);
+                $('#avg_rev_aff').text(`${formatDecimal(data.average_revenue_per_affiliate)} ${cur}`);
+                $('#avg_payout_offer').text(`${formatDecimal(data.average_payout_per_offer)} ${cur}`);
+                $('#avg_payout_aff').text(`${formatDecimal(data.average_payout_per_affiliate)} ${cur}`);
 
                 // Click Limit Logic
                 if (data.clicks_limit > 0) {

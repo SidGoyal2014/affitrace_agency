@@ -701,4 +701,49 @@ class AdminService
 
         return response()->stream($callback, 200, $headers);
     }
+
+    public function getSettingsData()
+    {
+        $settings = \App\Models\Setting::find(1);
+        if (!$settings) {
+            $settings = new \App\Models\Setting();
+            $settings->id = 1;
+            $settings->current_plan_id = 1;
+            $settings->current_plan_name = 'Trial';
+            $settings->current_plan_price = 0.00;
+            $settings->default_currency = 'USD';
+            $settings->save();
+        }
+        return [
+            'settings' => $settings,
+            'default_currency' => $settings->default_currency ?? 'USD',
+            'currencies' => $this->getCurrency()
+        ];
+    }
+
+    public function saveSettings($request)
+    {
+        $validator = Validator::make($request->all(), [
+            'default_currency' => 'required|string|max:10'
+        ]);
+
+        if ($validator->fails()) {
+            return ['status' => 0, 'error' => $validator->errors()->toArray(), 'code' => 422];
+        }
+
+        $settings = \App\Models\Setting::find(1);
+        if (!$settings) {
+            $settings = new \App\Models\Setting();
+            $settings->id = 1;
+            $settings->current_plan_id = 1;
+            $settings->current_plan_name = 'Trial';
+            $settings->current_plan_price = 0.00;
+        }
+
+        $settings->default_currency = $request->default_currency;
+        $settings->save();
+
+        return ['status' => 1, 'msg' => 'Settings saved successfully', 'code' => 200];
+    }
 }
+

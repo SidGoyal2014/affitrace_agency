@@ -52,7 +52,7 @@ class AffiliateDashboardService
 
         foreach ($arr as $obj) {
             $month = (trim($obj->month) == "") ? 0 : $obj->month;
-            $arrSTR[$month] = $obj->revenue;
+            $arrSTR[$month] = \App\Utils\CurrencyUtils::convertFromUsdToDefault($obj->revenue);
         }
 
         for ($index = 1; $index <= 12; $index++) {
@@ -105,7 +105,13 @@ class AffiliateDashboardService
                     WHERE 
                         offer_affiliates.affiliate_id = " . Auth::id();
 
-            return DB::select($sql);
+            $offers = DB::select($sql);
+            foreach ($offers as $offer) {
+                $offer->payout_usd = \App\Utils\CurrencyUtils::convertFromUsdToDefault($offer->payout_usd);
+                $offer->revenue_usd = \App\Utils\CurrencyUtils::convertFromUsdToDefault($offer->revenue_usd);
+                $offer->offer_price_usd = $offer->payout_usd; // Compatibility mapping for client-side
+            }
+            return $offers;
         } catch (\Exception $e) {
             return [];
         }
@@ -124,8 +130,12 @@ class AffiliateDashboardService
     {
         // Always return data
         $strLimit = " LIMIT 5 OFFSET 0";
-        $sql = "SELECT U.id as uid, C.affiliate_id as aff_id, U.name, sum(C.payout) as payout FROM users U INNER JOIN conversions C ON U.id=C.affiliate_id GROUP BY C.affiliate_id, U.id, U.name ORDER BY payout DESC" . $strLimit;
-        return DB::select($sql);
+        $sql = "SELECT U.id as uid, C.affiliate_id as aff_id, U.name, sum(C.payout_usd) as payout FROM users U INNER JOIN conversions C ON U.id=C.affiliate_id GROUP BY C.affiliate_id, U.id, U.name ORDER BY payout DESC" . $strLimit;
+        $data = DB::select($sql);
+        foreach ($data as $row) {
+            $row->payout = \App\Utils\CurrencyUtils::convertFromUsdToDefault($row->payout);
+        }
+        return $data;
     }
 
     /**
@@ -134,8 +144,12 @@ class AffiliateDashboardService
     public function top_offers($dod = "Y")
     {
         // Always return data
-        $sql = "SELECT C.offer_id, O.offer_name, sum(C.revenue) as revenue, O.offer_status FROM offers O INNER JOIN conversions C ON O.id=C.offer_id GROUP BY C.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 5 OFFSET 0";
-        return DB::select($sql);
+        $sql = "SELECT C.offer_id, O.offer_name, sum(C.revenue_usd) as revenue, O.offer_status FROM offers O INNER JOIN conversions C ON O.id=C.offer_id GROUP BY C.offer_id, O.offer_name, O.offer_status ORDER BY revenue DESC LIMIT 5 OFFSET 0";
+        $data = DB::select($sql);
+        foreach ($data as $row) {
+            $row->revenue = \App\Utils\CurrencyUtils::convertFromUsdToDefault($row->revenue);
+        }
+        return $data;
     }
 
     // --- Statistics Methods ---
@@ -160,7 +174,8 @@ class AffiliateDashboardService
         // Earnings from conversions table
         $total = Conversion::where('affiliate_id', Auth::id())
             ->sum('payout_usd');
-        return number_format((float) $total, 2, '.', '');
+        $converted = \App\Utils\CurrencyUtils::convertFromUsdToDefault($total);
+        return number_format((float) $converted, 2, '.', '');
     }
 
     public function get_today_earnings()
@@ -168,7 +183,8 @@ class AffiliateDashboardService
         $total = Conversion::where('affiliate_id', Auth::id())
             ->whereDate('created_at', date('Y-m-d'))
             ->sum('payout_usd');
-        return number_format((float) $total, 2, '.', '');
+        $converted = \App\Utils\CurrencyUtils::convertFromUsdToDefault($total);
+        return number_format((float) $converted, 2, '.', '');
     }
 
     public function get_month_earnings()
@@ -177,6 +193,7 @@ class AffiliateDashboardService
             ->whereYear('created_at', date('Y'))
             ->whereMonth('created_at', date('m'))
             ->sum('payout_usd');
-        return number_format((float) $total, 2, '.', '');
+        $converted = \App\Utils\CurrencyUtils::convertFromUsdToDefault($total);
+        return number_format((float) $converted, 2, '.', '');
     }
 }

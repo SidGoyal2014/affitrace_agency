@@ -250,6 +250,17 @@ class AdminController extends Controller
 		return $this->adminService->exportAdvertisers($request);
 	}
 
+	public function get_settings()
+	{
+		return response()->json($this->adminService->getSettingsData());
+	}
+
+	public function update_settings(Request $request)
+	{
+		$result = $this->adminService->saveSettings($request);
+		return response()->json($result, $result['code'] ?? 200);
+	}
+
 }
 
 

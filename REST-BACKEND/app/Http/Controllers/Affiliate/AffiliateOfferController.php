@@ -44,7 +44,8 @@ class AffiliateOfferController extends Controller
 
 			return response()->json([
 				'module_name' => 'Offers Approved',
-				'offers' => $offers
+				'offers' => $offers,
+				'default_currency' => \App\Utils\CurrencyUtils::getDefaultCurrency()
 			]);
 
 		} catch (\Exception $e) {
@@ -58,6 +59,7 @@ class AffiliateOfferController extends Controller
 		try {
 			$eai = $this->resolve_agency_username($request);
 			$data = $service->getTrackingUrlDetails($oid, Auth::id(), $eai);
+			$data['default_currency'] = \App\Utils\CurrencyUtils::getDefaultCurrency();
 			return response()->json($data);
 
 		} catch (\Exception $e) {

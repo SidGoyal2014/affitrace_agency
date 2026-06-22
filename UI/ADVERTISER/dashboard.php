@@ -94,12 +94,13 @@ include $pathPrefix . '/includes/head.php';
         $(document).ready(async function () {
             try {
                 const data = await API.fetchWithAuth('advertiser/dashboard');
+                const cur = data.default_currency || 'USD';
 
                 // Update Stats
                 $('#total_offers').text(data.total_offers || 0);
-                $('#total_budget').text('$' + Number(data.total_budget || 0).toLocaleString());
+                $('#total_budget').text(Number(data.total_budget || 0).toLocaleString() + ' ' + cur);
                 $('#conversions').text(Number(data.conversions || 0).toLocaleString());
-                $('#pending_invoices').text('$' + Number(data.pending_invoices || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $('#pending_invoices').text(Number(data.pending_invoices || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + cur);
 
             } catch (error) {
                 console.error('Dashboard load failed:', error);

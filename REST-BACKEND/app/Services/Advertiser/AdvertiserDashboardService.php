@@ -31,6 +31,7 @@ class AdvertiserDashboardService
                 'title' => 'Advertiser Dashboard',
                 'module_name' => 'Advertiser Dashboard',
                 'logged_in_user_type' => $logged_in_user_type,
+                'default_currency' => \App\Models\Setting::find(1)->default_currency ?? 'USD',
                 'offers' => $offers,
                 'total_offers' => count($offers),
                 'total_budget' => $total_spend,
@@ -85,7 +86,7 @@ class AdvertiserDashboardService
     private function get_total_spend($advertiser_id)
     {
         try {
-            // Calculate total spend from offer_trackings for advertiser's offers
+            // Calculate total spend from conversions for advertiser's offers
             $sql = "SELECT SUM(COALESCE(c.revenue_usd, 0)) as total_spend 
                     FROM conversions c 
                     INNER JOIN offers o ON c.offer_id = o.id 
@@ -94,7 +95,8 @@ class AdvertiserDashboardService
 
             $result = DB::select($sql);
 
-            return isset($result[0]) ? floatval($result[0]->total_spend ?? 0) : 0;
+            $usdAmount = isset($result[0]) ? floatval($result[0]->total_spend ?? 0) : 0;
+            return \App\Utils\CurrencyUtils::convertFromUsdToDefault($usdAmount);
         } catch (\Exception $e) {
             return 0;
         }
@@ -133,7 +135,7 @@ class AdvertiserDashboardService
 
             foreach ($arr as $obj) {
                 $month = $obj->month ? $obj->month : 0;
-                $arrSTR[$month] = $obj->spend;
+                $arrSTR[$month] = \App\Utils\CurrencyUtils::convertFromUsdToDefault($obj->spend);
             }
 
             for ($index = 1; $index <= 12; $index++) {
@@ -188,7 +190,8 @@ class AdvertiserDashboardService
 
             $result = DB::select($sql);
 
-            return isset($result[0]) ? floatval($result[0]->pending_amount ?? 0) : 0;
+            $usdAmount = isset($result[0]) ? floatval($result[0]->pending_amount ?? 0) : 0;
+            return \App\Utils\CurrencyUtils::convertFromUsdToDefault($usdAmount);
         } catch (\Exception $e) {
             return 0;
         }

@@ -45,6 +45,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('dashboard', [App\Http\Controllers\Admin\AdminDashboardController::class, 'dashboard']);
         Route::get('dashboard/revenue-payout-chart', [App\Http\Controllers\Admin\AdminDashboardController::class, 'revenuePayoutChart']);
 
+        // Settings Management
+        Route::get('settings', [App\Http\Controllers\Admin\AdminController::class, 'get_settings']);
+        Route::post('settings', [App\Http\Controllers\Admin\AdminController::class, 'update_settings']);
+
         // General Admin
         Route::get('profile', [App\Http\Controllers\Admin\AdminController::class, 'profile']);
         Route::post('update_profile', [App\Http\Controllers\Admin\AdminController::class, 'update_profile']);
