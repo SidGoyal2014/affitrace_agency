@@ -323,6 +323,8 @@ class AdminService
             $adud->private_note = '';
             $adud->additional_info = '';
             $adud->tax_details = '';
+            $adud->tags = '';
+            $adud->status_reason = '';
         }
 
         $responseData = [
@@ -581,5 +583,122 @@ class AdminService
         $aud->save();
 
         return ['success' => true, 'msg' => 'Document uploaded successfully', 'file_name' => $fileName];
+    }
+
+    public function updateAdvertiserStatus($id, $status, $reason = null)
+    {
+        $user = User::findOrFail($id);
+        $user->status = \App\Enums\UserStatus::tryFrom($status) ?? $user->status;
+        $user->save();
+
+        if ($reason !== null) {
+            $adud = AdvertiserUserDetail::where('user_id', $id)->first();
+            if (!$adud) {
+                $adud = new AdvertiserUserDetail();
+                $adud->user_id = $id;
+            }
+            $adud->status_reason = $reason;
+            $adud->save();
+        }
+
+        return ['success' => true, 'msg' => 'Advertiser status updated successfully'];
+    }
+
+    public function updateAdvertiserNotesTags($id, $notes, $tags)
+    {
+        $adud = AdvertiserUserDetail::where('user_id', $id)->first();
+        if (!$adud) {
+            $adud = new AdvertiserUserDetail();
+            $adud->user_id = $id;
+        }
+        $adud->private_note = $notes;
+        $adud->tags = $tags;
+        $adud->save();
+
+        return ['success' => true, 'msg' => 'Advertiser notes and tags updated successfully'];
+    }
+
+    public function getAdvertiserOffers($id)
+    {
+        $offers = DB::table('offers')
+            ->select('id', 'offer_name', 'ad_model', 'ad_pricing', 'aff_model', 'aff_pricing', 'offer_status', 'offer_visibility')
+            ->where('advertiser_id', (string) $id)
+            ->whereNull('deleted_at')
+            ->get();
+
+        return ['success' => true, 'offers' => $offers];
+    }
+
+    public function getAdvertiserStats($id)
+    {
+        $totalClicks = DB::table('offer_trackings')->where('adv_id', $id)->count();
+        $conversionsQuery = DB::table('conversions')->where('advertiser_id', $id);
+
+        $stats = [
+            'total_clicks' => $totalClicks,
+            'approved_conversions' => (clone $conversionsQuery)->where('status', 'confirmed')->count(),
+            'pending_conversions' => (clone $conversionsQuery)->where('status', 'pending')->count(),
+            'rejected_conversions' => (clone $conversionsQuery)->where('status', 'declined')->count(),
+            'total_spend' => (clone $conversionsQuery)->where('status', 'confirmed')->sum('revenue'), // Spend for advertiser is revenue for agency
+            'total_payout' => (clone $conversionsQuery)->where('status', 'confirmed')->sum('payout'),
+        ];
+
+        $stats['total_profit'] = $stats['total_spend'] - $stats['total_payout'];
+        $stats['cr'] = $totalClicks > 0 ? round(($stats['approved_conversions'] / $totalClicks) * 100, 2) : 0;
+        $stats['epc'] = $totalClicks > 0 ? round($stats['total_spend'] / $totalClicks, 2) : 0;
+
+        return ['success' => true, 'stats' => $stats];
+    }
+
+    public function getAdvertiserInvoices($id)
+    {
+        $invoices = DB::table('invoices')
+            ->select('id', 'invoice_number', 'title', 'status', 'invoice_date', 'due_date', 'total_amount')
+            ->where('advertiser_id', $id)
+            ->whereNull('deleted_at')
+            ->get();
+
+        return ['success' => true, 'invoices' => $invoices];
+    }
+
+    public function exportAdvertisers($request = null)
+    {
+        $res = $this->listAdvertisers();
+        $data = $res['data'];
+
+        $headers = [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=advertisers_export_" . date('Ymd_His') . ".csv",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $columns = ['ID', 'Name', 'Email', 'Company', 'Phone', 'Country', 'Status', 'Private Note', 'Tags', 'Manager', 'Signup Date'];
+
+        $callback = function () use ($data, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($data as $adv) {
+                fputcsv($file, [
+                    $adv->uid,
+                    $adv->name,
+                    $adv->email,
+                    $adv->company ?? '-',
+                    $adv->phone ?? '-',
+                    $adv->country ?? '-',
+                    $adv->status,
+                    $adv->private_note ?? '-',
+                    $adv->tags ?? '-',
+                    $adv->manager_name ?? '-',
+                    $adv->created_at
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

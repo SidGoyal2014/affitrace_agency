@@ -19,6 +19,8 @@ class AdvertiserUserDetail extends Model
         'private_note',
         'additional_info',
         'tax_details',
+        'tags',
+        'status_reason',
     ];
 
 

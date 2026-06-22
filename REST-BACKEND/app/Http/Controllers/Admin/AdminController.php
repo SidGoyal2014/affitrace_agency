@@ -212,5 +212,44 @@ class AdminController extends Controller
 		return response()->json($this->adminService->uploadAffiliateDoc($request));
 	}
 
+	public function update_advertiser_status(Request $request, $id)
+	{
+		$request->validate([
+			'status' => 'required|string|in:active,pending,rejected,suspended',
+			'reason' => 'nullable|string'
+		]);
+		return response()->json($this->adminService->updateAdvertiserStatus($id, $request->status, $request->reason));
+	}
+
+	public function update_advertiser_notes_tags(Request $request, $id)
+	{
+		$request->validate([
+			'notes' => 'nullable|string',
+			'tags' => 'nullable|string'
+		]);
+		return response()->json($this->adminService->updateAdvertiserNotesTags($id, $request->notes, $request->tags));
+	}
+
+	public function get_advertiser_offers($id)
+	{
+		return response()->json($this->adminService->getAdvertiserOffers($id));
+	}
+
+	public function get_advertiser_stats($id)
+	{
+		return response()->json($this->adminService->getAdvertiserStats($id));
+	}
+
+	public function get_advertiser_invoices($id)
+	{
+		return response()->json($this->adminService->getAdvertiserInvoices($id));
+	}
+
+	public function export_advertisers(Request $request)
+	{
+		return $this->adminService->exportAdvertisers($request);
+	}
+
 }
+
 

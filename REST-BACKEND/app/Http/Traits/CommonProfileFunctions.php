@@ -71,6 +71,14 @@ trait CommonProfileFunctions
             if ($request->has('employee_id'))
                 $user->employee_id = $request->employee_id;
 
+            // Allow Admin & Employee to update status
+            $currentUserType = strtolower($request->user()->user_type);
+            if ($currentUserType === 'admin' || $currentUserType === 'employee') {
+                if ($request->has('status')) {
+                    $user->status = \App\Enums\UserStatus::tryFrom($request->status) ?? $user->status;
+                }
+            }
+
 
             if ($request->has('timezone'))
                 $user->timezone = $request->timezone;
@@ -97,6 +105,10 @@ trait CommonProfileFunctions
                 $adud->additional_info = $request->additional_info;
             if ($request->has('tax_details'))
                 $adud->tax_details = $request->tax_details;
+            if ($request->has('tags'))
+                $adud->tags = $request->tags;
+            if ($request->has('status_reason'))
+                $adud->status_reason = $request->status_reason;
 
             $adud->save();
 

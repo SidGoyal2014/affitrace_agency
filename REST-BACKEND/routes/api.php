@@ -54,6 +54,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('advertisers/save', [App\Http\Controllers\Admin\AdminController::class, 'save_advertiser']);
         Route::get('advertisers/edit/{id}', [App\Http\Controllers\Admin\AdminController::class, 'edit_advertiser']);
         Route::post('advertisers/update', [App\Http\Controllers\Admin\AdminController::class, 'update_advertiser']);
+        Route::post('advertisers/{id}/status', [App\Http\Controllers\Admin\AdminController::class, 'update_advertiser_status']);
+        Route::post('advertisers/{id}/notes-tags', [App\Http\Controllers\Admin\AdminController::class, 'update_advertiser_notes_tags']);
+        Route::get('advertisers/{id}/offers', [App\Http\Controllers\Admin\AdminController::class, 'get_advertiser_offers']);
+        Route::get('advertisers/{id}/stats', [App\Http\Controllers\Admin\AdminController::class, 'get_advertiser_stats']);
+        Route::get('advertisers/{id}/invoices', [App\Http\Controllers\Admin\AdminController::class, 'get_advertiser_invoices']);
+        Route::get('advertisers/export', [App\Http\Controllers\Admin\AdminController::class, 'export_advertisers']);
 
         Route::get('affiliates/list', [App\Http\Controllers\Admin\AdminController::class, 'list_affiliates']);
         Route::get('affiliates/create', [App\Http\Controllers\Admin\AdminController::class, 'create_affiliate']);
@@ -363,6 +369,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::middleware(['module.access:advertisers,can_view'])->group(function () {
             Route::get('advertisers/list', [App\Http\Controllers\Admin\AdminController::class, 'list_advertisers']);
             Route::get('advertisers/edit/{id}', [App\Http\Controllers\Admin\AdminController::class, 'edit_advertiser']);
+            Route::get('advertisers/{id}/offers', [App\Http\Controllers\Admin\AdminController::class, 'get_advertiser_offers']);
+            Route::get('advertisers/{id}/stats', [App\Http\Controllers\Admin\AdminController::class, 'get_advertiser_stats']);
+            Route::get('advertisers/{id}/invoices', [App\Http\Controllers\Admin\AdminController::class, 'get_advertiser_invoices']);
+            Route::get('advertisers/export', [App\Http\Controllers\Admin\AdminController::class, 'export_advertisers']);
         });
         Route::middleware(['module.access:advertisers,can_create'])->group(function () {
             Route::get('advertisers/create', [App\Http\Controllers\Admin\AdminController::class, 'create_advertiser']);
@@ -370,6 +380,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
         Route::middleware(['module.access:advertisers,can_edit'])->group(function () {
             Route::post('advertisers/update', [App\Http\Controllers\Admin\AdminController::class, 'update_advertiser']);
+            Route::post('advertisers/{id}/status', [App\Http\Controllers\Admin\AdminController::class, 'update_advertiser_status']);
+            Route::post('advertisers/{id}/notes-tags', [App\Http\Controllers\Admin\AdminController::class, 'update_advertiser_notes_tags']);
         });
 
         // ── Employees ──
