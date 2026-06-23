@@ -111,7 +111,7 @@ include $pathPrefix . '/includes/head.php';
                     <div class="card-modern h-100">
                         <div class="stat-card">
                             <div class="stat-icon success">
-                                <i class="fas fa-dollar-sign"></i>
+                                <i class="fas fa-money-bill"></i>
                             </div>
                             <div class="stat-content">
                                 <div class="stat-label">Total Margin</div>
@@ -161,7 +161,7 @@ include $pathPrefix . '/includes/head.php';
                     <div class="card-modern h-100">
                         <div class="stat-card">
                             <div class="stat-icon success">
-                                <i class="fas fa-dollar-sign"></i>
+                                <i class="fas fa-money-bill"></i>
                             </div>
                             <div class="stat-content">
                                 <div class="stat-label">Total Revenue</div>
@@ -176,7 +176,7 @@ include $pathPrefix . '/includes/head.php';
                     <div class="card-modern h-100">
                         <div class="stat-card">
                             <div class="stat-icon warning">
-                                <i class="fas fa-dollar-sign"></i>
+                                <i class="fas fa-money-bill"></i>
                             </div>
                             <div class="stat-content">
                                 <div class="stat-label">Total Payouts</div>
