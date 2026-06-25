@@ -86,11 +86,20 @@ class User extends Authenticatable
         }
 
         // No role assigned = no access
-        if (!$this->role_id || !$this->role) {
+        if (!$this->role_id) {
             return false;
         }
 
-        $module = $this->role->modules()->where('slug', $moduleSlug)->first();
+        // Avoid N+1 queries by accessing lazy loaded modules relation collection
+        if (!$this->relationLoaded('role') || ($this->role && !$this->role->relationLoaded('modules'))) {
+            $this->loadMissing('role.modules');
+        }
+
+        if (!$this->role) {
+            return false;
+        }
+
+        $module = $this->role->modules->firstWhere('slug', $moduleSlug);
 
         if (!$module) {
             return false;

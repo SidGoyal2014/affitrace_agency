@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\AffiliateUserDetail;
 use App\Models\AdvertiserUserDetail;
 
+
 trait CommonProfileFunctions
 {
 
@@ -20,7 +21,13 @@ trait CommonProfileFunctions
     {
         try {
 
-            $uid = $request->filled('uid') ? (int) $request->uid : $request->user()->id;
+            // $uid = $request->filled('uid') ? (int) $request->uid : $request->user()->id;
+
+            $currentUser = $request->user();
+            $uid = ($currentUser && strtolower($currentUser->user_type) === 'admin')
+                ? ($request->filled('uid') ? (int) $request->uid : $currentUser->id)
+                : $currentUser->id;
+
 
             $validator = Validator::make(request()->all(), [
                 'name' => 'required|string|min:5',
@@ -131,7 +138,13 @@ trait CommonProfileFunctions
     {
         try {
 
-            $uid = $request->filled('uid') ? (int) $request->uid : $request->user()->id;
+            // $uid = $request->filled('uid') ? (int) $request->uid : $request->user()->id;
+
+            $currentUser = $request->user();
+            $uid = ($currentUser && strtolower($currentUser->user_type) === 'admin')
+                ? ($request->filled('uid') ? (int) $request->uid : $currentUser->id)
+                : $currentUser->id;
+
 
             $validator = Validator::make(request()->all(), [
                 'name' => 'required|string|min:5',
@@ -293,12 +306,47 @@ trait CommonProfileFunctions
             $user->email = $request->email;
             $user->phone = $request->phone;
 
-            if ($request->has('role_id')) {
+            /*if ($request->has('role_id')) {
                 $user->role_id = $request->filled('role_id') ? $request->role_id : null;
             }
             if ($request->has('designation_id')) {
                 $user->designation_id = $request->filled('designation_id') ? $request->designation_id : null;
+            }*/
+
+            $currentUser = $request->user();
+            // Prevent employees from self-updating their own roles or designations
+            if ($currentUser->id === $user->id) {
+                if ($request->has('role_id') || $request->has('designation_id')) {
+                    return response()->json(['status' => 0, 'error' => ['role_id' => ['You cannot modify your own role or designation.']]], 403);
+                }
             }
+
+            // Only allow role changes if authenticated user is admin or has role management permissions
+            if ($request->has('role_id')) {
+                if (strtolower($currentUser->user_type) === 'admin' || $currentUser->hasModuleAccess('role_management', 'can_edit')) {
+                    if ($request->filled('role_id')) {
+                        $targetRole = \App\Models\Role::findOrFail($request->role_id);
+                        if ($targetRole->user_type !== 'employee') {
+                            return response()->json(['status' => 0, 'error' => ['role_id' => ['Target role must belong to employee user type.']]], 422);
+                        }
+                        $user->role_id = $request->role_id;
+                    } else {
+                        $user->role_id = null;
+                    }
+                } else {
+                    return response()->json(['status' => 0, 'error' => ['role_id' => ['Unauthorized role assignment.']]], 403);
+                }
+            }
+
+            if ($request->has('designation_id')) {
+                if (strtolower($currentUser->user_type) === 'admin' || $currentUser->hasModuleAccess('role_management', 'can_edit')) {
+                    $user->designation_id = $request->filled('designation_id') ? $request->designation_id : null;
+                } else {
+                    return response()->json(['status' => 0, 'error' => ['designation_id' => ['Unauthorized designation assignment.']]], 403);
+                }
+            }
+
+
 
             if ($request->has('timezone'))
                 $user->timezone = $request->timezone;

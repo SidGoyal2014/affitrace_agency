@@ -27,15 +27,18 @@ class RoleService
     public function createRole(array $data)
     {
         $validator = Validator::make($data, [
-            'name'        => 'required|string|max:255',
-            'user_type'   => 'required|in:admin,affiliate,advertiser,employee',
+            'name' => 'required|string|max:255',
+            'user_type' => 'required|in:admin,affiliate,advertiser,employee',
             'description' => 'nullable|string',
-            'is_default'  => 'boolean',
-            'modules'     => 'required|array',
-            'modules.*.module_id'  => 'required|exists:modules,id',
-            'modules.*.can_view'   => 'boolean',
+            'is_default' => 'boolean',
+            'modules' => 'required|array',
+            'modules.*.module_id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('modules', 'id')
+            ],
+            'modules.*.can_view' => 'boolean',
             'modules.*.can_create' => 'boolean',
-            'modules.*.can_edit'   => 'boolean',
+            'modules.*.can_edit' => 'boolean',
             'modules.*.can_delete' => 'boolean',
         ]);
 
@@ -61,9 +64,9 @@ class RoleService
         $moduleData = [];
         foreach ($data['modules'] as $mod) {
             $moduleData[$mod['module_id']] = [
-                'can_view'   => $mod['can_view'] ?? true,
+                'can_view' => $mod['can_view'] ?? true,
                 'can_create' => $mod['can_create'] ?? false,
-                'can_edit'   => $mod['can_edit'] ?? false,
+                'can_edit' => $mod['can_edit'] ?? false,
                 'can_delete' => $mod['can_delete'] ?? false,
             ];
         }
@@ -88,15 +91,15 @@ class RoleService
         $role = Role::findOrFail($id);
 
         $validator = Validator::make($data, [
-            'name'        => 'sometimes|required|string|max:255',
-            'user_type'   => 'sometimes|required|in:admin,affiliate,advertiser,employee',
+            'name' => 'sometimes|required|string|max:255',
+            'user_type' => 'sometimes|required|in:admin,affiliate,advertiser,employee',
             'description' => 'nullable|string',
-            'is_default'  => 'boolean',
-            'modules'     => 'sometimes|required|array',
-            'modules.*.module_id'  => 'required_with:modules|exists:modules,id',
-            'modules.*.can_view'   => 'boolean',
+            'is_default' => 'boolean',
+            'modules' => 'sometimes|required|array',
+            'modules.*.module_id' => 'required_with:modules|exists:modules,id',
+            'modules.*.can_view' => 'boolean',
             'modules.*.can_create' => 'boolean',
-            'modules.*.can_edit'   => 'boolean',
+            'modules.*.can_edit' => 'boolean',
             'modules.*.can_delete' => 'boolean',
         ]);
 
@@ -114,10 +117,14 @@ class RoleService
         }
 
         $updateData = [];
-        if (isset($data['name'])) $updateData['name'] = $data['name'];
-        if (isset($data['user_type'])) $updateData['user_type'] = $data['user_type'];
-        if (array_key_exists('description', $data)) $updateData['description'] = $data['description'];
-        if (isset($data['is_default'])) $updateData['is_default'] = $data['is_default'];
+        if (isset($data['name']))
+            $updateData['name'] = $data['name'];
+        if (isset($data['user_type']))
+            $updateData['user_type'] = $data['user_type'];
+        if (array_key_exists('description', $data))
+            $updateData['description'] = $data['description'];
+        if (isset($data['is_default']))
+            $updateData['is_default'] = $data['is_default'];
 
         $role->update($updateData);
 
@@ -126,9 +133,9 @@ class RoleService
             $moduleData = [];
             foreach ($data['modules'] as $mod) {
                 $moduleData[$mod['module_id']] = [
-                    'can_view'   => $mod['can_view'] ?? true,
+                    'can_view' => $mod['can_view'] ?? true,
                     'can_create' => $mod['can_create'] ?? false,
-                    'can_edit'   => $mod['can_edit'] ?? false,
+                    'can_edit' => $mod['can_edit'] ?? false,
                     'can_delete' => $mod['can_delete'] ?? false,
                 ];
             }

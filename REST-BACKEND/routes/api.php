@@ -33,8 +33,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('inbox/{id}', [App\Http\Controllers\Api\V1\NotificationController::class, 'inboxShow']);
         Route::patch('inbox/{id}/read', [App\Http\Controllers\Api\V1\NotificationController::class, 'markRead']);
         Route::get('unread-count', [App\Http\Controllers\Api\V1\NotificationController::class, 'unreadCount']);
-        Route::post('send', [App\Http\Controllers\Api\V1\NotificationController::class, 'send']);
-        Route::get('sent', [App\Http\Controllers\Api\V1\NotificationController::class, 'sentIndex']);
+        // Route::post('send', [App\Http\Controllers\Api\V1\NotificationController::class, 'send']);
+        // Route::get('sent', [App\Http\Controllers\Api\V1\NotificationController::class, 'sentIndex']);
     });
 
     // Impersonation Exit (Must be outside 'admin' middleware so impersonated users can call it)
@@ -286,25 +286,29 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Affiliate Routes
     Route::prefix('affiliate')->middleware(['affiliate'])->group(function () {
         Route::get('dashboard', [App\Http\Controllers\Affiliate\AffiliateDashboardController::class, 'dashboard']);
-        Route::get('reports/summary', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'summary']);
-        Route::get('reports/offer-clicks/{offer_id}', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'offer_clicks']);
-        Route::post('reports/offer-clicks/search', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'search_offer_clicks']);
-        Route::get('reports/click-conversion-report', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'click_conversion_report']);
 
-        Route::get('reports/offer-payouts/{oid}', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'offer_payouts']);
-        Route::post('reports/offer-payouts/search', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'search_offer_payouts']);
-        Route::get('reports/payouts', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'payouts']);
-        Route::post('reports/payouts/search', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'search_affiliate_payouts']);
-        Route::post('reports/clicks', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'clicks_report']);
-        Route::post('reports/conversions', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'conversions_report']);
-        Route::get('reports/click-detail/{id}', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'click_detail']);
-
+        // Reports
+        Route::middleware(['module.access:reports,can_view'])->group(function () {
+            Route::get('reports/summary', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'summary']);
+            Route::get('reports/offer-clicks/{offer_id}', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'offer_clicks']);
+            Route::post('reports/offer-clicks/search', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'search_offer_clicks']);
+            Route::get('reports/click-conversion-report', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'click_conversion_report']);
+            Route::get('reports/offer-payouts/{oid}', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'offer_payouts']);
+            Route::post('reports/offer-payouts/search', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'search_offer_payouts']);
+            Route::get('reports/payouts', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'payouts']);
+            Route::post('reports/payouts/search', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'search_affiliate_payouts']);
+            Route::post('reports/clicks', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'clicks_report']);
+            Route::post('reports/conversions', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'conversions_report']);
+            Route::get('reports/click-detail/{id}', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'click_detail']);
+        });
 
         // Offers
-        Route::get('offers/browse', [App\Http\Controllers\Affiliate\AffiliateOfferController::class, 'browse']);
-        Route::post('offers/request/{oid}', [App\Http\Controllers\Affiliate\AffiliateOfferController::class, 'request_access']);
-        Route::get('offers/approved', [App\Http\Controllers\Affiliate\AffiliateOfferController::class, 'offers_approved']);
-        Route::get('offers/tracking-url/{oid}', [App\Http\Controllers\Affiliate\AffiliateOfferController::class, 'tracking_url']);
+        Route::middleware(['module.access:offers,can_view'])->group(function () {
+            Route::get('offers/browse', [App\Http\Controllers\Affiliate\AffiliateOfferController::class, 'browse']);
+            Route::post('offers/request/{oid}', [App\Http\Controllers\Affiliate\AffiliateOfferController::class, 'request_access']);
+            Route::get('offers/approved', [App\Http\Controllers\Affiliate\AffiliateOfferController::class, 'offers_approved']);
+            Route::get('offers/tracking-url/{oid}', [App\Http\Controllers\Affiliate\AffiliateOfferController::class, 'tracking_url']);
+        });
 
         // Profile
         Route::get('profile', [App\Http\Controllers\Affiliate\AffiliateController::class, 'profile']);
@@ -322,17 +326,25 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('update_profile', [App\Http\Controllers\Advertiser\AdvertiserController::class, 'update_profile']);
 
         // Offers
-        Route::get('offers/my', [App\Http\Controllers\Advertiser\AdvertiserOfferController::class, 'my_offers']);
-        Route::get('offers/approved', [App\Http\Controllers\Advertiser\AdvertiserOfferController::class, 'approved_offers']);
+        Route::middleware(['module.access:offers,can_view'])->group(function () {
+            Route::get('offers/my', [App\Http\Controllers\Advertiser\AdvertiserOfferController::class, 'my_offers']);
+            Route::get('offers/approved', [App\Http\Controllers\Advertiser\AdvertiserOfferController::class, 'approved_offers']);
+        });
 
         // Reports
-        Route::get('reports/summary', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'summary']);
-        Route::get('reports/clicks-conversions', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'clickConversionReport']);
-        Route::post('reports/clicks', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'clicks_report']);
-        Route::post('reports/conversions', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'conversions_report']);
-        Route::get('reports/click-detail/{id}', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'click_detail']);
-        Route::get('invoices', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'invoices']);
-        Route::get('invoices/{id}/download', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'downloadInvoice']);
+        Route::middleware(['module.access:reports,can_view'])->group(function () {
+            Route::get('reports/summary', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'summary']);
+            Route::get('reports/clicks-conversions', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'clickConversionReport']);
+            Route::post('reports/clicks', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'clicks_report']);
+            Route::post('reports/conversions', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'conversions_report']);
+            Route::get('reports/click-detail/{id}', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'click_detail']);
+        });
+
+        // Invoices
+        Route::middleware(['module.access:invoices,can_view'])->group(function () {
+            Route::get('invoices', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'invoices']);
+            Route::get('invoices/{id}/download', [App\Http\Controllers\Advertiser\AdvertiserReportController::class, 'downloadInvoice']);
+        });
     });
 
     // Employee Routes
@@ -518,7 +530,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
 
         // ── Payments ──
-        Route::middleware(['module.access:integrations,can_view'])->group(function () {
+        Route::middleware(['module.access:payments,can_view'])->group(function () {
             Route::get('payments/plan-details', [App\Http\Controllers\Admin\PaymentController::class, 'get_plan_details']);
             Route::get('payments/show-subscriptions', [App\Http\Controllers\Admin\PaymentController::class, 'show_subscriptions']);
         });
@@ -527,6 +539,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::middleware(['module.access:reports,can_edit'])->group(function () {
             Route::post('reports/conversion/update-status', [App\Http\Controllers\Admin\ReportController::class, 'update_conversion_status']);
             Route::post('reports/conversion/bulk-update-status', [App\Http\Controllers\Admin\ReportController::class, 'bulk_update_conversion_status']);
+        });
+
+        // ── Notifications ──
+        Route::middleware(['module.access:role_management,can_create'])->group(function () {
+            Route::prefix('v1/notifications')->group(function () {
+                Route::post('', [App\Http\Controllers\Api\V1\NotificationController::class, 'send']);
+                Route::get('sent', [App\Http\Controllers\Api\V1\NotificationController::class, 'sentIndex']);
+                Route::get('sent/{id}', [App\Http\Controllers\Api\V1\NotificationController::class, 'sentShow']);
+                Route::put('sent/{id}', [App\Http\Controllers\Api\V1\NotificationController::class, 'sentUpdate']);
+                Route::delete('sent/{id}', [App\Http\Controllers\Api\V1\NotificationController::class, 'sentDestroy']);
+            });
         });
     });
 
