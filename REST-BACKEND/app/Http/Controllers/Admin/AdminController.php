@@ -33,7 +33,7 @@ class AdminController extends Controller
 	public function search_users(Request $request)
 	{
 		$request->validate([
-			'q'     => 'required|string|min:2|max:100',
+			'q' => 'required|string|min:2|max:100',
 			'limit' => 'sometimes|integer|min:1|max:50',
 		]);
 
@@ -44,7 +44,7 @@ class AdminController extends Controller
 
 		return response()->json($result);
 	}
-		
+
 	public function profile(Request $request)
 	{
 		// Auth check handled by middleware
@@ -250,13 +250,25 @@ class AdminController extends Controller
 		return $this->adminService->exportAdvertisers($request);
 	}
 
-	public function get_settings()
+	public function get_settings(Request $request)
 	{
+
+		$user = $request->user();
+		if (strtolower($user->user_type) !== 'admin' && !$user->hasModuleAccess('settings', 'can_view')) {
+			return response()->json(['message' => 'You do not have permission to view settings.'], 403);
+		}
+
 		return response()->json($this->adminService->getSettingsData());
 	}
 
 	public function update_settings(Request $request)
 	{
+
+		$user = $request->user();
+		if (strtolower($user->user_type) !== 'admin' && !$user->hasModuleAccess('settings', 'can_edit')) {
+			return response()->json(['message' => 'You do not have permission to edit settings.'], 403);
+		}
+
 		$result = $this->adminService->saveSettings($request);
 		return response()->json($result, $result['code'] ?? 200);
 	}

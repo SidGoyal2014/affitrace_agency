@@ -14,6 +14,10 @@ $pathCommonPrefix = $pathPrefix . '/../common';
 
     <title><?php echo isset($pageTitle) ? $pageTitle : 'Affiliate System'; ?></title>
 
+    <!-- Shared White-Label Branding Head Component -->
+    <?php include $pathCommonPrefix . '/includes/head_branding.php'; ?>
+
+
     <!-- Custom fonts for this template-->
     <link href="<?php echo $pathCommonPrefix; ?>/assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet"
         type="text/css">
@@ -27,7 +31,8 @@ $pathCommonPrefix = $pathPrefix . '/../common';
     <link href="<?php echo $pathCommonPrefix; ?>/assets/css/sb-admin-2.css" rel="stylesheet">
     <link href="<?php echo $pathCommonPrefix; ?>/assets/css/dropdown.css" rel="stylesheet">
     <link href="<?php echo $pathCommonPrefix; ?>/assets/css/arrow.css" rel="stylesheet">
-    <link href="<?php echo $pathCommonPrefix; ?>/assets/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/vendor/datatables/dataTables.bootstrap4.min.css"
+        rel="stylesheet">
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css"

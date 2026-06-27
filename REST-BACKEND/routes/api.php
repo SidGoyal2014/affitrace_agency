@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 
 // Public Authentication
 Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login']);
+Route::get('branding', [App\Http\Controllers\Api\AuthController::class, 'get_branding']);
 
 // Public Tracking (Server-to-Server)
 // api.tenant is now in Kernel, so it applies to all API routes

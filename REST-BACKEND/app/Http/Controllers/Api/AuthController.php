@@ -59,11 +59,11 @@ class AuthController extends Controller
 
         // 2. Authenticate (DB connection is already set by api.tenant middleware)
         if (
-        Auth::attempt([
-        'email' => $request->email,
-        'password' => $request->password,
-        'user_type' => $request->user_type
-        ])
+            Auth::attempt([
+                'email' => $request->email,
+                'password' => $request->password,
+                'user_type' => $request->user_type
+            ])
         ) {
 
             $user = Auth::user();
@@ -99,6 +99,37 @@ class AuthController extends Controller
 
         return response()->json(['error' => 'Invalid credentials'], 401);
     }
+
+
+    /**
+     * Get Platform Branding
+     *
+     * Retrieves the branding configurations (name, logo, favicon, colors) for the current tenant.
+     * This endpoint does not require authentication.
+     *
+     * @unauthenticated
+     */
+    public function get_branding(Request $request)
+    {
+        $settings = \App\Models\Setting::find(1);
+
+        $branding = [
+            'platform_name' => $settings->platform_name ?? 'AffiTrace Agency',
+            'platform_logo' => $settings->platform_logo ?? null,
+            'platform_favicon' => $settings->platform_favicon ?? null,
+            'primary_color' => $settings->primary_color ?? '#2563EB',
+            'secondary_color' => $settings->secondary_color ?? '#1E293B',
+            'accent_color' => $settings->accent_color ?? '#10B981',
+            'support_email' => $settings->support_email ?? null,
+            'custom_copyright' => $settings->custom_copyright ?? null,
+        ];
+        return response()->json([
+            'status' => 1,
+            'branding' => $branding
+        ]);
+    }
+
+
 
     /**
      * Refresh Token
@@ -192,9 +223,9 @@ class AuthController extends Controller
         $user = $request->user();
 
         Log::info('Timezone update requested', [
-            'user_id'   => $user->id,
+            'user_id' => $user->id,
             'user_type' => $user->user_type,
-            'email'     => $user->email,
+            'email' => $user->email,
             'requested_timezone' => $request->timezone,
             'ip' => $request->ip(),
         ]);
@@ -206,7 +237,7 @@ class AuthController extends Controller
         if ($validator->fails()) {
             Log::warning('Timezone update validation failed', [
                 'user_id' => $user->id,
-                'errors'  => $validator->errors()->toArray(),
+                'errors' => $validator->errors()->toArray(),
             ]);
             return response()->json(['errors' => $validator->errors()], 422);
         }
@@ -218,17 +249,17 @@ class AuthController extends Controller
             $user->save();
 
             Log::info('Timezone updated successfully', [
-                'user_id'      => $user->id,
-                'user_type'    => $user->user_type,
-                'email'        => $user->email,
+                'user_id' => $user->id,
+                'user_type' => $user->user_type,
+                'email' => $user->email,
                 'old_timezone' => $oldTimezone,
                 'new_timezone' => $user->timezone,
             ]);
         } catch (\Exception $e) {
             Log::error('Timezone update failed', [
-                'user_id'   => $user->id,
-                'error'     => $e->getMessage(),
-                'trace'     => $e->getTraceAsString(),
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([

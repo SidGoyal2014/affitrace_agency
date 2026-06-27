@@ -21,6 +21,9 @@ $pathCommonPrefix = $pathPrefix . '/../common';
 <!-- Toast Notifications -->
 <script src="<?php echo $pathCommonPrefix; ?>/assets/js/toast.js"></script>
 
+<!-- White-Label Branding Component -->
+<script src="<?php echo $pathCommonPrefix; ?>/assets/js/branding.js"></script>
+
 <!-- Report Filters -->
 <script src="<?php echo $pathCommonPrefix; ?>/js/report-date-presets.js"></script>
 

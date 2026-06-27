@@ -19,8 +19,9 @@ include $pathPrefix . '/includes/head.php';
                 <h1>Settings</h1>
             </div>
 
-            <!-- Timezone Settings Card -->
+
             <div class="row">
+                <!-- Timezone Settings Card -->
                 <div class="col-lg-6">
                     <div class="card-modern">
                         <div class="card-header d-flex align-items-center">
@@ -31,7 +32,7 @@ include $pathPrefix . '/includes/head.php';
                             <div id="tz-alert-container"></div>
 
                             <p class="text-muted mb-3" style="font-size:0.9rem;">
-                                Set your preferred timezone. All dates and times across the dashboard 
+                                Set your preferred timezone. All dates and times across the dashboard
                                 (reports, logs, charts) will be displayed in this timezone.
                             </p>
 
@@ -65,7 +66,7 @@ include $pathPrefix . '/includes/head.php';
                             <div id="cur-alert-container"></div>
 
                             <p class="text-muted mb-3" style="font-size:0.9rem;">
-                                Set your default currency. All financial stats across the dashboard 
+                                Set your default currency. All financial stats across the dashboard
                                 (margin, revenue, payouts) will be displayed in this currency.
                             </p>
 
@@ -78,7 +79,8 @@ include $pathPrefix . '/includes/head.php';
 
                             <div class="d-flex align-items-center justify-content-between mt-4">
                                 <small class="text-muted" id="cur-current-display">
-                                    <i class="fas fa-money-bill-wave mr-1"></i> Current: <span id="cur-current-label">—</span>
+                                    <i class="fas fa-money-bill-wave mr-1"></i> Current: <span
+                                        id="cur-current-label">—</span>
                                 </small>
                                 <button type="button" class="btn btn-primary" id="btnSaveCurrency">
                                     <i class="fas fa-save mr-1"></i> Save Currency
@@ -88,6 +90,151 @@ include $pathPrefix . '/includes/head.php';
                     </div>
                 </div>
             </div>
+
+            <!-- White Label & Branding Settings Card -->
+            <div class="row mt-4">
+                <div class="col-lg-12">
+                    <div class="card-modern">
+                        <div class="card-header d-flex align-items-center">
+                            <i class="fas fa-palette mr-2 text-primary"></i>
+                            <h6 class="m-0 font-weight-bold">Platform Branding &amp; White Label Settings</h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="brand-alert-container"></div>
+
+                            <form id="brandingForm" enctype="multipart/form-data">
+                                <div class="row">
+                                    <!-- Platform Name -->
+                                    <div class="col-md-6 form-group">
+                                        <label for="platform_name"><strong>Platform Name <span
+                                                    class="text-danger">*</span></strong></label>
+                                        <input type="text" name="platform_name" id="platform_name" class="form-control"
+                                            placeholder="e.g. GrowthX Performance Platform" required maxlength="100">
+                                        <small class="text-muted">Used in page titles, sidebar headers, emails, and
+                                            notifications.</small>
+                                    </div>
+
+                                    <!-- Support Email -->
+                                    <div class="col-md-3 form-group">
+                                        <label for="support_email"><strong>Support Email Address</strong></label>
+                                        <input type="email" name="support_email" id="support_email" class="form-control"
+                                            placeholder="e.g. support@yourcompany.com" maxlength="100">
+                                        <small class="text-muted">Displayed to users in email footers.</small>
+                                    </div>
+
+                                    <!-- Custom Copyright -->
+                                    <div class="col-md-3 form-group">
+                                        <label for="custom_copyright"><strong>Custom Copyright Footer</strong></label>
+                                        <input type="text" name="custom_copyright" id="custom_copyright"
+                                            class="form-control" placeholder="e.g. Your Agency LLC" maxlength="150">
+                                        <small class="text-muted">Custom copyright text shown at the bottom of
+                                            pages/emails.</small>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <!-- Platform Logo -->
+                                    <div class="col-md-6 form-group">
+                                        <label><strong>Platform Logo</strong></label>
+                                        <div class="d-flex align-items-start mt-2">
+                                            <div id="logo-preview-container"
+                                                class="mr-3 border rounded p-2 bg-light d-flex align-items-center justify-content-center"
+                                                style="width: 180px; height: 70px;">
+                                                <span class="text-muted small">No Logo</span>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <input type="file" name="platform_logo" id="platform_logo"
+                                                    class="form-control-file"
+                                                    accept="image/png, image/jpeg, image/svg+xml">
+                                                <small class="text-muted d-block mt-1">PNG, JPG, SVG. Recommended:
+                                                    250x80 px (Max 2MB)</small>
+                                                <button type="button" class="btn btn-sm btn-outline-danger mt-2 d-none"
+                                                    id="btnRemoveLogo">
+                                                    <i class="fas fa-trash mr-1"></i> Remove Logo
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Favicon -->
+                                    <div class="col-md-6 form-group">
+                                        <label><strong>Browser Favicon</strong></label>
+                                        <div class="d-flex align-items-start mt-2">
+                                            <div id="favicon-preview-container"
+                                                class="mr-3 border rounded p-2 bg-light d-flex align-items-center justify-content-center"
+                                                style="width: 70px; height: 70px;">
+                                                <span class="text-muted small">No Icon</span>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <input type="file" name="platform_favicon" id="platform_favicon"
+                                                    class="form-control-file" accept="image/png, image/x-icon">
+                                                <small class="text-muted d-block mt-1">PNG, ICO. Recommended: 32x32 or
+                                                    64x64 px (Max 512KB)</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <!-- Brand Colors -->
+                                    <div class="col-md-4 form-group">
+                                        <label><strong>Primary Color</strong></label>
+                                        <div class="input-group">
+                                            <input type="color" id="primary_picker" class="form-control p-1"
+                                                style="width: 50px; flex: 0 0 auto; height: 46px;" value="#2563EB">
+                                            <input type="text" name="primary_color" id="primary_color"
+                                                class="form-control text-uppercase" placeholder="#2563EB" required
+                                                maxlength="7">
+                                        </div>
+                                        <small class="text-muted">Header active items and primary buttons.</small>
+                                    </div>
+
+                                    <div class="col-md-4 form-group">
+                                        <label><strong>Secondary Color</strong></label>
+                                        <div class="input-group">
+                                            <input type="color" id="secondary_picker" class="form-control p-1"
+                                                style="width: 50px; flex: 0 0 auto; height: 46px;" value="#1E293B">
+                                            <input type="text" name="secondary_color" id="secondary_color"
+                                                class="form-control text-uppercase" placeholder="#1E293B" required
+                                                maxlength="7">
+                                        </div>
+                                        <small class="text-muted">Secondary texts and labels.</small>
+                                    </div>
+
+                                    <div class="col-md-4 form-group">
+                                        <label><strong>Accent Color (Success Highlights)</strong></label>
+                                        <div class="input-group">
+                                            <input type="color" id="accent_picker" class="form-control p-1"
+                                                style="width: 50px; flex: 0 0 auto; height: 46px;" value="#10B981">
+                                            <input type="text" name="accent_color" id="accent_color"
+                                                class="form-control text-uppercase" placeholder="#10B981" required
+                                                maxlength="7">
+                                        </div>
+                                        <small class="text-muted">Badges, green indicators, and highlights.</small>
+                                    </div>
+                                </div>
+
+                                <div class="border-top pt-3 mt-4 d-flex align-items-center justify-content-between">
+                                    <!-- Live Color Preview indicator -->
+                                    <div>
+                                        <span class="mr-2">Live Preview:</span>
+                                        <button type="button" class="btn btn-sm btn-primary" id="preview-btn"
+                                            style="pointer-events: none;">Primary Button</button>
+                                        <span class="badge badge-success ml-2" id="preview-badge"
+                                            style="pointer-events: none;">Accent Badge</span>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary" id="btnSaveBranding">
+                                        <i class="fas fa-save mr-1"></i> Save Branding Settings
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
 
         </div>
     </main>
@@ -241,6 +388,7 @@ include $pathPrefix . '/includes/head.php';
             });
         });
     </script>
+    <script src="<?php echo $pathPrefix; ?>/../common/js/branding_settings.js"></script>
 </body>
 
 </html>

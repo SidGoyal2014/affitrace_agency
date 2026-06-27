@@ -712,6 +712,10 @@ class AdminService
             $settings->current_plan_name = 'Trial';
             $settings->current_plan_price = 0.00;
             $settings->default_currency = 'USD';
+            $settings->platform_name = 'AffiTrace Agency';
+            $settings->primary_color = '#2563EB';
+            $settings->secondary_color = '#1E293B';
+            $settings->accent_color = '#10B981';
             $settings->save();
         }
         return [
@@ -721,6 +725,222 @@ class AdminService
         ];
     }
 
+
+    public function saveSettings($request)
+    {
+        // Check if updating branding or currency settings
+        if ($request->has('platform_name') || $request->has('primary_color') || $request->has('remove_logo') || $request->hasFile('platform_logo') || $request->hasFile('platform_favicon')) {
+
+            // Check permission
+            $user = Auth::user();
+            if (strtolower($user->user_type) !== 'admin' && !$user->hasModuleAccess('settings', 'can_edit')) {
+                return ['status' => 0, 'msg' => 'Unauthorized.', 'code' => 403];
+            }
+
+            $validator = Validator::make($request->all(), [
+                'platform_name' => 'required|string|max:100',
+                'primary_color' => 'required|string|regex:/^#[a-fA-F0-9]{6}$/',
+                'secondary_color' => 'required|string|regex:/^#[a-fA-F0-9]{6}$/',
+                'accent_color' => 'required|string|regex:/^#[a-fA-F0-9]{6}$/',
+                'support_email' => 'nullable|email|max:100',
+                'custom_copyright' => 'nullable|string|max:150',
+                'platform_logo' => 'nullable|file|image|mimes:png,jpg,jpeg,svg|max:2048',
+                'platform_favicon' => 'nullable|file|mimes:ico,png|max:512',
+            ]);
+
+            if ($validator->fails()) {
+                return ['status' => 0, 'error' => $validator->errors()->toArray(), 'code' => 422];
+            }
+
+            $settings = \App\Models\Setting::find(1);
+            if (!$settings) {
+                $settings = new \App\Models\Setting();
+                $settings->id = 1;
+                $settings->current_plan_id = 1;
+                $settings->current_plan_name = 'Trial';
+                $settings->current_plan_price = 0.00;
+            }
+
+            $oldName = $settings->platform_name;
+            $oldPrimary = $settings->primary_color;
+            $oldSecondary = $settings->secondary_color;
+            $oldAccent = $settings->accent_color;
+            $oldSupportEmail = $settings->support_email;
+            $oldCopyright = $settings->custom_copyright;
+            $oldLogo = $settings->platform_logo;
+            $oldFavicon = $settings->platform_favicon;
+
+            $settings->platform_name = $request->platform_name;
+            $settings->primary_color = $request->primary_color;
+            $settings->secondary_color = $request->secondary_color;
+            $settings->accent_color = $request->accent_color;
+            $settings->support_email = $request->support_email;
+            $settings->custom_copyright = $request->custom_copyright;
+
+            // Logo Removal
+            if ($request->input('remove_logo') == 1) {
+                if ($settings->platform_logo) {
+                    $logoPath = storage_path('app/public/branding/' . $settings->platform_logo);
+                    if (file_exists($logoPath)) {
+                        @unlink($logoPath);
+                    }
+                    $settings->platform_logo = null;
+
+                    // Audit Log: Logo removed
+                    \App\Models\AuditLog::create([
+                        'actor_id' => Auth::id(),
+                        'action' => 'settings_platform_logo_removed',
+                        'details' => [
+                            'old_value' => $oldLogo,
+                            'new_value' => null
+                        ],
+                        'ip_address' => request()->ip(),
+                    ]);
+                }
+            }
+
+            // Logo Upload
+            if ($request->hasFile('platform_logo')) {
+                $file = $request->file('platform_logo');
+                $logoName = time() . '_logo.' . $file->getClientOriginalExtension();
+                $file->storeAs('public/branding', $logoName);
+
+                if ($settings->platform_logo) {
+                    $oldLogoPath = storage_path('app/public/branding/' . $settings->platform_logo);
+                    if (file_exists($oldLogoPath)) {
+                        @unlink($oldLogoPath);
+                    }
+                }
+
+                $settings->platform_logo = $logoName;
+
+                // Audit Log: Logo changed
+                \App\Models\AuditLog::create([
+                    'actor_id' => Auth::id(),
+                    'action' => 'settings_platform_logo_changed',
+                    'details' => [
+                        'old_value' => $oldLogo,
+                        'new_value' => $logoName
+                    ],
+                    'ip_address' => request()->ip(),
+                ]);
+            }
+
+            // Favicon Upload
+            if ($request->hasFile('platform_favicon')) {
+                $file = $request->file('platform_favicon');
+                $faviconName = time() . '_favicon.' . $file->getClientOriginalExtension();
+                $file->storeAs('public/branding', $faviconName);
+
+                if ($settings->platform_favicon) {
+                    $oldFaviconPath = storage_path('app/public/branding/' . $settings->platform_favicon);
+                    if (file_exists($oldFaviconPath)) {
+                        @unlink($oldFaviconPath);
+                    }
+                }
+
+                $settings->platform_favicon = $faviconName;
+
+                // Audit Log: Favicon changed
+                \App\Models\AuditLog::create([
+                    'actor_id' => Auth::id(),
+                    'action' => 'settings_platform_favicon_changed',
+                    'details' => [
+                        'old_value' => $oldFavicon,
+                        'new_value' => $faviconName
+                    ],
+                    'ip_address' => request()->ip(),
+                ]);
+            }
+
+            $settings->save();
+
+            // Audit Logs for text fields
+            if ($oldName !== $settings->platform_name) {
+                \App\Models\AuditLog::create([
+                    'actor_id' => Auth::id(),
+                    'action' => 'settings_platform_name_changed',
+                    'details' => [
+                        'old_value' => $oldName,
+                        'new_value' => $settings->platform_name
+                    ],
+                    'ip_address' => request()->ip(),
+                ]);
+            }
+
+            $colorChanges = [];
+            if ($oldPrimary !== $settings->primary_color) {
+                $colorChanges['primary_color'] = ['old' => $oldPrimary, 'new' => $settings->primary_color];
+            }
+            if ($oldSecondary !== $settings->secondary_color) {
+                $colorChanges['secondary_color'] = ['old' => $oldSecondary, 'new' => $settings->secondary_color];
+            }
+            if ($oldAccent !== $settings->accent_color) {
+                $colorChanges['accent_color'] = ['old' => $oldAccent, 'new' => $settings->accent_color];
+            }
+            if (!empty($colorChanges)) {
+                \App\Models\AuditLog::create([
+                    'actor_id' => Auth::id(),
+                    'action' => 'settings_brand_colors_changed',
+                    'details' => $colorChanges,
+                    'ip_address' => request()->ip(),
+                ]);
+            }
+
+            if ($oldSupportEmail !== $settings->support_email) {
+                \App\Models\AuditLog::create([
+                    'actor_id' => Auth::id(),
+                    'action' => 'settings_support_email_changed',
+                    'details' => [
+                        'old_value' => $oldSupportEmail,
+                        'new_value' => $settings->support_email
+                    ],
+                    'ip_address' => request()->ip(),
+                ]);
+            }
+
+            if ($oldCopyright !== $settings->custom_copyright) {
+                \App\Models\AuditLog::create([
+                    'actor_id' => Auth::id(),
+                    'action' => 'settings_custom_copyright_changed',
+                    'details' => [
+                        'old_value' => $oldCopyright,
+                        'new_value' => $settings->custom_copyright
+                    ],
+                    'ip_address' => request()->ip(),
+                ]);
+            }
+
+            return ['status' => 1, 'msg' => 'Branding settings saved successfully', 'settings' => $settings, 'code' => 200];
+
+        } else {
+            // Original default_currency settings save
+            $validator = Validator::make($request->all(), [
+                'default_currency' => 'required|string|max:10'
+            ]);
+
+            if ($validator->fails()) {
+                return ['status' => 0, 'error' => $validator->errors()->toArray(), 'code' => 422];
+            }
+
+            $settings = \App\Models\Setting::find(1);
+            if (!$settings) {
+                $settings = new \App\Models\Setting();
+                $settings->id = 1;
+                $settings->current_plan_id = 1;
+                $settings->current_plan_name = 'Trial';
+                $settings->current_plan_price = 0.00;
+            }
+
+            $settings->default_currency = $request->default_currency;
+            $settings->save();
+
+            return ['status' => 1, 'msg' => 'Settings saved successfully', 'code' => 200];
+        }
+    }
+
+
+    /*
     public function saveSettings($request)
     {
         $validator = Validator::make($request->all(), [
@@ -744,6 +964,6 @@ class AdminService
         $settings->save();
 
         return ['status' => 1, 'msg' => 'Settings saved successfully', 'code' => 200];
-    }
+    }*/
 }
 

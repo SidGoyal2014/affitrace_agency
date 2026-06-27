@@ -23,6 +23,9 @@ $pathCommonPrefix = $pathPrefix . '/../common';
 <!-- Toast Notifications -->
 <script src="<?php echo $pathCommonPrefix; ?>/assets/js/toast.js"></script>
 
+<!-- White-Label Branding Component -->
+<script src="<?php echo $pathCommonPrefix; ?>/assets/js/branding.js"></script>
+
 <!-- Report Filters -->
 <script src="<?php echo $pathCommonPrefix; ?>/js/report-date-presets.js"></script>
 
@@ -41,9 +44,9 @@ $pathCommonPrefix = $pathPrefix . '/../common';
         function addOptions(nodes, depth) {
             nodes.forEach((node, idx) => {
                 const isLast = idx === nodes.length - 1;
-                const pad    = '\u00A0'.repeat(depth * 4);
+                const pad = '\u00A0'.repeat(depth * 4);
                 const prefix = depth > 0 ? pad + (isLast ? '└─ ' : '├─ ') : '';
-                const sel    = selectedId && node.id == selectedId ? 'selected' : '';
+                const sel = selectedId && node.id == selectedId ? 'selected' : '';
                 select.append(`<option value="${node.id}" ${sel}>${prefix}${node.category_name}</option>`);
                 if (node.children.length > 0) {
                     addOptions(node.children, depth + 1);

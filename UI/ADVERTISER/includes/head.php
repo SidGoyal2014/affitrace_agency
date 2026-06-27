@@ -14,6 +14,9 @@ $pathCommonPrefix = $pathPrefix . '/../common';
 
     <title><?php echo isset($pageTitle) ? $pageTitle : 'Advertiser Dashboard'; ?></title>
 
+    <!-- Shared White-Label Branding Head Component -->
+    <?php include $pathCommonPrefix . '/includes/head_branding.php'; ?>
+
     <!-- Custom fonts for this template-->
     <link href="<?php echo $pathCommonPrefix; ?>/assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet"
         type="text/css">
@@ -27,7 +30,8 @@ $pathCommonPrefix = $pathPrefix . '/../common';
     <link href="<?php echo $pathCommonPrefix; ?>/assets/css/sb-admin-2.css" rel="stylesheet">
     <link href="<?php echo $pathCommonPrefix; ?>/assets/css/dropdown.css" rel="stylesheet">
     <link href="<?php echo $pathCommonPrefix; ?>/assets/css/arrow.css" rel="stylesheet">
-    <link href="<?php echo $pathCommonPrefix; ?>/assets/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/vendor/datatables/dataTables.bootstrap4.min.css"
+        rel="stylesheet">
 
     <link href="<?php echo $pathCommonPrefix; ?>/assets/css/tab.css" rel="stylesheet">
     <link href="<?php echo $pathCommonPrefix; ?>/assets/css/custom.css" rel="stylesheet">
