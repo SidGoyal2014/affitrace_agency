@@ -183,6 +183,18 @@ class OfferController extends Controller
 		try {
 
 			\App\Models\OfferEvent::where('id', $eid)->where('offer_id', $oid)->delete();
+
+			// Audit Log: Offer event deleted
+			\App\Models\AuditLog::create([
+				'actor_id' => \Illuminate\Support\Facades\Auth::id(),
+				'action' => 'offer_event_deleted',
+				'details' => [
+					'offer_id' => $oid,
+					'event_id' => $eid,
+				],
+				'ip_address' => request()->ip(),
+			]);
+
 			return response()->json(['status' => 1, 'msg' => 'Event removed successfully']);
 
 		} catch (\Exception $e) {

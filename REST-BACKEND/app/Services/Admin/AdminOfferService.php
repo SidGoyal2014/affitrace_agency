@@ -42,7 +42,7 @@ class AdminOfferService
                 'arrEvents' => [],
                 'arrOA' => [],
                 'tracking_url' => '',
-                'arrCategories' => Category::where('is_active', 'Y')->orderBy('category_name')->get(),                
+                'arrCategories' => Category::where('is_active', 'Y')->orderBy('category_name')->get(),
                 'logged_in_user_type' => $logged_in_user_type
             ];
         } else {
@@ -94,10 +94,23 @@ class AdminOfferService
         $offer->private_note = $request->private_note;
         $offer->offer_terms = $request->offer_terms;
         $offer->conversion_tracking_method = $request->conversion_tracking_method ?? 's2s';
-        $offer->clicks_cap = isset($request->clicks_cap) && $request->clicks_cap !== '' ? (int)$request->clicks_cap : null;
-        $offer->conversions_cap = isset($request->conversions_cap) && $request->conversions_cap !== '' ? (int)$request->conversions_cap : null;
+        $offer->clicks_cap = isset($request->clicks_cap) && $request->clicks_cap !== '' ? (int) $request->clicks_cap : null;
+        $offer->conversions_cap = isset($request->conversions_cap) && $request->conversions_cap !== '' ? (int) $request->conversions_cap : null;
 
         $offer->save();
+
+        // Audit Log: Offer created
+        \App\Models\AuditLog::create([
+            'actor_id' => \Illuminate\Support\Facades\Auth::id(),
+            'action' => 'offer_created',
+            'details' => [
+                'offer_id' => $offer->id,
+                'offer_name' => $offer->offer_name,
+                'advertiser_id' => $offer->advertiser_id,
+                'category_id' => $offer->category_id,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
 
         return [
             'status' => 1,
@@ -110,12 +123,34 @@ class AdminOfferService
     public function deleteOffer($id)
     {
         Offer::find($id)->delete();
+
+        // Audit Log: Offer deleted
+        \App\Models\AuditLog::create([
+            'actor_id' => \Illuminate\Support\Facades\Auth::id(),
+            'action' => 'offer_deleted',
+            'details' => [
+                'offer_id' => $id,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
+
         return ['status' => 1, 'msg' => 'Offer has been deleted'];
     }
 
     public function restoreOffer($id)
     {
         Offer::withTrashed()->find($id)->restore();
+
+        // Audit Log: Offer restored
+        \App\Models\AuditLog::create([
+            'actor_id' => \Illuminate\Support\Facades\Auth::id(),
+            'action' => 'offer_restored',
+            'details' => [
+                'offer_id' => $id,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
+
         return ['status' => 1, 'msg' => 'Offer has been restored'];
     }
 
@@ -204,10 +239,24 @@ class AdminOfferService
         $offer->private_note = $request->private_note;
         $offer->offer_terms = $request->offer_terms;
         $offer->conversion_tracking_method = $request->conversion_tracking_method ?? 's2s';
-        $offer->clicks_cap = isset($request->clicks_cap) && $request->clicks_cap !== '' ? (int)$request->clicks_cap : null;
-        $offer->conversions_cap = isset($request->conversions_cap) && $request->conversions_cap !== '' ? (int)$request->conversions_cap : null;
+        $offer->clicks_cap = isset($request->clicks_cap) && $request->clicks_cap !== '' ? (int) $request->clicks_cap : null;
+        $offer->conversions_cap = isset($request->conversions_cap) && $request->conversions_cap !== '' ? (int) $request->conversions_cap : null;
 
         $offer->save();
+
+        // Audit Log: Offer updated
+        \App\Models\AuditLog::create([
+            'actor_id' => \Illuminate\Support\Facades\Auth::id(),
+            'action' => 'offer_updated',
+            'details' => [
+                'offer_id' => $offer->id,
+                'offer_name' => $offer->offer_name,
+                'advertiser_id' => $offer->advertiser_id,
+                'category_id' => $offer->category_id,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
+
 
         return ['status' => 1, 'msg' => 'Offer updated successfully', 'code' => 200];
     }
@@ -247,6 +296,18 @@ class AdminOfferService
         $offer->target_device = $request->target_device;
 
         $offer->save();
+
+        // Audit Log: Offer targeting updated
+        \App\Models\AuditLog::create([
+            'actor_id' => \Illuminate\Support\Facades\Auth::id(),
+            'action' => 'offer_targeting_updated',
+            'details' => [
+                'offer_id' => $offer->id,
+                'target_country' => $offer->target_country,
+                'target_device' => $offer->target_device,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
 
         return ['status' => 1, 'msg' => 'Offer targeting updated successfully', 'code' => 200];
     }
@@ -308,6 +369,19 @@ class AdminOfferService
         }
 
         DB::table('payout_rules')->updateOrInsert($arrW, $arr);
+
+        // Audit Log: Offer payout rules updated
+        \App\Models\AuditLog::create([
+            'actor_id' => \Illuminate\Support\Facades\Auth::id(),
+            'action' => 'offer_payout_rules_saved',
+            'details' => [
+                'offer_id' => $arrW['offer_id'] ?? null,
+                'event_id' => $arrW['event_id'] ?? null,
+                'affiliate_id' => $arr['affiliate_id'] ?? null,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
+
         return ['status' => 1, 'msg' => 'Payout rules updated successfully', 'code' => 200];
     }
 
@@ -317,6 +391,17 @@ class AdminOfferService
         DB::table('offer_affiliates')->where('offer_id', $request->offer_id)
             ->where('affiliate_id', $request->aff_id)
             ->update($arrParsed);
+
+        // Audit Log: Tracking URL updated
+        \App\Models\AuditLog::create([
+            'actor_id' => \Illuminate\Support\Facades\Auth::id(),
+            'action' => 'offer_tracking_url_updated',
+            'details' => [
+                'offer_id' => $request->offer_id,
+                'affiliate_id' => $request->aff_id,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
 
         return ['status' => 1, 'msg' => 'Tracking URL updated successfully', 'code' => 200];
     }
@@ -338,6 +423,18 @@ class AdminOfferService
             $oa->save();
         }
 
+        // Audit Log: Offer assigned
+        \App\Models\AuditLog::create([
+            'actor_id' => \Illuminate\Support\Facades\Auth::id(),
+            'action' => 'offer_assigned',
+            'details' => [
+                'offer_id' => $oid,
+                'affiliate_id' => $aid,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
+
+
         return ['status' => 1, 'msg' => 'Offer assigned successfully', 'code' => 200];
     }
 
@@ -346,6 +443,18 @@ class AdminOfferService
         OfferAffiliate::where("offer_id", $oid)
             ->where("affiliate_id", $aid)
             ->update(['request_status' => 'Rejected']);
+
+        // Audit Log: Offer application rejected
+        \App\Models\AuditLog::create([
+            'actor_id' => \Illuminate\Support\Facades\Auth::id(),
+            'action' => 'offer_application_rejected',
+            'details' => [
+                'offer_id' => $oid,
+                'affiliate_id' => $aid,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
+
         return ['status' => 1, 'msg' => 'Offer application rejected', 'code' => 200];
     }
 
@@ -354,6 +463,18 @@ class AdminOfferService
         OfferAffiliate::where("offer_id", $oid)
             ->where("affiliate_id", $aid)
             ->update(['request_status' => 'Unassigned', 'tracking_url' => Null]);
+
+        // Audit Log: Offer unassigned
+        \App\Models\AuditLog::create([
+            'actor_id' => \Illuminate\Support\Facades\Auth::id(),
+            'action' => 'offer_unassigned',
+            'details' => [
+                'offer_id' => $oid,
+                'affiliate_id' => $aid,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
+
         return ['status' => 1, 'msg' => 'Offer unassigned successfully', 'code' => 200];
     }
 
@@ -392,6 +513,19 @@ class AdminOfferService
         $oe->multi_conv_ip = $multiConvIp;
         $oe->approval = $approval;
         $oe->save();
+
+        // Audit Log: Offer event created
+        \App\Models\AuditLog::create([
+            'actor_id' => \Illuminate\Support\Facades\Auth::id(),
+            'action' => 'offer_event_created',
+            'details' => [
+                'offer_id' => $oe->offer_id,
+                'event_id' => $oe->id,
+                'event_name' => $oe->event_name,
+                'event_token' => $oe->event_token,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
 
         return ['status' => 1, 'msg' => 'A new event has been created', 'code' => 200];
     }
@@ -445,6 +579,19 @@ class AdminOfferService
             'approval' => $approval,
         ]);
 
+        // Audit Log: Offer event updated
+        \App\Models\AuditLog::create([
+            'actor_id' => \Illuminate\Support\Facades\Auth::id(),
+            'action' => 'offer_event_updated',
+            'details' => [
+                'offer_id' => $event->offer_id,
+                'event_id' => $event->id,
+                'event_name' => $request->event_name,
+                'event_token' => $request->event_token,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
+
         return ['status' => 1, 'msg' => 'Event updated successfully', 'code' => 200];
     }
 
@@ -490,18 +637,30 @@ class AdminOfferService
         }
 
         $clone = $source->replicate();          // copies all Eloquent attributes
-        $clone->offer_name        = $source->offer_name . ' (Copy)';
-        $clone->offer_status      = 'pending';  // requires re-approval
-        $clone->clicks_cap        = null;       // reset usage caps
-        $clone->conversions_cap   = null;
-        $clone->attribution_link  = null;       // reset generated tracking link
+        $clone->offer_name = $source->offer_name . ' (Copy)';
+        $clone->offer_status = 'pending';  // requires re-approval
+        $clone->clicks_cap = null;       // reset usage caps
+        $clone->conversions_cap = null;
+        $clone->attribution_link = null;       // reset generated tracking link
         $clone->save();
 
+        // Audit Log: Offer cloned
+        \App\Models\AuditLog::create([
+            'actor_id' => \Illuminate\Support\Facades\Auth::id(),
+            'action' => 'offer_cloned',
+            'details' => [
+                'source_offer_id' => $id,
+                'cloned_offer_id' => $clone->id,
+                'offer_name' => $clone->offer_name,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
+
         return [
-            'status'   => 1,
-            'msg'      => 'Offer cloned successfully',
+            'status' => 1,
+            'msg' => 'Offer cloned successfully',
             'offer_id' => $clone->id,
-            'code'     => 200
+            'code' => 200
         ];
     }
 

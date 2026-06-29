@@ -81,12 +81,12 @@ function url($path)
             </a>
             <div class="dropdown-menu">
                 <a class="dropdown-item" href="<?php echo url('invoices/index.php'); ?>">Invoices</a>
-                <a class="dropdown-item" href="<?php echo url('reports/payouts.php'); ?>">Payouts</a>
+                <a class="dropdown-item" href="<?php echo url('payouts/payouts.php'); ?>">Payouts</a>
                 <?php /*
-           <a class="dropdown-item" href="< ? php echo url('payments/plans.php'); ? >">Payment Plans</a>
-           <a class="dropdown-item" href="< ? php echo url('payments/subscriptions.php'); ?>">Subscriptions</a>
-           <a class="dropdown-item" href="< ? php echo url('payments/transactions.php'); ? >">Transactions</a>
-           */ ?>
+<a class="dropdown-item" href="< ? php echo url('payments/plans.php'); ? >">Payment Plans</a>
+<a class="dropdown-item" href="< ? php echo url('payments/subscriptions.php'); ?>">Subscriptions</a>
+<a class="dropdown-item" href="< ? php echo url('payments/transactions.php'); ? >">Transactions</a>
+*/ ?>
             </div>
         </li>
 

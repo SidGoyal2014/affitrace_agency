@@ -87,6 +87,17 @@ class AuthController extends Controller
             $user->load(['role.modules', 'designation']);
             $permissions = $user->getPermissions();
 
+            // Audit Log: User login
+            \App\Models\AuditLog::create([
+                'actor_id' => $user->id,
+                'action' => $user->user_type . '_login',
+                'details' => [
+                    'email' => $user->email,
+                    'user_type' => $user->user_type,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+
             return response()->json([
                 'message' => 'Login successful',
                 'access_token' => $accessToken,

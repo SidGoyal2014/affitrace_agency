@@ -441,9 +441,63 @@ class AdminService
             $aud->save();
         }
 
+        // Audit Log: Affiliate status updated
+        \App\Models\AuditLog::create([
+            'actor_id' => Auth::id(),
+            'action' => 'affiliate_status_updated',
+            'details' => [
+                'target_id' => $id,
+                'target_name' => $user->name,
+                'status' => $status,
+                'reason' => $reason
+            ],
+            'ip_address' => request()->ip(),
+        ]);
+
         return ['success' => true, 'msg' => 'Affiliate status updated successfully'];
     }
+    public function bulkAffiliatesStatus($ids, $status, $reason = null)
+    {
+        foreach ($ids as $id) {
+            $this->updateAffiliateStatus($id, $status, $reason);
+        }
+        return ['success' => true, 'msg' => 'Affiliates status updated successfully'];
+    }
 
+    public function deleteAffiliate($id)
+    {
+        User::where('id', $id)->delete();
+        AffiliateUserDetail::where('user_id', $id)->delete();
+        return ['success' => true, 'msg' => 'Affiliate account deleted successfully'];
+    }
+
+    public function assignAffiliateManager($id, $employee_id = null)
+    {
+        $user = User::findOrFail($id);
+        $user->employee_id = $employee_id ? (string) $employee_id : null;
+        $user->save();
+
+        // Audit Log: Affiliate manager assigned
+        \App\Models\AuditLog::create([
+            'actor_id' => Auth::id(),
+            'action' => 'affiliate_manager_assigned',
+            'details' => [
+                'target_id' => $id,
+                'target_name' => $user->name,
+                'employee_id' => $employee_id,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
+
+        return ['success' => true, 'msg' => 'Affiliate manager assigned successfully'];
+    }
+
+
+
+
+
+
+    /*
     public function bulkAffiliatesStatus($ids, $status, $reason = null)
     {
         foreach ($ids as $id) {
@@ -466,6 +520,7 @@ class AdminService
         $user->save();
         return ['success' => true, 'msg' => 'Affiliate manager assigned successfully'];
     }
+    */
 
     public function getAffiliateStats($id)
     {
@@ -508,6 +563,19 @@ class AdminService
                 'revenue_usd' => $this->getNewCurrencyValue($request->revenue, 'USD')
             ]
         );
+
+        // Audit Log: Payout override saved
+        \App\Models\AuditLog::create([
+            'actor_id' => Auth::id(),
+            'action' => 'affiliate_payout_override_saved',
+            'details' => [
+                'offer_id' => $request->offer_id,
+                'affiliate_id' => $request->affiliate_id,
+                'payout' => $request->payout,
+                'revenue' => $request->revenue
+            ],
+            'ip_address' => request()->ip(),
+        ]);
 
         return ['success' => true, 'msg' => 'Payout override saved successfully'];
     }
@@ -582,6 +650,17 @@ class AdminService
         $aud->docs = json_encode($existingDocs);
         $aud->save();
 
+        // Audit Log: Document uploaded
+        \App\Models\AuditLog::create([
+            'actor_id' => Auth::id(),
+            'action' => 'affiliate_document_uploaded',
+            'details' => [
+                'target_id' => $uid,
+                'file_name' => $fileName,
+            ],
+            'ip_address' => request()->ip(),
+        ]);
+
         return ['success' => true, 'msg' => 'Document uploaded successfully', 'file_name' => $fileName];
     }
 
@@ -601,6 +680,19 @@ class AdminService
             $adud->save();
         }
 
+        // Audit Log: Advertiser status updated
+        \App\Models\AuditLog::create([
+            'actor_id' => Auth::id(),
+            'action' => 'advertiser_status_updated',
+            'details' => [
+                'target_id' => $id,
+                'target_name' => $user->name,
+                'status' => $status,
+                'reason' => $reason
+            ],
+            'ip_address' => request()->ip(),
+        ]);
+
         return ['success' => true, 'msg' => 'Advertiser status updated successfully'];
     }
 
@@ -614,6 +706,18 @@ class AdminService
         $adud->private_note = $notes;
         $adud->tags = $tags;
         $adud->save();
+
+        // Audit Log: Advertiser notes and tags updated
+        \App\Models\AuditLog::create([
+            'actor_id' => Auth::id(),
+            'action' => 'advertiser_notes_tags_updated',
+            'details' => [
+                'target_id' => $id,
+                'private_note' => $notes,
+                'tags' => $tags
+            ],
+            'ip_address' => request()->ip(),
+        ]);
 
         return ['success' => true, 'msg' => 'Advertiser notes and tags updated successfully'];
     }

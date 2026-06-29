@@ -2,6 +2,7 @@
 // Top Navigation Component
 $pathPrefix = isset($pathPrefix) ? $pathPrefix : '.';
 $pathCommonPrefix = isset($pathCommonPrefix) ? $pathCommonPrefix : $pathPrefix . '/../common';
+
 $activePage = isset($activePage) ? $activePage : '';
 
 function isActiveNav($id, $activePage)
@@ -56,7 +57,8 @@ function url($path)
         </li>
 
         <!-- Affiliates Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('affiliates', $activePage); ?> require-permission" data-module="affiliates">
+        <li class="nav-item <?php echo isActiveNav('affiliates', $activePage); ?> require-permission"
+            data-module="affiliates">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-users"></i>
                 Affiliates
@@ -69,7 +71,8 @@ function url($path)
         </li>
 
         <!-- Advertisers Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('advertisers', $activePage); ?> require-permission" data-module="advertisers">
+        <li class="nav-item <?php echo isActiveNav('advertisers', $activePage); ?> require-permission"
+            data-module="advertisers">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-handshake"></i>
                 Advertisers
@@ -82,7 +85,8 @@ function url($path)
         </li>
 
         <!-- Invoices Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('invoices', $activePage); ?> require-permission" data-module="invoices">
+        <li class="nav-item <?php echo isActiveNav('invoices', $activePage); ?> require-permission"
+            data-module="invoices">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-file-invoice-dollar"></i>
                 Invoices
@@ -94,8 +98,22 @@ function url($path)
             </div>
         </li>
 
+        <!-- Payouts Dropdown -->
+        <li class="nav-item <?php echo isActiveNav('payouts', $activePage); ?> require-permission"
+            data-module="payouts">
+            <a class="nav-link" href="#" data-toggle="dropdown">
+                <i class="fas fa-file-invoice-dollar"></i>
+                Payouts
+                <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
+            </a>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" href="<?php echo url('payouts/payouts.php'); ?>">Payouts</a>
+            </div>
+        </li>
+
         <!-- Reports Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('reports', $activePage); ?> require-permission" data-module="reports">
+        <li class="nav-item <?php echo isActiveNav('reports', $activePage); ?> require-permission"
+            data-module="reports">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-chart-line"></i>
                 Reports
@@ -104,7 +122,6 @@ function url($path)
             <div class="dropdown-menu">
                 <a class="dropdown-item" href="<?php echo url('reports/clicks_report.php'); ?>">Clicks</a>
                 <a class="dropdown-item" href="<?php echo url('reports/conversions_report.php'); ?>">Conversions</a>
-                <a class="dropdown-item" href="<?php echo url('reports/payouts.php'); ?>">Payouts</a>
                 <a class="dropdown-item" href="<?php echo url('reports/logs.php'); ?>">System Logs</a>
                 <a class="dropdown-item" href="<?php echo url('reports/postback_logs.php'); ?>">Postback Logs</a>
                 <div class="dropdown-divider"></div>
@@ -115,7 +132,8 @@ function url($path)
         </li>
 
         <!-- Settings Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('settings', $activePage); ?> require-permission" data-module="integrations">
+        <li class="nav-item <?php echo isActiveNav('settings', $activePage); ?> require-permission"
+            data-module="integrations">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-cog"></i>
                 Integrations
@@ -123,17 +141,19 @@ function url($path)
             </a>
             <div class="dropdown-menu">
                 <a class="dropdown-item" href="<?php echo url('mmp/platforms.php'); ?>">MMP Platforms</a>
-                <a class="dropdown-item" href="<?php echo url('integrations/data-integrations.php'); ?>">Data Integrations</a>
+                <a class="dropdown-item" href="<?php echo url('integrations/data-integrations.php'); ?>">Data
+                    Integrations</a>
                 <?php /*
-                <a class="dropdown-item" href="<?php echo url('payments/plans.php'); ?>">Payment Plans</a>
-                <a class="dropdown-item" href="<?php echo url('payments/subscriptions.php'); ?>">Subscriptions</a>
-                <a class="dropdown-item" href="<?php echo url('payments/transactions.php'); ?>">Transactions</a>
-                */ ?>
+<a class="dropdown-item" href="<?php echo url('payments/plans.php'); ?>">Payment Plans</a>
+<a class="dropdown-item" href="<?php echo url('payments/subscriptions.php'); ?>">Subscriptions</a>
+<a class="dropdown-item" href="<?php echo url('payments/transactions.php'); ?>">Transactions</a>
+*/ ?>
             </div>
         </li>
 
         <!-- User Management Dropdown -->
-        <li class="nav-item <?php echo isActiveNav('users', $activePage); ?> require-permission" data-module="role_management">
+        <li class="nav-item <?php echo isActiveNav('users', $activePage); ?> require-permission"
+            data-module="role_management">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-user-shield"></i>
                 Users & Roles
@@ -150,13 +170,13 @@ function url($path)
 
     <!-- Script to toggle menus by permission -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const user = JSON.parse(localStorage.getItem('user') || '{}');
             const permissions = JSON.parse(localStorage.getItem('permissions') || '{}');
-            
+
             // Display user role
             if (user.user_type) {
-                document.querySelectorAll('.user-role').forEach(function(el) {
+                document.querySelectorAll('.user-role').forEach(function (el) {
                     el.textContent = user.user_type;
                 });
             }
@@ -164,10 +184,10 @@ function url($path)
             if (user.user_type === 'admin') return; // Admins see everything
 
             // Hide nav items the user doesn't have view access to
-            document.querySelectorAll('.require-permission').forEach(function(item) {
+            document.querySelectorAll('.require-permission').forEach(function (item) {
                 const moduleSlug = item.getAttribute('data-module');
                 const modulePerms = permissions[moduleSlug];
-                
+
                 if (moduleSlug && (!modulePerms || !modulePerms.can_view)) {
                     item.style.display = 'none';
                 } else if (modulePerms) {
@@ -187,10 +207,9 @@ function url($path)
         <!-- Notifications Bell -->
         <div class="nav-item mr-2">
             <a class="nav-link position-relative" href="<?php echo $pathPrefix; ?>/notifications/inbox.php"
-               title="Notifications" id="notif-bell-link">
+                title="Notifications" id="notif-bell-link">
                 <i class="fas fa-bell fa-fw"></i>
-                <span id="notif-nav-badge"
-                      style="display:none; position:absolute; top:2px; right:0;
+                <span id="notif-nav-badge" style="display:none; position:absolute; top:2px; right:0;
                              background:#e74a3b; color:#fff; border-radius:50%;
                              width:18px; height:18px; font-size:0.65rem;
                              line-height:18px; text-align:center; font-weight:700;">
@@ -206,7 +225,8 @@ function url($path)
                     <span class="user-name mb-0" style="font-weight: 600; line-height: 1.2;">Employee</span>
                     <small class="user-role text-muted" style="font-size: 0.75rem; text-transform: capitalize;"></small>
                 </div>
-                <img class="user-avatar" src="<?php echo $pathCommonPrefix; ?>/assets/img/undraw_profile.svg" alt="User">
+                <img class="user-avatar" src="<?php echo $pathCommonPrefix; ?>/assets/img/undraw_profile.svg"
+                    alt="User">
             </a>
             <div class="dropdown-menu dropdown-menu-right">
                 <a class="dropdown-item" href="<?php echo $pathPrefix; ?>/profile.php">

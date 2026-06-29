@@ -142,6 +142,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('reports/offer-clicks/search', [App\Http\Controllers\Admin\ReportController::class, 'search_offer_clicks']);
         Route::get('reports/devices', [App\Http\Controllers\Admin\ReportController::class, 'devices_list']);
 
+        /*
         Route::get('reports/all-payouts', [App\Http\Controllers\Admin\ReportController::class, 'all_payouts']);
         Route::post('reports/all-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_all_payouts']);
 
@@ -157,7 +158,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         Route::get('reports/affiliate-payouts/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'affiliate_payouts']);
         Route::post('reports/affiliate-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_affiliate_payouts']);
-
+        */
         Route::get('reports/offers-assigned/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'get_offers_assigned_to_affiliate']);
         Route::post('reports/click-conversion-report', [App\Http\Controllers\Admin\ReportController::class, 'click_conversion_report']);
         Route::post('reports/clicks', [App\Http\Controllers\Admin\ReportController::class, 'clicks_report']);
@@ -184,6 +185,25 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('invoices/{id}/pay', [\App\Http\Controllers\Admin\InvoiceController::class, 'pay']);
         Route::post('invoices/{id}/email', [\App\Http\Controllers\Admin\InvoiceController::class, 'email']);
         Route::post('invoices/{id}/revert-draft', [\App\Http\Controllers\Admin\InvoiceController::class, 'revertToDraft']);
+
+        // Payouts
+
+        Route::get('payouts/all-payouts', [App\Http\Controllers\Admin\ReportController::class, 'all_payouts']);
+        Route::post('payouts/all-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_all_payouts']);
+
+        Route::get('payouts/weekly-payouts/feature-status', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts_feature_status']);
+        Route::get('payouts/weekly-payouts', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts']);
+        Route::get('payouts/weekly-payouts/stats', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts_stats']);
+        Route::post('payouts/weekly-payouts/pay', [App\Http\Controllers\Admin\ReportController::class, 'pay_weekly_payouts']);
+        Route::post('payouts/weekly-payouts/reject', [App\Http\Controllers\Admin\ReportController::class, 'reject_weekly_payout']);
+        Route::post('payouts/weekly-payouts/manual', [App\Http\Controllers\Admin\ReportController::class, 'create_manual_weekly_payout']);
+
+        Route::get('payouts/offer-payouts/{oid}', [App\Http\Controllers\Admin\ReportController::class, 'offer_payouts']);
+        Route::post('payouts/offer-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_offer_payouts']);
+
+        Route::get('payouts/affiliate-payouts/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'affiliate_payouts']);
+        Route::post('payouts/affiliate-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_affiliate_payouts']);
+
 
         // Report Export Routes (Async)
         Route::get('reports/exports', [\App\Http\Controllers\Admin\ReportExportController::class, 'index']);
@@ -491,6 +511,78 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('invoices/{id}/email', [\App\Http\Controllers\Admin\InvoiceController::class, 'email']);
             Route::post('invoices/{id}/revert-draft', [\App\Http\Controllers\Admin\InvoiceController::class, 'revertToDraft']);
         });
+
+        // ── Payouts ──
+        Route::middleware(['module.access:payouts,can_view'])->group(function () {
+            Route::get('payouts/all-payouts', [App\Http\Controllers\Admin\ReportController::class, 'all_payouts']);
+            Route::post('payouts/all-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_all_payouts']);
+
+            Route::get('payouts/weekly-payouts/feature-status', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts_feature_status']);
+            Route::get('payouts/weekly-payouts', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts']);
+            Route::get('payouts/weekly-payouts/stats', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts_stats']);
+            Route::post('payouts/weekly-payouts/pay', [App\Http\Controllers\Admin\ReportController::class, 'pay_weekly_payouts']);
+            Route::post('payouts/weekly-payouts/reject', [App\Http\Controllers\Admin\ReportController::class, 'reject_weekly_payout']);
+            Route::post('payouts/weekly-payouts/manual', [App\Http\Controllers\Admin\ReportController::class, 'create_manual_weekly_payout']);
+
+            Route::get('payouts/offer-payouts/{oid}', [App\Http\Controllers\Admin\ReportController::class, 'offer_payouts']);
+            Route::post('payouts/offer-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_offer_payouts']);
+            Route::get('payouts/affiliate-payouts/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'affiliate_payouts']);
+            Route::post('payouts/affiliate-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_affiliate_payouts']);
+        });
+
+
+        Route::middleware(['module.access:payouts,can_create'])->group(function () {
+            Route::get('payouts/all-payouts', [App\Http\Controllers\Admin\ReportController::class, 'all_payouts']);
+            Route::post('payouts/all-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_all_payouts']);
+
+            Route::get('payouts/weekly-payouts/feature-status', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts_feature_status']);
+            Route::get('payouts/weekly-payouts', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts']);
+            Route::get('payouts/weekly-payouts/stats', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts_stats']);
+            Route::post('payouts/weekly-payouts/pay', [App\Http\Controllers\Admin\ReportController::class, 'pay_weekly_payouts']);
+            Route::post('payouts/weekly-payouts/reject', [App\Http\Controllers\Admin\ReportController::class, 'reject_weekly_payout']);
+            Route::post('payouts/weekly-payouts/manual', [App\Http\Controllers\Admin\ReportController::class, 'create_manual_weekly_payout']);
+
+            Route::get('payouts/offer-payouts/{oid}', [App\Http\Controllers\Admin\ReportController::class, 'offer_payouts']);
+            Route::post('payouts/offer-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_offer_payouts']);
+            Route::get('payouts/affiliate-payouts/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'affiliate_payouts']);
+            Route::post('payouts/affiliate-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_affiliate_payouts']);
+        });
+        Route::middleware(['module.access:payouts,can_edit'])->group(function () {
+            Route::get('payouts/all-payouts', [App\Http\Controllers\Admin\ReportController::class, 'all_payouts']);
+            Route::post('payouts/all-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_all_payouts']);
+
+            Route::get('payouts/weekly-payouts/feature-status', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts_feature_status']);
+            Route::get('payouts/weekly-payouts', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts']);
+            Route::get('payouts/weekly-payouts/stats', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts_stats']);
+            Route::post('payouts/weekly-payouts/pay', [App\Http\Controllers\Admin\ReportController::class, 'pay_weekly_payouts']);
+            Route::post('payouts/weekly-payouts/reject', [App\Http\Controllers\Admin\ReportController::class, 'reject_weekly_payout']);
+            Route::post('payouts/weekly-payouts/manual', [App\Http\Controllers\Admin\ReportController::class, 'create_manual_weekly_payout']);
+
+            Route::get('payouts/offer-payouts/{oid}', [App\Http\Controllers\Admin\ReportController::class, 'offer_payouts']);
+            Route::post('payouts/offer-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_offer_payouts']);
+            Route::get('payouts/affiliate-payouts/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'affiliate_payouts']);
+            Route::post('payouts/affiliate-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_affiliate_payouts']);
+        });
+        Route::middleware(['module.access:payouts,can_delete'])->group(function () {
+            Route::get('payouts/all-payouts', [App\Http\Controllers\Admin\ReportController::class, 'all_payouts']);
+            Route::post('payouts/all-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_all_payouts']);
+
+            Route::get('payouts/weekly-payouts/feature-status', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts_feature_status']);
+            Route::get('payouts/weekly-payouts', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts']);
+            Route::get('payouts/weekly-payouts/stats', [App\Http\Controllers\Admin\ReportController::class, 'weekly_payouts_stats']);
+            Route::post('payouts/weekly-payouts/pay', [App\Http\Controllers\Admin\ReportController::class, 'pay_weekly_payouts']);
+            Route::post('payouts/weekly-payouts/reject', [App\Http\Controllers\Admin\ReportController::class, 'reject_weekly_payout']);
+            Route::post('payouts/weekly-payouts/manual', [App\Http\Controllers\Admin\ReportController::class, 'create_manual_weekly_payout']);
+
+
+            Route::get('payouts/offer-payouts/{oid}', [App\Http\Controllers\Admin\ReportController::class, 'offer_payouts']);
+            Route::post('payouts/offer-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_offer_payouts']);
+            Route::get('payouts/affiliate-payouts/{aid}', [App\Http\Controllers\Admin\ReportController::class, 'affiliate_payouts']);
+            Route::post('payouts/affiliate-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_affiliate_payouts']);
+        });
+
+
+
 
         // ── Integrations ──
         Route::middleware(['module.access:integrations,can_view'])->group(function () {

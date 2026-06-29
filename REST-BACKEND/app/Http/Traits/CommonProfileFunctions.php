@@ -87,10 +87,21 @@ trait CommonProfileFunctions
             }
 
 
-            if ($request->has('timezone'))
-                $user->timezone = $request->timezone;
-            elseif ($request->has('time_zone'))
-                $user->timezone = $request->time_zone;
+            $tz = null;
+            if ($request->has('timezone')) {
+                $tz = $request->timezone ?: 'UTC';
+            } elseif ($request->has('time_zone')) {
+                $tz = $request->time_zone ?: 'UTC';
+            }
+            if ($tz !== null) {
+                $user->timezone = $tz;
+            }
+
+            // Fallback for legacy database rows where timezone column is null
+            if (empty($user->timezone)) {
+                $user->timezone = 'UTC';
+            }
+
 
             $user->save();
 
@@ -117,7 +128,22 @@ trait CommonProfileFunctions
             if ($request->has('status_reason'))
                 $adud->status_reason = $request->status_reason;
 
+            if ($tz !== null) {
+                $adud->time_zone = $tz;
+            }
+
             $adud->save();
+
+            // Audit Log: Advertiser profile updated
+            \App\Models\AuditLog::create([
+                'actor_id' => Auth::id(),
+                'action' => 'advertiser_profile_updated',
+                'details' => [
+                    'target_id' => $uid,
+                    'target_name' => $user->name,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
 
             return response()->json(['status' => 1, 'msg' => 'Profile Updated']);
 
@@ -208,10 +234,16 @@ trait CommonProfileFunctions
                 }
             }
 
-            if ($request->has('timezone'))
-                $user->timezone = $request->timezone;
-            elseif ($request->has('time_zone'))
-                $user->timezone = $request->time_zone;
+            $tz = null;
+            if ($request->has('timezone')) {
+                $tz = $request->timezone ?: 'UTC';
+            } elseif ($request->has('time_zone')) {
+                $tz = $request->time_zone ?: 'UTC';
+            }
+            if ($tz !== null) {
+                $user->timezone = $tz;
+            }
+
 
             $user->save();
 
@@ -222,7 +254,7 @@ trait CommonProfileFunctions
             if ($request->has('additional_tracking_url_tokens'))
                 $aud->additional_tracking_url_tokens = $request->additional_tracking_url_tokens;
             if ($request->has('time_zone'))
-                $aud->time_zone = $request->time_zone;
+                $aud->time_zone = $request->time_zone ?: 'UTC';
             if ($request->has('payment_method'))
                 $aud->payment_method = $request->payment_method;
             if ($request->has('payment_details'))
@@ -254,27 +286,47 @@ trait CommonProfileFunctions
             if ($request->has('private_note'))
                 $aud->private_note = $request->private_note;
 
+            if ($tz !== null) {
+                $aud->time_zone = $tz;
+            }
+
             $aud->save();
 
             // Save postback configuration if provided
             if ($request->has('pb_url')) {
-                \Illuminate\Support\Facades\DB::table('affiliate_postback_columns')->updateOrInsert(
-                    ['uid' => $uid],
-                    [
-                        'url' => $request->pb_url,
-                        'tid' => $request->pb_tid,
-                        'aff_id' => $request->pb_aff_id,
-                        'event_id' => $request->pb_event_id,
-                        'sub_aff_id' => $request->pb_sub_aff_id,
-                        'aff_sub1' => $request->pb_aff_sub1,
-                        'aff_sub2' => $request->pb_aff_sub2,
-                        'aff_sub3' => $request->pb_aff_sub3,
-                        'aff_sub4' => $request->pb_aff_sub4,
-                        'aff_sub5' => $request->pb_aff_sub5,
-                        'updated_at' => now()
-                    ]
-                );
+                if ($request->filled('pb_url')) {
+                    \Illuminate\Support\Facades\DB::table('affiliate_postback_columns')->updateOrInsert(
+                        ['uid' => $uid],
+                        [
+                            'url' => $request->pb_url,
+                            'tid' => $request->pb_tid,
+                            'aff_id' => $request->pb_aff_id,
+                            'event_id' => $request->pb_event_id,
+                            'sub_aff_id' => $request->pb_sub_aff_id,
+                            'aff_sub1' => $request->pb_aff_sub1,
+                            'aff_sub2' => $request->pb_aff_sub2,
+                            'aff_sub3' => $request->pb_aff_sub3,
+                            'aff_sub4' => $request->pb_aff_sub4,
+                            'aff_sub5' => $request->pb_aff_sub5,
+                            'updated_at' => now()
+                        ]
+                    );
+                } else {
+                    \Illuminate\Support\Facades\DB::table('affiliate_postback_columns')->where('uid', $uid)->delete();
+                }
             }
+
+
+            // Audit Log: Affiliate profile updated
+            \App\Models\AuditLog::create([
+                'actor_id' => Auth::id(),
+                'action' => 'affiliate_profile_updated',
+                'details' => [
+                    'target_id' => $uid,
+                    'target_name' => $user->name,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
 
             return response()->json(['status' => 1, 'msg' => 'Profile Updated']);
 
@@ -361,7 +413,25 @@ trait CommonProfileFunctions
                 $user->status = \App\Enums\UserStatus::tryFrom($request->status) ?? $user->status;
             }
 
+            // Fallback for legacy database rows where timezone column is null
+            if (empty($user->timezone)) {
+                $user->timezone = 'UTC';
+            }
+
+
             $user->save();
+
+            // Audit Log: Employee profile updated
+            \App\Models\AuditLog::create([
+                'actor_id' => Auth::id(),
+                'action' => 'employee_profile_updated',
+                'details' => [
+                    'target_id' => $request->uid,
+                    'target_name' => $user->name,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+
             return response()->json(['status' => 1, 'msg' => 'Employee Profile Updated']);
         } catch (\Exception $e) {
             return response()->json(['status' => 0, 'error' => $e->getMessage()], 500);

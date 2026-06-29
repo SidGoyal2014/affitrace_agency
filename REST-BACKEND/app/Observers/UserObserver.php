@@ -26,6 +26,48 @@ class UserObserver
 
     public function created(User $user): void
     {
+        $userType = $user->user_type ?: 'user';
+        $this->log($userType . '_created', $user);
+    }
+
+    public function updated(User $user): void
+    {
+        $userType = $user->user_type ?: 'user';
+        $dirty = [];
+        if ($user->isDirty('role_id')) {
+            $dirty['old_role_id'] = $user->getOriginal('role_id');
+            $dirty['new_role_id'] = $user->role_id;
+        }
+        if ($user->isDirty('status')) {
+            $dirty['old_status'] = $user->getOriginal('status') ? $user->getOriginal('status')->value : null;
+            $dirty['new_status'] = $user->status ? $user->status->value : null;
+        }
+
+        if (!empty($dirty)) {
+            AuditLog::create([
+                'actor_id' => Auth::id(),
+                'action' => $userType . '_updated_security',
+                'details' => array_merge($dirty, [
+                    'target_id' => $user->id,
+                    'target_name' => $user->name,
+                ]),
+                'ip_address' => request()->ip(),
+            ]);
+        } else {
+            $this->log($userType . '_updated', $user);
+        }
+    }
+
+    public function deleted(User $user): void
+    {
+        $userType = $user->user_type ?: 'user';
+        $this->log($userType . '_deleted', $user);
+    }
+
+
+
+    /*public function created(User $user): void
+    {
         $this->log('user_created', $user);
     }
 
@@ -59,5 +101,5 @@ class UserObserver
     public function deleted(User $user): void
     {
         $this->log('user_deleted', $user);
-    }
+    }*/
 }
