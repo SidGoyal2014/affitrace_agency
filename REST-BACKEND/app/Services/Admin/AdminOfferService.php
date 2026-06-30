@@ -312,6 +312,44 @@ class AdminOfferService
         return ['status' => 1, 'msg' => 'Offer targeting updated successfully', 'code' => 200];
     }
 
+    public function getAllOffers($status = null)
+    {
+        $query = DB::table('offers')
+            ->join('ad_models', DB::raw("CAST(NULLIF(offers.ad_model, '') AS BIGINT)"), '=', 'ad_models.id')
+            ->leftJoin('users', DB::raw("CAST(NULLIF(offers.advertiser_id, '') AS BIGINT)"), '=', 'users.id')
+            ->select('offers.*', 'ad_models.name', 'users.name as advertiser_name', 'users.id as user_advertiser_id');
+
+        if ($status != null) {
+
+            if ($status == 'deleted') {
+                $query->where('deleted_at', '!=', null);
+
+            } else {
+                $query->where('deleted_at', null);
+
+                if ($status == \App\Enums\OfferStatus::Approved->value) {
+                    $query->where('offer_status', \App\Enums\OfferStatus::Approved->value)
+                        ->where(function ($q) {
+                            $q->where('campaign_end_date', '>=', NOW())
+                                ->orWhere('campaign_end_date', null);
+                        });
+                } elseif ($status == \App\Enums\OfferStatus::Pending->value) {
+                    $query->where('offer_status', \App\Enums\OfferStatus::Pending->value);
+                } elseif ($status == \App\Enums\OfferStatus::Ended->value) {
+                    $query->where(function ($q) {
+                        $q->where('offer_status', \App\Enums\OfferStatus::Ended->value)
+                            ->orWhere('campaign_end_date', '<', NOW());
+                    });
+                }
+            }
+        }
+
+        $offers = $query->get();
+        return ['module_name' => 'Offers ' . ucfirst($status), 'offers' => $offers];
+
+    }//getAllOffers
+
+
     public function getOffersByStatus($status)
     {
         $query = DB::table('offers')

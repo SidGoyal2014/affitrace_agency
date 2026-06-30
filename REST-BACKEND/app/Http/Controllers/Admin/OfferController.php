@@ -18,7 +18,8 @@ class OfferController extends Controller
 
 	public function index()
 	{
-		return response()->json(['module_name' => 'Offers Index', 'success' => true]);
+		return response()->json($this->offerService->getAllOffers());
+		//return response()->json(['module_name' => 'Offers Index', 'success' => true]);
 	}
 
 	public function create(Request $request)

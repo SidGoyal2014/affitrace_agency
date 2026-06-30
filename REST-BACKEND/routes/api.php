@@ -103,10 +103,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('offer/delete/{id}', [App\Http\Controllers\Admin\OfferController::class, 'delete_offer']);
         Route::post('offer/restore/{id}', [App\Http\Controllers\Admin\OfferController::class, 'restore_offer']);
         Route::post('offer/clone/{id}', [App\Http\Controllers\Admin\OfferController::class, 'clone_offer']);
+        /*
         Route::get('offer/approved', [App\Http\Controllers\Admin\OfferController::class, 'offers_approved']);
         Route::get('offer/pending', [App\Http\Controllers\Admin\OfferController::class, 'offers_pending']);
         Route::get('offer/ended', [App\Http\Controllers\Admin\OfferController::class, 'offers_ended']);
         Route::get('offer/deleted', [App\Http\Controllers\Admin\OfferController::class, 'offers_deleted']);
+        */
 
         Route::post('offer/update-targetting', [App\Http\Controllers\Admin\OfferController::class, 'update_targetting']);
         Route::post('offer/save-payout-rules', [App\Http\Controllers\Admin\OfferController::class, 'save_payout_rules']);
@@ -141,6 +143,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('reports/offer-clicks/{offer_id}', [App\Http\Controllers\Admin\ReportController::class, 'offer_clicks']);
         Route::post('reports/offer-clicks/search', [App\Http\Controllers\Admin\ReportController::class, 'search_offer_clicks']);
         Route::get('reports/devices', [App\Http\Controllers\Admin\ReportController::class, 'devices_list']);
+
 
         /*
         Route::get('reports/all-payouts', [App\Http\Controllers\Admin\ReportController::class, 'all_payouts']);
@@ -437,9 +440,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // ── Offers ──
         Route::middleware(['module.access:offers,can_view'])->group(function () {
             Route::get('offer/index', [App\Http\Controllers\Admin\OfferController::class, 'index']);
-            Route::get('offer/approved', [App\Http\Controllers\Admin\OfferController::class, 'offers_approved']);
-            Route::get('offer/pending', [App\Http\Controllers\Admin\OfferController::class, 'offers_pending']);
-            Route::get('offer/ended', [App\Http\Controllers\Admin\OfferController::class, 'offers_ended']);
+            //Route::get('offer/approved', [App\Http\Controllers\Admin\OfferController::class, 'offers_approved']);
+            //Route::get('offer/pending', [App\Http\Controllers\Admin\OfferController::class, 'offers_pending']);
+            //Route::get('offer/ended', [App\Http\Controllers\Admin\OfferController::class, 'offers_ended']);
             Route::get('offer/edit/{id}', [App\Http\Controllers\Admin\OfferController::class, 'edit']);
             Route::get('offer/create', [App\Http\Controllers\Admin\OfferController::class, 'create']);
             Route::get('offer/show-events/{id}', [App\Http\Controllers\Admin\OfferController::class, 'show_events']);
