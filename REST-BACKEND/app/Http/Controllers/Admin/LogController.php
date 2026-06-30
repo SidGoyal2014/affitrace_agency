@@ -29,7 +29,7 @@ class LogController extends Controller
 
 	public function impersonation_logs(Request $request)
 	{
-		//return response()->json($this->logService->getAffiliatePostbackLogs($request));
+		return response()->json($this->logService->getImpersonationLogs($request));
 	}
 
 	public function audit_logs(Request $request)

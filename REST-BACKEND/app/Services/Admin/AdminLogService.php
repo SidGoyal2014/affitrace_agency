@@ -2,11 +2,12 @@
 
 namespace App\Services\Admin;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 use App\Services\Reports\BaseReportService;
 use Illuminate\Support\Facades\Log;
-
+use App\Models\ImpersonationLog;
 class AdminLogService extends BaseReportService
 {
 
@@ -90,6 +91,34 @@ class AdminLogService extends BaseReportService
             'data' => $data
         ];
     }
+
+
+    /**
+     * List impersonation logs.
+     */
+    /**
+     * List impersonation logs.
+     */
+    public function getImpersonationLogs(Request $request)
+    {
+        // Define filters and pagination limit from the request
+        $filters = $request->only(['impersonator_id', 'impersonated_id']);
+        $perPage = $request->input('per_page', 25);
+
+        $query = ImpersonationLog::with(['impersonator:id,name,email', 'impersonated:id,name,email,user_type'])
+            ->orderByDesc('started_at');
+
+        if (!empty($filters['impersonator_id'])) {
+            $query->where('impersonator_id', $filters['impersonator_id']);
+        }
+
+        if (!empty($filters['impersonated_id'])) {
+            $query->where('impersonated_id', $filters['impersonated_id']);
+        }
+
+        return $query->paginate($perPage);
+    }
+
 
 
 
