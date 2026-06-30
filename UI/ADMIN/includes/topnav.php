@@ -105,7 +105,7 @@ function url($path)
                 <a class="dropdown-item" href="<?php echo url('reports/logs.php'); ?>">System Logs</a>
                 <a class="dropdown-item" href="<?php echo url('reports/postback_logs.php'); ?>">Postback Logs</a>
                 <a class="dropdown-item" href="<?php echo url('logs/audit_logs.php'); ?>">Audit Logs</a>
-                <a class="dropdown-item" href="<?php echo url('impersonation/logs.php'); ?>">Impersonation Logs</a>
+                <a class="dropdown-item" href="<?php echo url('logs/impersonation_logs.php'); ?>">Impersonation Logs</a>
             </div>
         </li>
 

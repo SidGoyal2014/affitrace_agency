@@ -255,7 +255,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         // ─── Impersonation ────────────────────────────────
         Route::post('impersonate/{user_id}', [App\Http\Controllers\Admin\ImpersonationController::class, 'start']);
-        Route::get('impersonation-logs', [App\Http\Controllers\Admin\ImpersonationController::class, 'logs']);
+        //Route::get('impersonation-logs', [App\Http\Controllers\Admin\ImpersonationController::class, 'logs']);
 
         // ─── Notifications: Sent management (admin only) ──
         Route::prefix('v1/notifications')->group(function () {
