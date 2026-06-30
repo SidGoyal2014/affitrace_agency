@@ -145,6 +145,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('reports/devices', [App\Http\Controllers\Admin\ReportController::class, 'devices_list']);
 
 
+        // Logs
+        Route::get('logs/system_logs', [App\Http\Controllers\Admin\LogController::class, 'system_logs']);
+        Route::get('logs/postback_logs', [App\Http\Controllers\Admin\LogController::class, 'postback_logs']);
+        Route::get('logs/audit_logs', [App\Http\Controllers\Admin\LogController::class, 'audit_logs']);
+        Route::get('logs/impersonation_logs', [App\Http\Controllers\Admin\LogController::class, 'impersonation_logs']);
+
         /*
         Route::get('reports/all-payouts', [App\Http\Controllers\Admin\ReportController::class, 'all_payouts']);
         Route::post('reports/all-payouts/search', [App\Http\Controllers\Admin\ReportController::class, 'search_all_payouts']);
