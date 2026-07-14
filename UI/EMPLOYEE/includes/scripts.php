@@ -34,3 +34,30 @@ $pathCommonPrefix = $pathPrefix . '/../common';
 
 <!-- Reusable Plugins -->
 <script src="<?php echo $pathCommonPrefix; ?>/js/mark-paid-modal.js"></script>
+
+<!-- Shared Utilities -->
+<script>
+    function renderCategoryOptions(select, categories, selectedId) {
+        function buildTree(items, parentId) {
+            return items
+                .filter(item => item.parent_id == parentId)
+                .map(item => ({ ...item, children: buildTree(items, item.id) }));
+        }
+
+        function addOptions(nodes, depth) {
+            nodes.forEach((node, idx) => {
+                const isLast = idx === nodes.length - 1;
+                const pad = '\u00A0'.repeat(depth * 4);
+                const prefix = depth > 0 ? pad + (isLast ? '└─ ' : '├─ ') : '';
+                const sel = selectedId && node.id == selectedId ? 'selected' : '';
+                select.append(`<option value="${node.id}" ${sel}>${prefix}${node.category_name}</option>`);
+                if (node.children.length > 0) {
+                    addOptions(node.children, depth + 1);
+                }
+            });
+        }
+
+        const tree = buildTree(categories, 0);
+        addOptions(tree, 0);
+    }
+</script>

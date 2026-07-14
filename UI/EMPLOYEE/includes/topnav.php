@@ -49,10 +49,7 @@ function url($path)
             </a>
             <div class="dropdown-menu">
                 <a class="dropdown-item" href="<?php echo url('offers/create.php'); ?>">Create Offer</a>
-                <a class="dropdown-item" href="<?php echo url('offers/approved.php'); ?>">Approved</a>
-                <a class="dropdown-item" href="<?php echo url('offers/pending.php'); ?>">Pending</a>
-                <a class="dropdown-item" href="<?php echo url('offers/ended.php'); ?>">Ended</a>
-                <a class="dropdown-item" href="<?php echo url('offers/trash.php'); ?>">Trash</a>
+                <a class="dropdown-item" href="<?php echo url('offers/index.php'); ?>">All Offers</a>
             </div>
         </li>
 

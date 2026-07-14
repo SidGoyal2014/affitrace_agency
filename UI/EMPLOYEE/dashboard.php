@@ -27,6 +27,7 @@ include $pathPrefix . '/includes/head.php';
         overflow: hidden;
         box-shadow: var(--shadow-lg);
     }
+
     .welcome-card-premium::after {
         content: '';
         position: absolute;
@@ -39,6 +40,7 @@ include $pathPrefix . '/includes/head.php';
         z-index: 1;
         pointer-events: none;
     }
+
     .welcome-card-premium .card-body {
         position: relative;
         z-index: 2;
@@ -52,6 +54,7 @@ include $pathPrefix . '/includes/head.php';
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         overflow: hidden;
     }
+
     .card-modern:hover {
         transform: translateY(-4px);
         box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -61,19 +64,38 @@ include $pathPrefix . '/includes/head.php';
         border: none;
         color: #ffffff;
     }
+
     .stat-card-gradient .stat-label {
         color: rgba(255, 255, 255, 0.8) !important;
     }
+
     .stat-card-gradient .stat-value {
         color: #ffffff !important;
     }
 
-    .g-purple { background: var(--theme-indigo-gradient); }
-    .g-green { background: var(--theme-emerald-gradient); }
-    .g-orange { background: var(--theme-amber-gradient); }
-    .g-red { background: var(--theme-rose-gradient); }
-    .g-blue { background: var(--theme-blue-gradient); }
-    .g-violet { background: var(--theme-violet-gradient); }
+    .g-purple {
+        background: var(--theme-indigo-gradient);
+    }
+
+    .g-green {
+        background: var(--theme-emerald-gradient);
+    }
+
+    .g-orange {
+        background: var(--theme-amber-gradient);
+    }
+
+    .g-red {
+        background: var(--theme-rose-gradient);
+    }
+
+    .g-blue {
+        background: var(--theme-blue-gradient);
+    }
+
+    .g-violet {
+        background: var(--theme-violet-gradient);
+    }
 
     .badge-role {
         font-size: 0.75rem;
@@ -86,31 +108,65 @@ include $pathPrefix . '/includes/head.php';
         align-items: center;
         gap: 0.35rem;
     }
-    .badge-role-am { background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
-    .badge-role-adv { background: rgba(244, 114, 182, 0.15); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.3); }
-    .badge-role-fin { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .badge-role-obs { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .badge-role-am {
+        background: rgba(99, 102, 241, 0.15);
+        color: #818cf8;
+        border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .badge-role-adv {
+        background: rgba(244, 114, 182, 0.15);
+        color: #f472b6;
+        border: 1px solid rgba(244, 114, 182, 0.3);
+    }
+
+    .badge-role-fin {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-role-obs {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
 
     /* Task Item styles */
     .task-item {
         border-left: 4px solid var(--border-default);
         transition: all 0.2s ease;
     }
+
     .task-item:hover {
         background: var(--bg-body);
         border-left-color: var(--primary-main);
     }
-    .task-item.pending { border-left-color: var(--warning-main); }
-    .task-item.high { border-left-color: var(--error-main); }
-    .task-item.success { border-left-color: var(--success-main); }
+
+    .task-item.pending {
+        border-left-color: var(--warning-main);
+    }
+
+    .task-item.high {
+        border-left-color: var(--error-main);
+    }
+
+    .task-item.success {
+        border-left-color: var(--success-main);
+    }
 
     /* Observer Locked Overlay */
     .observer-locked-card {
         position: relative;
     }
+
     .observer-locked-overlay {
         position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(4px);
         display: flex;
@@ -121,6 +177,7 @@ include $pathPrefix . '/includes/head.php';
         text-align: center;
         padding: 1.5rem;
     }
+
     .observer-locked-overlay i {
         font-size: 2rem;
         color: var(--error-main);
@@ -129,9 +186,20 @@ include $pathPrefix . '/includes/head.php';
     }
 
     @keyframes pulse {
-        0% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.1); opacity: 0.7; }
-        100% { transform: scale(1); opacity: 1; }
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.7;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
     }
 
     /* Skeleton Loader */
@@ -142,9 +210,15 @@ include $pathPrefix . '/includes/head.php';
         border-radius: var(--radius-md);
         display: inline-block;
     }
+
     @keyframes loading {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
+        0% {
+            background-position: 200% 0;
+        }
+
+        100% {
+            background-position: -200% 0;
+        }
     }
 </style>
 
@@ -165,11 +239,14 @@ include $pathPrefix . '/includes/head.php';
                             <div class="row align-items-center">
                                 <div class="col-lg-8">
                                     <span id="role-badge-container"></span>
-                                    <h2 class="h1 mt-2 mb-3">Welcome back, <span class="user-name">Employee</span>!</h2>
-                                    <p class="lead mb-0 text-white-50">Here is your account overview, pending tasks, and performance updates for today.</p>
+                                    <h2 class="h1 mt-2 mb-3" style="color:#fff;">Welcome back, <span
+                                            class="user-name">Employee</span>!</h2>
+                                    <p class="lead mb-0 text-white-50">Here is your account overview, pending tasks, and
+                                        performance updates for today.</p>
                                 </div>
                                 <div class="col-lg-4 text-lg-right mt-3 mt-lg-0">
-                                    <div class="text-white-50 small mb-1"><i class="far fa-calendar-alt mr-1"></i> Current Date</div>
+                                    <div class="text-white-50 small mb-1"><i class="far fa-calendar-alt mr-1"></i>
+                                        Current Date</div>
                                     <h5 class="mb-0 text-white font-weight-bold" id="current-date-display">...</h5>
                                 </div>
                             </div>
@@ -183,14 +260,19 @@ include $pathPrefix . '/includes/head.php';
                 <div class="col-12">
                     <div class="card-modern py-3 px-4">
                         <div class="d-flex flex-wrap align-items-center justify-content-between">
-                            <div class="d-flex align-items-center flex-grow-1 mr-md-4 mb-2 mb-md-0" style="min-width: 280px;">
-                                <h6 class="font-weight-bold text-primary mb-0 mr-3 text-nowrap">Plan Usage: Clicks Consumed</h6>
+                            <div class="d-flex align-items-center flex-grow-1 mr-md-4 mb-2 mb-md-0"
+                                style="min-width: 280px;">
+                                <h6 class="font-weight-bold text-primary mb-0 mr-3 text-nowrap">Plan Usage: Clicks
+                                    Consumed</h6>
                                 <div class="progress flex-grow-1" style="height: 12px; min-width: 150px;">
-                                    <div class="progress-bar bg-info" role="progressbar" id="clicks_progress_bar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div class="progress-bar bg-info" role="progressbar" id="clicks_progress_bar"
+                                        style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                    </div>
                                 </div>
                             </div>
                             <div class="d-flex align-items-center">
-                                <span class="small font-weight-bold text-muted mr-3" id="clicks_status_text">Loading...</span>
+                                <span class="small font-weight-bold text-muted mr-3"
+                                    id="clicks_status_text">Loading...</span>
                                 <span class="badge badge-info" id="clicks_percentage_text">0%</span>
                             </div>
                         </div>
@@ -204,10 +286,30 @@ include $pathPrefix . '/includes/head.php';
             <!-- Dynamic Scoped Stats Grid -->
             <div class="row" id="stats-grid-container">
                 <!-- Skeletons will load here -->
-                <div class="col-xl-3 col-md-6 mb-4"><div class="card-modern p-4" style="height: 110px;"><div class="skeleton-loader w-70 h-20 mb-2"></div><div class="skeleton-loader w-50 h-30"></div></div></div>
-                <div class="col-xl-3 col-md-6 mb-4"><div class="card-modern p-4" style="height: 110px;"><div class="skeleton-loader w-70 h-20 mb-2"></div><div class="skeleton-loader w-50 h-30"></div></div></div>
-                <div class="col-xl-3 col-md-6 mb-4"><div class="card-modern p-4" style="height: 110px;"><div class="skeleton-loader w-70 h-20 mb-2"></div><div class="skeleton-loader w-50 h-30"></div></div></div>
-                <div class="col-xl-3 col-md-6 mb-4"><div class="card-modern p-4" style="height: 110px;"><div class="skeleton-loader w-70 h-20 mb-2"></div><div class="skeleton-loader w-50 h-30"></div></div></div>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card-modern p-4" style="height: 110px;">
+                        <div class="skeleton-loader w-70 h-20 mb-2"></div>
+                        <div class="skeleton-loader w-50 h-30"></div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card-modern p-4" style="height: 110px;">
+                        <div class="skeleton-loader w-70 h-20 mb-2"></div>
+                        <div class="skeleton-loader w-50 h-30"></div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card-modern p-4" style="height: 110px;">
+                        <div class="skeleton-loader w-70 h-20 mb-2"></div>
+                        <div class="skeleton-loader w-50 h-30"></div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card-modern p-4" style="height: 110px;">
+                        <div class="skeleton-loader w-70 h-20 mb-2"></div>
+                        <div class="skeleton-loader w-50 h-30"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- Middle Row: Today's Metrics & Tasks -->
@@ -216,7 +318,8 @@ include $pathPrefix . '/includes/head.php';
                 <div class="col-xl-7 col-lg-7 mb-4">
                     <div class="card-modern h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-tasks mr-2"></i>My Pending Action Items</h6>
+                            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-tasks mr-2"></i>My Pending
+                                Action Items</h6>
                             <span class="badge badge-warning" id="task-badge-count">0</span>
                         </div>
                         <div class="card-body p-0">
@@ -235,7 +338,8 @@ include $pathPrefix . '/includes/head.php';
                     <!-- Top Offers -->
                     <div class="card-modern mb-4">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-fire mr-2"></i>Top Managed Offers</h6>
+                            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-fire mr-2"></i>Top Managed
+                                Offers</h6>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
@@ -247,7 +351,12 @@ include $pathPrefix . '/includes/head.php';
                                         </tr>
                                     </thead>
                                     <tbody id="top-offers-list">
-                                        <tr><td colspan="2" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary mr-2"></div>Loading...</td></tr>
+                                        <tr>
+                                            <td colspan="2" class="text-center py-4 text-muted">
+                                                <div class="spinner-border spinner-border-sm text-primary mr-2"></div>
+                                                Loading...
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -257,7 +366,8 @@ include $pathPrefix . '/includes/head.php';
                     <!-- Top Affiliates / Advertisers (Conditional) -->
                     <div class="card-modern" id="top-partners-card">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary" id="top-partners-title"><i class="fas fa-award mr-2"></i>Top Partners</h6>
+                            <h6 class="m-0 font-weight-bold text-primary" id="top-partners-title"><i
+                                    class="fas fa-award mr-2"></i>Top Partners</h6>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
@@ -269,7 +379,12 @@ include $pathPrefix . '/includes/head.php';
                                         </tr>
                                     </thead>
                                     <tbody id="top-partners-list">
-                                        <tr><td colspan="2" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary mr-2"></div>Loading...</td></tr>
+                                        <tr>
+                                            <td colspan="2" class="text-center py-4 text-muted">
+                                                <div class="spinner-border spinner-border-sm text-primary mr-2"></div>
+                                                Loading...
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -286,11 +401,13 @@ include $pathPrefix . '/includes/head.php';
                         <div id="observer-chart-overlay" class="observer-locked-overlay d-none">
                             <i class="fas fa-lock"></i>
                             <h5>Financial Chart Unavailable</h5>
-                            <p class="text-muted small mb-0">Your profile (Observer) is restricted from viewing financial trends.</p>
+                            <p class="text-muted small mb-0">Your profile (Observer) is restricted from viewing
+                                financial trends.</p>
                         </div>
 
                         <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-                            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-chart-line mr-2"></i>Revenue vs Payout Performance</h6>
+                            <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-chart-line mr-2"></i>Revenue
+                                vs Payout Performance</h6>
                             <div class="d-flex align-items-center flex-wrap mt-2 mt-md-0">
                                 <!-- Period toggle buttons -->
                                 <div class="btn-group btn-group-sm mr-3" id="revPayoutPeriodToggle">
@@ -301,10 +418,13 @@ include $pathPrefix . '/includes/head.php';
                                 </div>
                                 <!-- Custom date range controls (hidden by default) -->
                                 <div id="customRangeControls" class="d-none d-flex align-items-center flex-wrap">
-                                    <input type="date" id="rev_from" class="form-control form-control-sm mr-1" style="width:140px; height: 31px; padding: 0.25rem 0.5rem;">
+                                    <input type="date" id="rev_from" class="form-control form-control-sm mr-1"
+                                        style="width:140px; height: 31px; padding: 0.25rem 0.5rem;">
                                     <span class="mx-1 text-muted small">to</span>
-                                    <input type="date" id="rev_to" class="form-control form-control-sm mr-2" style="width:140px; height: 31px; padding: 0.25rem 0.5rem;">
-                                    <button id="applyCustomRange" class="btn btn-sm btn-success" style="padding: 0.25rem 0.5rem;">Apply</button>
+                                    <input type="date" id="rev_to" class="form-control form-control-sm mr-2"
+                                        style="width:140px; height: 31px; padding: 0.25rem 0.5rem;">
+                                    <button id="applyCustomRange" class="btn btn-sm btn-success"
+                                        style="padding: 0.25rem 0.5rem;">Apply</button>
                                 </div>
                             </div>
                         </div>
@@ -711,7 +831,7 @@ include $pathPrefix . '/includes/head.php';
                             scales: {
                                 yAxes: [{
                                     ticks: {
-                                        callback: function(value) {
+                                        callback: function (value) {
                                             return value.toLocaleString() + ' ' + currency;
                                         }
                                     }
@@ -719,7 +839,7 @@ include $pathPrefix . '/includes/head.php';
                             },
                             tooltips: {
                                 callbacks: {
-                                    label: function(tooltipItem, data) {
+                                    label: function (tooltipItem, data) {
                                         let label = data.datasets[tooltipItem.datasetIndex].label || '';
                                         if (label) label += ': ';
                                         label += formatDecimal(tooltipItem.yLabel) + ' ' + currency;
@@ -798,4 +918,5 @@ include $pathPrefix . '/includes/head.php';
         }
     </script>
 </body>
+
 </html>

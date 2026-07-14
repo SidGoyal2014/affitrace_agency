@@ -3,6 +3,6 @@ $pathPrefix = '..';
 $activePage = 'offers';
 $pageTitle = 'Edit Offer';
 
-$user_type='employee';
+$user_type='admin';
 require_once __DIR__ . '/../../common/offers/edit.php';
 ?>

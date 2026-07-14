@@ -40,7 +40,7 @@ function url($path)
             </a>
         </li>
 
-        <!-- Partners Dropdown -->
+        <!-- Network Dropdown -->
         <li class="nav-item require-permission" data-module="partners">
             <a class="nav-link" href="#" data-toggle="dropdown">
                 <i class="fas fa-network-wired"></i>
