@@ -67,6 +67,26 @@ class User extends Authenticatable
         return $this->belongsTo(Designation::class);
     }
 
+    public function isAffiliateManager(): bool
+    {
+        return $this->designation && strtolower($this->designation->name) === 'affiliate manager';
+    }
+
+    public function isAdvertiserManager(): bool
+    {
+        return $this->designation && strtolower($this->designation->name) === 'advertiser manager';
+    }
+
+    public function isFinanceManager(): bool
+    {
+        return $this->designation && strtolower($this->designation->name) === 'finance manager';
+    }
+
+    public function isObserver(): bool
+    {
+        return $this->designation && strtolower($this->designation->name) === 'observer';
+    }
+
     // ─── RBAC Helpers ─────────────────────────────────────
 
     /**

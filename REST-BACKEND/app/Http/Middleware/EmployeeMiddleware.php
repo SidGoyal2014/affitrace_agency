@@ -18,12 +18,15 @@ class EmployeeMiddleware
     {
         //return $next($request);
 
-        if (strtolower(Auth::user()->user_type) != 'employee') {
+        $user = Auth::user();
+        if (!$user || !in_array($user->user_type, [\App\Enums\UserType::Admin->value, \App\Enums\UserType::Employee->value])) {
 
             // Revoke the token if it's not transient
-            $accessToken = $request->user()->currentAccessToken();
-            if ($accessToken && !($accessToken instanceof \Laravel\Sanctum\TransientToken)) {
-                $accessToken->delete();
+            if ($user) {
+                $accessToken = $request->user()->currentAccessToken();
+                if ($accessToken && !($accessToken instanceof \Laravel\Sanctum\TransientToken)) {
+                    $accessToken->delete();
+                }
             }
 
             if ($request->expectsJson() || $request->is('api/*')) {

@@ -20,6 +20,17 @@ class BaseReportService
      */
     protected function applyFilters(Builder $query, ReportFilterDTO $filters): Builder
     {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user) {
+            if ($user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('offer_trackings.aff_id', count($assignedAffIds) ? $assignedAffIds : [-1]);
+            } elseif ($user->isAdvertiserManager()) {
+                $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('offers.advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
+            }
+        }
+
         // Date range filter
         if ($filters->from && $filters->to) {
             $fromUtc = $this->getUtcStartOfDay($filters->from);
@@ -127,9 +138,18 @@ class BaseReportService
         // Paginate results
         $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($filters->limit);
         
-        $results->getCollection()->transform(function ($row) {
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        $results->getCollection()->transform(function ($row) use ($user) {
             if (isset($row->link_clicked_at)) $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
             if (isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
+            if ($user && $user->isObserver()) {
+                if (isset($row->revenue_usd)) $row->revenue_usd = 0;
+                if (isset($row->payout_usd)) $row->payout_usd = 0;
+                if (isset($row->revenue)) $row->revenue = 0;
+                if (isset($row->payout)) $row->payout = 0;
+                if (isset($row->cost)) $row->cost = 0;
+            }
             return $row;
         });
 
@@ -181,6 +201,13 @@ class BaseReportService
             ->limit(30)
             ->get();
 
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user && $user->isObserver()) {
+            foreach ($stats as $row) {
+                $row->cost = 0;
+            }
+        }
+
         return [
             'module_name' => 'Summary Report',
             'stats' => $stats,
@@ -224,10 +251,28 @@ class BaseReportService
             $query->where('offer_trackings.aff_id', $scopeUserId);
         }
 
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user) {
+            if ($user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('offer_trackings.aff_id', count($assignedAffIds) ? $assignedAffIds : [-1]);
+            } elseif ($user->isAdvertiserManager()) {
+                $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('offers.advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
+            }
+        }
+
         $click = $query->first();
 
         if (!$click) {
             return ['success' => false, 'message' => 'Click record not found'];
+        }
+
+        if ($user && $user->isObserver()) {
+            if (isset($click->revenue_usd)) $click->revenue_usd = 0;
+            if (isset($click->payout_usd)) $click->payout_usd = 0;
+            if (isset($click->revenue)) $click->revenue = 0;
+            if (isset($click->payout)) $click->payout = 0;
         }
 
         // Convert timestamps to local timezone if present

@@ -19,7 +19,8 @@ class AdminService
 
     public function listAdvertisers()
     {
-        $data = DB::table('users')
+        $user = Auth::user();
+        $query = DB::table('users')
             ->select(
                 'users.*',
                 'users.id as uid',
@@ -28,8 +29,13 @@ class AdminService
             )
             ->leftJoin('advertiser_user_details', 'users.id', '=', 'advertiser_user_details.user_id')
             ->leftJoin('users as managers', DB::raw("CAST(NULLIF(users.employee_id, '') AS BIGINT)"), '=', 'managers.id')
-            ->where('users.user_type', \App\Enums\UserType::Advertiser->value)
-            ->get();
+            ->where('users.user_type', \App\Enums\UserType::Advertiser->value);
+
+        if ($user && $user->isAdvertiserManager()) {
+            $query->where('users.employee_id', (string) $user->id);
+        }
+
+        $data = $query->get();
 
         return [
             'module_name' => "List Advertisers",
@@ -39,6 +45,7 @@ class AdminService
 
     public function listAffiliates($request = null)
     {
+        $user = Auth::user();
         $query = DB::table('users')
             ->select(
                 'users.name',
@@ -64,6 +71,10 @@ class AdminService
             ->leftJoin('affiliate_user_details', 'users.id', '=', 'affiliate_user_details.user_id')
             ->leftJoin('users as managers', DB::raw("CAST(NULLIF(users.employee_id, '') AS BIGINT)"), '=', 'managers.id')
             ->where('users.user_type', \App\Enums\UserType::Affiliate->value);
+
+        if ($user && $user->isAffiliateManager()) {
+            $query->where('users.employee_id', (string) $user->id);
+        }
 
         if ($request) {
             if ($request->filled('status')) {
@@ -175,6 +186,11 @@ class AdminService
 
         if (!$user) {
             return ['error' => 'User not found', 'code' => 404];
+        }
+
+        $authUser = Auth::user();
+        if ($authUser && $authUser->isAffiliateManager() && $user->employee_id != $authUser->id) {
+            return ['error' => 'Unauthorized.', 'code' => 403];
         }
 
         $user_type = $user->user_type;
@@ -307,6 +323,11 @@ class AdminService
 
         if (!$user) {
             return ['error' => 'User not found', 'code' => 404];
+        }
+
+        $authUser = Auth::user();
+        if ($authUser && $authUser->isAdvertiserManager() && $user->employee_id != $authUser->id) {
+            return ['error' => 'Unauthorized.', 'code' => 403];
         }
 
         $user_type = $user->user_type;

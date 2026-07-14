@@ -20,6 +20,21 @@ class WeeklyPayoutService extends BaseReportService
         $affiliateId = isset($filters['affiliate_id']) ? (int) $filters['affiliate_id'] : null;
         $sync = !array_key_exists('sync', $filters) || filter_var($filters['sync'], FILTER_VALIDATE_BOOLEAN);
 
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $assignedAffIds = null;
+        if ($user) {
+            if ($user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                if ($affiliateId) {
+                    if (!in_array($affiliateId, $assignedAffIds)) {
+                        $affiliateId = -1;
+                    }
+                }
+            } elseif ($user->isAdvertiserManager()) {
+                $affiliateId = -1;
+            }
+        }
+
         if (!$this->weeklyPayoutTableExists()) {
             return [
                 'success' => true,
@@ -37,9 +52,21 @@ class WeeklyPayoutService extends BaseReportService
                 : AffiliateWeeklyPayout::query()
                     ->where('month_key', $monthKey)
                     ->when($affiliateId, fn ($query) => $query->where('affiliate_id', $affiliateId))
+                    ->when($assignedAffIds, fn ($query) => $query->whereIn('affiliate_id', $assignedAffIds))
                     ->orderBy('week_start')
                     ->orderBy('affiliate_id')
                     ->get();
+
+            if ($user && $user->isObserver()) {
+                foreach ($data as $row) {
+                    $row->total_amount = 0;
+                    $row->net_amount = 0;
+                    $row->paid_amount = 0;
+                    if (isset($row->breakdown)) {
+                        $row->breakdown = [];
+                    }
+                }
+            }
         } catch (Throwable $e) {
             if (!$this->isMissingWeeklyPayoutTableException($e)) {
                 throw $e;
@@ -71,6 +98,21 @@ class WeeklyPayoutService extends BaseReportService
         $monthKey = $filters['month'] ?? Carbon::now($timezone)->format('Y-m');
         $affiliateId = isset($filters['affiliate_id']) ? (int) $filters['affiliate_id'] : null;
 
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $assignedAffIds = null;
+        if ($user) {
+            if ($user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                if ($affiliateId) {
+                    if (!in_array($affiliateId, $assignedAffIds)) {
+                        $affiliateId = -1;
+                    }
+                }
+            } elseif ($user->isAdvertiserManager()) {
+                $affiliateId = -1;
+            }
+        }
+
         if (!$this->weeklyPayoutTableExists()) {
             return [
                 'success' => true,
@@ -91,7 +133,8 @@ class WeeklyPayoutService extends BaseReportService
         try {
             $query = AffiliateWeeklyPayout::query()
                 ->where('month_key', $monthKey)
-                ->when($affiliateId, fn ($q) => $q->where('affiliate_id', $affiliateId));
+                ->when($affiliateId, fn ($q) => $q->where('affiliate_id', $affiliateId))
+                ->when($assignedAffIds, fn ($q) => $q->whereIn('affiliate_id', $assignedAffIds));
 
             $stats = [
                 'pending_count' => (clone $query)->where('status', 'PENDING')->count(),
@@ -101,6 +144,12 @@ class WeeklyPayoutService extends BaseReportService
                 'paid_amount' => round((float) (clone $query)->where('status', 'PAID')->sum('total_amount'), 2),
                 'rejected_amount' => round((float) (clone $query)->where('status', 'REJECTED')->sum('total_amount'), 2),
             ];
+
+            if ($user && $user->isObserver()) {
+                $stats['pending_amount'] = 0;
+                $stats['paid_amount'] = 0;
+                $stats['rejected_amount'] = 0;
+            }
         } catch (Throwable $e) {
             if (!$this->isMissingWeeklyPayoutTableException($e)) {
                 throw $e;
@@ -141,9 +190,27 @@ class WeeklyPayoutService extends BaseReportService
             return ['success' => false, 'code' => 'UNAUTHORIZED', 'message' => 'Authenticated user is required.'];
         }
 
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user) {
+            if ($user->isObserver()) {
+                return ['success' => false, 'code' => 'UNAUTHORIZED', 'message' => 'Observer cannot perform this action'];
+            }
+            if ($user->isAdvertiserManager()) {
+                return ['success' => false, 'code' => 'UNAUTHORIZED', 'message' => 'Advertiser manager cannot perform this action'];
+            }
+        }
+
         $ids = array_values(array_unique(array_map('intval', $payload['payout_ids'] ?? [])));
         if (empty($ids)) {
             return ['success' => false, 'code' => 'INVALID_INPUT', 'message' => 'No payout rows selected.'];
+        }
+
+        if ($user && $user->isAffiliateManager()) {
+            $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            $payoutsCount = AffiliateWeeklyPayout::whereIn('id', $ids)->whereIn('affiliate_id', $assignedAffIds)->count();
+            if ($payoutsCount !== count($ids)) {
+                return ['success' => false, 'code' => 'UNAUTHORIZED', 'message' => 'Unauthorized payout selection'];
+            }
         }
 
         return DB::transaction(function () use ($ids, $payload, $actorId) {
@@ -221,9 +288,27 @@ class WeeklyPayoutService extends BaseReportService
             return ['success' => false, 'code' => 'UNAUTHORIZED', 'message' => 'Authenticated user is required.'];
         }
 
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user) {
+            if ($user->isObserver()) {
+                return ['success' => false, 'code' => 'UNAUTHORIZED', 'message' => 'Observer cannot perform this action'];
+            }
+            if ($user->isAdvertiserManager()) {
+                return ['success' => false, 'code' => 'UNAUTHORIZED', 'message' => 'Advertiser manager cannot perform this action'];
+            }
+        }
+
         $payoutId = (int) ($payload['payout_id'] ?? 0);
         if ($payoutId <= 0) {
             return ['success' => false, 'code' => 'INVALID_INPUT', 'message' => 'Invalid payout row id.'];
+        }
+
+        if ($user && $user->isAffiliateManager()) {
+            $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            $payoutExists = AffiliateWeeklyPayout::where('id', $payoutId)->whereIn('affiliate_id', $assignedAffIds)->exists();
+            if (!$payoutExists) {
+                return ['success' => false, 'code' => 'UNAUTHORIZED', 'message' => 'Unauthorized payout selection'];
+            }
         }
 
         return DB::transaction(function () use ($payoutId, $payload, $actorId) {
@@ -264,6 +349,22 @@ class WeeklyPayoutService extends BaseReportService
 
         if ($actorId <= 0) {
             return ['success' => false, 'code' => 'UNAUTHORIZED', 'message' => 'Authenticated user is required.'];
+        }
+
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user) {
+            if ($user->isObserver()) {
+                return ['success' => false, 'code' => 'UNAUTHORIZED', 'message' => 'Observer cannot perform this action'];
+            }
+            if ($user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                if (!in_array((int) $payload['affiliate_id'], $assignedAffIds)) {
+                    return ['success' => false, 'code' => 'UNAUTHORIZED', 'message' => 'Unauthorized affiliate selection'];
+                }
+            }
+            if ($user->isAdvertiserManager()) {
+                return ['success' => false, 'code' => 'UNAUTHORIZED', 'message' => 'Advertiser manager cannot perform this action'];
+            }
         }
 
         $weekStart = Carbon::parse($payload['week_start'])->startOfDay();
@@ -320,15 +421,37 @@ class WeeklyPayoutService extends BaseReportService
             return collect();
         }
 
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $assignedAffIds = null;
+        if ($user) {
+            if ($user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                if ($affiliateId) {
+                    if (!in_array($affiliateId, $assignedAffIds)) {
+                        $affiliateId = -1;
+                    }
+                }
+            } elseif ($user->isAdvertiserManager()) {
+                $affiliateId = -1;
+            }
+        }
+
         $month = $this->parseMonthKey($monthKey);
         $rows = $this->buildMonthlyRows($month, $affiliateId);
 
-        return DB::transaction(function () use ($rows, $monthKey, $affiliateId) {
+        return DB::transaction(function () use ($rows, $monthKey, $affiliateId, $assignedAffIds) {
             if ($affiliateId) {
                 AffiliateWeeklyPayout::query()
                     ->where('month_key', $monthKey)
                     ->where('entry_type', 'Generated')
                     ->where('affiliate_id', $affiliateId)
+                    ->where('status', 'PENDING')
+                    ->delete();
+            } elseif ($assignedAffIds) {
+                AffiliateWeeklyPayout::query()
+                    ->where('month_key', $monthKey)
+                    ->where('entry_type', 'Generated')
+                    ->whereIn('affiliate_id', $assignedAffIds)
                     ->where('status', 'PENDING')
                     ->delete();
             }
@@ -351,6 +474,7 @@ class WeeklyPayoutService extends BaseReportService
             return AffiliateWeeklyPayout::query()
                 ->where('month_key', $monthKey)
                 ->when($affiliateId, fn ($query) => $query->where('affiliate_id', $affiliateId))
+                ->when($assignedAffIds, fn ($query) => $query->whereIn('affiliate_id', $assignedAffIds))
                 ->orderBy('week_start')
                 ->orderBy('affiliate_id')
                 ->get();
@@ -428,7 +552,7 @@ class WeeklyPayoutService extends BaseReportService
 
     protected function getAcceptedAssignments(?int $affiliateId = null): Collection
     {
-        return DB::table('offer_affiliates as oa')
+        $query = DB::table('offer_affiliates as oa')
             ->join('offers as o', 'oa.offer_id', '=', 'o.id')
             ->leftJoin('ad_models as am', DB::raw("CAST(NULLIF(o.ad_model, '') AS BIGINT)"), '=', 'am.id')
             ->leftJoin('users as u', 'oa.affiliate_id', '=', 'u.id')
@@ -444,9 +568,24 @@ class WeeklyPayoutService extends BaseReportService
                 'am.name as ad_model_name'
             )
             ->whereRaw("LOWER(TRIM(COALESCE(oa.request_status, ''))) IN (?, ?)", ['accepted', 'pending'])
-            ->whereNull('o.deleted_at')
-            ->when($affiliateId, fn ($query) => $query->where('oa.affiliate_id', $affiliateId))
-            ->get();
+            ->whereNull('o.deleted_at');
+
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user) {
+            if ($user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('oa.affiliate_id', count($assignedAffIds) ? $assignedAffIds : [-1]);
+            } elseif ($user->isAdvertiserManager()) {
+                $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('o.advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
+            }
+        }
+
+        if ($affiliateId) {
+            $query->where('oa.affiliate_id', $affiliateId);
+        }
+
+        return $query->get();
     }
 
     protected function buildClickContributions(object $assignment, string $timezone, string $monthStartUtc, string $monthEndUtc): Collection

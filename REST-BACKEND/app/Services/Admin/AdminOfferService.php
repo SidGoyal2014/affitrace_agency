@@ -28,11 +28,16 @@ class AdminOfferService
     {
         $logged_in_user_type = $user->user_type;
 
-        if ($logged_in_user_type == \App\Enums\UserType::Admin->value) {
+        if ($logged_in_user_type == \App\Enums\UserType::Admin->value || $logged_in_user_type == \App\Enums\UserType::Employee->value) {
+            $advQuery = User::where('user_type', \App\Enums\UserType::Advertiser->value);
+            if ($user->isAdvertiserManager()) {
+                $advQuery->where('employee_id', (string) $user->id);
+            }
+
             return [
                 'module_name' => 'Create Offer',
                 'action_url' => 'admin/offer/save',
-                'advertisers' => User::where('user_type', \App\Enums\UserType::Advertiser->value)->get(),
+                'advertisers' => $advQuery->get(),
                 'admodels' => AdModel::all(),
                 'offerTokens' => OfferToken::all(),
                 'arrCur' => $this->getCurrency(),
@@ -52,6 +57,14 @@ class AdminOfferService
 
     public function saveOffer($request)
     {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user && $user->isAdvertiserManager()) {
+            $assignedAdvIds = User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            if (!in_array($request->advertiser_id, $assignedAdvIds)) {
+                return ['status' => 0, 'error' => 'Unauthorized action.', 'code' => 403];
+            }
+        }
+
         $validator = Validator::make($request->all(), [
             'offer_name' => 'required|string',
             'advertiser_id' => 'required|integer',
@@ -159,21 +172,34 @@ class AdminOfferService
         $offer = Offer::find($id);
 
         if (!is_null($offer)) {
-            $logged_in_user_type = $request->user()->user_type;
+            $user = $request->user();
+            $logged_in_user_type = $user->user_type;
 
-            if ($logged_in_user_type == \App\Enums\UserType::Admin->value) {
+            if ($logged_in_user_type == \App\Enums\UserType::Admin->value || $logged_in_user_type == \App\Enums\UserType::Employee->value) {
+                if ($user->isAdvertiserManager()) {
+                    $assignedAdvIds = User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                    if (!in_array($offer->advertiser_id, $assignedAdvIds)) {
+                        return ['error' => 'Unauthorized', 'code' => 403];
+                    }
+                }
+
                 $tracking_url = \App\Utils\UrlHelper::getBaseUrl() . "/offer/gourl/" . $offer->id;
 
                 // MMP Data
                 $mmpPlatforms = MmPlatform::where('is_active', 'Y')->get();
                 $offerMmp = OfferMmpDetail::where('offer_id', $id)->first();
 
+                $advQuery = User::where('user_type', \App\Enums\UserType::Advertiser->value);
+                if ($user->isAdvertiserManager()) {
+                    $advQuery->where('employee_id', (string) $user->id);
+                }
+
                 return [
                     'module_name' => 'Edit Offer',
                     'action_url' => 'admin/offer/update_offer',
                     'offer' => $offer,
                     'offerTokens' => OfferToken::all(),
-                    'advertisers' => User::where('user_type', \App\Enums\UserType::Advertiser->value)->get(),
+                    'advertisers' => $advQuery->get(),
                     'admodels' => AdModel::all(),
                     'arrCur' => $this->getCurrency(),
                     'arrCountry' => $this->getCountry(),
@@ -213,6 +239,17 @@ class AdminOfferService
         }
 
         $offer = Offer::find($request->offer_id);
+        if (!$offer) {
+            return ['status' => 0, 'error' => 'Offer not found', 'code' => 404];
+        }
+
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user && $user->isAdvertiserManager()) {
+            $assignedAdvIds = User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            if (!in_array($offer->advertiser_id, $assignedAdvIds) || !in_array($request->advertiser_id, $assignedAdvIds)) {
+                return ['status' => 0, 'error' => 'Unauthorized action.', 'code' => 403];
+            }
+        }
         // ... (Update fields similar to saveOffer, plus attribution_link)
         $offer->offer_name = $request->offer_name;
         $offer->advertiser_id = $request->advertiser_id;
@@ -269,6 +306,14 @@ class AdminOfferService
             return ['status' => 0, 'error' => 'Offer not found', 'code' => 404];
         }
 
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user && $user->isAdvertiserManager()) {
+            $assignedAdvIds = User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            if (!in_array($offer->advertiser_id, $assignedAdvIds)) {
+                return ['status' => 0, 'error' => 'Unauthorized action.', 'code' => 403];
+            }
+        }
+
         if (strlen(trim($request->target_country)) > 0) {
             $offer->country_permission = $request->country_permission;
             //$offer->target_country = $request->target_country;
@@ -319,6 +364,12 @@ class AdminOfferService
             ->leftJoin('users', DB::raw("CAST(NULLIF(offers.advertiser_id, '') AS BIGINT)"), '=', 'users.id')
             ->select('offers.*', 'ad_models.name', 'users.name as advertiser_name', 'users.id as user_advertiser_id');
 
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user && $user->isAdvertiserManager()) {
+            $assignedAdvIds = User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            $query->whereIn('offers.advertiser_id', $assignedAdvIds);
+        }
+
         if ($status != null) {
 
             if ($status == 'deleted') {
@@ -356,6 +407,12 @@ class AdminOfferService
             ->join('ad_models', DB::raw("CAST(NULLIF(offers.ad_model, '') AS BIGINT)"), '=', 'ad_models.id')
             ->leftJoin('users', DB::raw("CAST(NULLIF(offers.advertiser_id, '') AS BIGINT)"), '=', 'users.id')
             ->select('offers.*', 'ad_models.name', 'users.name as advertiser_name', 'users.id as user_advertiser_id');
+
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user && $user->isAdvertiserManager()) {
+            $assignedAdvIds = User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            $query->whereIn('offers.advertiser_id', $assignedAdvIds);
+        }
 
         if ($status == 'deleted') {
             $query->where('deleted_at', '!=', null);

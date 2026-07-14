@@ -42,7 +42,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('admin/stop-impersonate', [App\Http\Controllers\Admin\ImpersonationController::class, 'stop']);
 
     // Admin Routes
-    Route::prefix('admin')->middleware(['admin'])->group(function () {
+    Route::prefix('admin')->middleware(['employee'])->group(function () {
         Route::get('dashboard', [App\Http\Controllers\Admin\AdminDashboardController::class, 'dashboard']);
         Route::get('dashboard/revenue-payout-chart', [App\Http\Controllers\Admin\AdminDashboardController::class, 'revenuePayoutChart']);
 
@@ -669,7 +669,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 // Admin Dashboard Extra
-Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::middleware(['auth:sanctum', 'employee'])->group(function () {
     Route::get('admin/approve-assign-request/{oaid}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'approve_offer_assign_requests']);
     Route::get('admin/reject-assign-request/{oaid}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'reject_offer_assign_requests']);
     Route::get('admin/reports/top-offers/{dod}', [App\Http\Controllers\Admin\AdminDashboardController::class, 'top_offers']);
