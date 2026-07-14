@@ -100,19 +100,19 @@ class AdminDashboardService
 
     public function top_affiliates($user = null, $dod = "Y")
     {
-        $query = DB::table('users as U')
-            ->join('conversions as C', 'U.id', '=', 'C.affiliate_id')
-            ->select('U.id as uid', 'C.affiliate_id as aff_id', 'U.name', DB::raw('sum(C.payout_usd) as payout'))
-            ->groupBy('C.affiliate_id', 'U.id', 'U.name')
+        $query = DB::table('users as u')
+            ->join('conversions as c', 'u.id', '=', 'c.affiliate_id')
+            ->select('u.id as uid', 'c.affiliate_id as aff_id', 'u.name', DB::raw('sum(c.payout_usd) as payout'))
+            ->groupBy('c.affiliate_id', 'u.id', 'u.name')
             ->orderBy('payout', 'desc');
 
         if ($user) {
             if ($user->isAffiliateManager()) {
-                $query->where('U.employee_id', (string) $user->id);
+                $query->where('u.employee_id', (string) $user->id);
             } elseif ($user->isAdvertiserManager()) {
                 $assignedAdvIds = User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
-                $query->join('offers as O', 'C.offer_id', '=', 'O.id')
-                      ->whereIn('O.advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
+                $query->join('offers as o', 'c.offer_id', '=', 'o.id')
+                      ->whereIn('o.advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
             }
         }
 
@@ -134,20 +134,20 @@ class AdminDashboardService
 
     public function top_offers($user = null, $dod = "Y")
     {
-        $query = DB::table('offers as O')
-            ->join('conversions as C', 'O.id', '=', 'C.offer_id')
-            ->select('C.offer_id', 'O.offer_name', DB::raw('sum(C.revenue_usd) as revenue'), 'O.offer_status')
-            ->groupBy('C.offer_id', 'O.offer_name', 'O.offer_status')
+        $query = DB::table('offers as o')
+            ->join('conversions as c', 'o.id', '=', 'c.offer_id')
+            ->select('c.offer_id', 'o.offer_name', DB::raw('sum(c.revenue_usd) as revenue'), 'o.offer_status')
+            ->groupBy('c.offer_id', 'o.offer_name', 'o.offer_status')
             ->orderBy('revenue', 'desc')
             ->limit(5);
 
         if ($user) {
             if ($user->isAffiliateManager()) {
-                $query->join('users as U', 'C.affiliate_id', '=', 'U.id')
-                      ->where('U.employee_id', (string) $user->id);
+                $query->join('users as u', 'c.affiliate_id', '=', 'u.id')
+                      ->where('u.employee_id', (string) $user->id);
             } elseif ($user->isAdvertiserManager()) {
                 $assignedAdvIds = User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
-                $query->whereIn('O.advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
+                $query->whereIn('o.advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
             }
         }
 
@@ -202,7 +202,8 @@ class AdminDashboardService
                 DB::raw('SUM(conv.revenue_usd) AS revenue')
             )
             ->groupBy(DB::raw('EXTRACT(MONTH FROM o.created_at)'), 'c.category_name')
-            ->orderBy(DB::raw('EXTRACT(MONTH FROM o.created_at)'), 'c.category_name')
+            ->orderBy(DB::raw('EXTRACT(MONTH FROM o.created_at)'), 'asc')
+            ->orderBy('c.category_name', 'asc')
             ->limit(5);
 
         if ($this->user) {

@@ -906,3 +906,50 @@ label {
     border: none;
     padding: var(--spacing-md) var(--spacing-lg);
 }
+
+/* ============================================
+   DATATABLES COLVIS DROPDOWN & OVERFLOW FIXES
+   ============================================ */
+div.dt-button-collection {
+    background-color: #ffffff !important;
+    border: 1px solid var(--border-light) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-lg) !important;
+    padding: 0.5rem 0 !important;
+    z-index: 2050 !important; /* Render above headers and scrollable containers */
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+div.dt-button-collection a.dt-button.dropdown-item {
+    background-color: transparent !important;
+    border: none !important;
+    color: var(--text-secondary) !important;
+    display: block !important;
+    width: 100% !important;
+    padding: 0.375rem 1.25rem !important;
+    font-weight: 400 !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+}
+
+div.dt-button-collection a.dt-button.dropdown-item:hover {
+    background-color: var(--bg-body) !important;
+    color: var(--text-primary) !important;
+    text-decoration: none !important;
+}
+
+div.dt-button-collection a.dt-button.dropdown-item.active {
+    background-color: var(--primary-main) !important;
+    color: #ffffff !important;
+}
+
+div.dt-button-collection a.dt-button.dropdown-item.active:hover {
+    background-color: var(--primary-dark) !important;
+    color: #ffffff !important;
+}
+
+/* Fix table container overflow clipping the dropdown */
+.table-responsive {
+    min-height: 450px; /* Ensures dropdown has room to display even with 0 or 1 row */
+}

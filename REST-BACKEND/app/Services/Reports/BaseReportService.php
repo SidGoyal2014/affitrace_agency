@@ -141,16 +141,7 @@ class BaseReportService
         $user = \Illuminate\Support\Facades\Auth::user();
 
         $results->getCollection()->transform(function ($row) use ($user) {
-            if (isset($row->link_clicked_at)) $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
-            if (isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
-            if ($user && $user->isObserver()) {
-                if (isset($row->revenue_usd)) $row->revenue_usd = 0;
-                if (isset($row->payout_usd)) $row->payout_usd = 0;
-                if (isset($row->revenue)) $row->revenue = 0;
-                if (isset($row->payout)) $row->payout = 0;
-                if (isset($row->cost)) $row->cost = 0;
-            }
-            return $row;
+            return $this->formatClickRow($row, $user);
         });
 
         return [
@@ -283,6 +274,203 @@ class BaseReportService
             $click->created_at = $this->formatUtcToLocal($click->created_at);
         }
 
+        if ($click) {
+            $this->formatClickRow($click, $user);
+        }
+
         return ['success' => true, 'data' => $click];
+    }
+
+    /**
+     * Format a conversion row, calculating fallbacks and masking fields based on user role.
+     */
+    public function formatConversionRow($row, $user)
+    {
+        // 1. Time Zone conversions
+        if (isset($row->conversion_time)) {
+            $row->conversion_time = $this->formatUtcToLocal($row->conversion_time);
+        }
+        if (isset($row->created_at)) {
+            $row->created_at = $this->formatUtcToLocal($row->created_at);
+        }
+        if (isset($row->click_time)) {
+            $row->click_time = $this->formatUtcToLocal($row->click_time);
+        }
+        if (isset($row->status_changed_at)) {
+            $row->status_changed_at = $this->formatUtcToLocal($row->status_changed_at);
+        }
+        if (isset($row->postback_fired_at)) {
+            $row->postback_fired_at = $this->formatUtcToLocal($row->postback_fired_at);
+        }
+        if (isset($row->postback_received_at)) {
+            $row->postback_received_at = $this->formatUtcToLocal($row->postback_received_at);
+        }
+        if (isset($row->impression_time)) {
+            $row->impression_time = $this->formatUtcToLocal($row->impression_time);
+        }
+
+        // 2. Dynamic Fallback Calculations
+        // Fallback for click_to_conv_time
+        if (!isset($row->click_to_conv_time) || $row->click_to_conv_time === null) {
+            $convTime = $row->conversion_time ?? $row->created_at ?? null;
+            $clickTime = $row->click_time ?? $row->ot_click_time ?? null;
+            if ($convTime && $clickTime) {
+                $row->click_to_conv_time = max(0, strtotime($convTime) - strtotime($clickTime));
+            } else {
+                $row->click_to_conv_time = null;
+            }
+        }
+
+        // Fallback for click_to_conv_display
+        if (!isset($row->click_to_conv_display) || $row->click_to_conv_display === null || $row->click_to_conv_display === '') {
+            $seconds = $row->click_to_conv_time;
+            if ($seconds === null) {
+                $row->click_to_conv_display = '-';
+            } else {
+                if ($seconds < 60) {
+                    $row->click_to_conv_display = $seconds . 's';
+                } else {
+                    $minutes = floor($seconds / 60);
+                    $remSeconds = $seconds % 60;
+                    if ($minutes < 60) {
+                        $row->click_to_conv_display = $minutes . 'm ' . $remSeconds . 's';
+                    } else {
+                        $hours = floor($minutes / 60);
+                        $remMinutes = $minutes % 60;
+                        if ($hours < 24) {
+                            $row->click_to_conv_display = $hours . 'h ' . $remMinutes . 'm';
+                        } else {
+                            $days = floor($hours / 24);
+                            $remHours = $hours % 24;
+                            $row->click_to_conv_display = $days . 'd ' . $remHours . 'h';
+                        }
+                    }
+                }
+            }
+        }
+
+        // Fallback for click_ip and conversion_ip
+        if (!isset($row->click_ip) || $row->click_ip === null || $row->click_ip === '') {
+            $row->click_ip = $row->ot_click_ip ?? null;
+        }
+        if (!isset($row->conversion_ip) || $row->conversion_ip === null || $row->conversion_ip === '') {
+            $row->conversion_ip = $row->ip ?? null;
+        }
+
+        // Fallback for ip_match
+        if (!isset($row->ip_match) || $row->ip_match === null) {
+            if ($row->click_ip && $row->conversion_ip) {
+                $row->ip_match = strtolower(trim($row->click_ip)) === strtolower(trim($row->conversion_ip));
+            } else {
+                $row->ip_match = false;
+            }
+        }
+
+        // 3. Role-Based Data Masking
+        $userType = $user ? $user->user_type : 'guest';
+        $isObserver = $user ? $user->isObserver() : false;
+
+        if ($userType === 'affiliate') {
+            $row->advertiser_id = null;
+            $row->advertiser_name = 'Advertiser';
+            $row->advertiser_price = 0;
+            $row->revenue = 0;
+            $row->revenue_usd = 0;
+            $row->profit = 0;
+            $row->margin_pct = 0;
+            $row->adv_sub1 = null;
+            $row->adv_sub2 = null;
+            $row->adv_sub3 = null;
+            $row->adv_sub4 = null;
+            $row->adv_sub5 = null;
+            $row->adv_sub6 = null;
+            $row->adv_sub7 = null;
+            $row->adv_sub8 = null;
+            $row->adv_sub9 = null;
+            $row->adv_sub10 = null;
+            $row->landing_page_id = null;
+            $row->landing_page_url = null;
+            $row->tracking_url = null;
+            $row->redirect_url = null;
+            $row->rejection_reason = null;
+        } elseif ($userType === 'advertiser') {
+            $row->affiliate_id = null;
+            $row->affiliate_name = 'Affiliate';
+            $row->affiliate_price = 0;
+            $row->payout = 0;
+            $row->payout_usd = 0;
+            $row->profit = 0;
+            $row->margin_pct = 0;
+            $row->aff_sub1 = null;
+            $row->aff_sub2 = null;
+            $row->aff_sub3 = null;
+            $row->aff_sub4 = null;
+            $row->aff_sub5 = null;
+            $row->aff_sub6 = null;
+            $row->aff_sub7 = null;
+            $row->aff_sub8 = null;
+            $row->aff_sub9 = null;
+            $row->aff_sub10 = null;
+            $row->postback_status = null;
+            $row->postback_fired_at = null;
+            $row->postback_received_at = null;
+            $row->postback_url_fired = null;
+            $row->postback_http_code = null;
+            $row->postback_attempts = 0;
+        }
+
+        // Mask financial details for observers
+        if ($isObserver) {
+            $row->revenue = 0;
+            $row->payout = 0;
+            $row->revenue_usd = 0;
+            $row->payout_usd = 0;
+            $row->profit = 0;
+            $row->sale = 0;
+            $row->affiliate_price = 0;
+            $row->advertiser_price = 0;
+        }
+
+        return $row;
+    }
+
+    /**
+     * Format a click row, calculating fallbacks and masking fields based on user role.
+     */
+    public function formatClickRow($row, $user)
+    {
+        if (isset($row->link_clicked_at)) {
+            $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
+        }
+        if (isset($row->created_at)) {
+            $row->created_at = $this->formatUtcToLocal($row->created_at);
+        }
+        if (isset($row->transferred_at)) {
+            $row->transferred_at = $this->formatUtcToLocal($row->transferred_at);
+        }
+
+        $userType = $user ? $user->user_type : 'guest';
+        $isObserver = $user ? $user->isObserver() : false;
+
+        if ($userType === 'affiliate') {
+            $row->adv_id = null;
+            $row->advert_name = 'Advertiser';
+            $row->revenue = 0;
+            $row->revenue_usd = 0;
+        } elseif ($userType === 'advertiser') {
+            $row->aff_id = null;
+            $row->aff_name = 'Affiliate';
+            $row->payout = 0;
+            $row->payout_usd = 0;
+        }
+
+        if ($isObserver) {
+            $row->revenue = 0;
+            $row->payout = 0;
+            $row->revenue_usd = 0;
+            $row->payout_usd = 0;
+        }
+
+        return $row;
     }
 }

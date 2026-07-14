@@ -754,19 +754,9 @@ class AdminReportService extends BaseReportService
         $results = $query->orderBy('offer_trackings.id', 'desc')
             ->get();
 
-        // Convert UTC timestamps to user's configured timezone
+        // Convert UTC timestamps to user's configured timezone and apply role masking
         $results->transform(function ($row) use ($user) {
-            if (isset($row->link_clicked_at))
-                $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
-            if (isset($row->created_at))
-                $row->created_at = $this->formatUtcToLocal($row->created_at);
-            if ($user && $user->isObserver()) {
-                if (isset($row->revenue_usd)) $row->revenue_usd = 0;
-                if (isset($row->payout_usd)) $row->payout_usd = 0;
-                if (isset($row->revenue)) $row->revenue = 0;
-                if (isset($row->payout)) $row->payout = 0;
-            }
-            return $row;
+            return $this->formatClickRow($row, $user);
         });
 
         return [
@@ -798,11 +788,14 @@ class AdminReportService extends BaseReportService
                 'adverts.id as advertiser_id',
                 'adverts.name as advertiser_name',
                 'offers.id as offer_id',
-                'offers.offer_name'
+                'offers.offer_name',
+                'ot.created_at as ot_click_time',
+                'ot.ip as ot_click_ip'
             )
             ->leftJoin('offers', 'conversions.offer_id', '=', 'offers.id')
             ->leftJoin('users as affis', 'conversions.affiliate_id', '=', 'affis.id')
-            ->leftJoin('users as adverts', 'conversions.advertiser_id', '=', 'adverts.id');
+            ->leftJoin('users as adverts', 'conversions.advertiser_id', '=', 'adverts.id')
+            ->leftJoin('offer_trackings as ot', 'conversions.tid', '=', 'ot.tid');
 
         if ($user) {
             if ($user->isAffiliateManager()) {
@@ -835,19 +828,9 @@ class AdminReportService extends BaseReportService
 
         $results = $query->orderBy('conversions.id', 'desc')->get();
 
-        // Convert UTC timestamps to user's configured timezone
+        // Convert UTC timestamps and compute fallbacks / masking
         $results->transform(function ($row) use ($user) {
-            if (isset($row->conversion_time))
-                $row->conversion_time = $this->formatUtcToLocal($row->conversion_time);
-            if (isset($row->created_at))
-                $row->created_at = $this->formatUtcToLocal($row->created_at);
-            if ($user && $user->isObserver()) {
-                if (isset($row->revenue)) $row->revenue = 0;
-                if (isset($row->payout)) $row->payout = 0;
-                if (isset($row->revenue_usd)) $row->revenue_usd = 0;
-                if (isset($row->payout_usd)) $row->payout_usd = 0;
-            }
-            return $row;
+            return $this->formatConversionRow($row, $user);
         });
 
         return [
