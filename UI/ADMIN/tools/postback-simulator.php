@@ -1,12 +1,24 @@
 <?php
 $pathPrefix = '..';
+$activePage = 'tools';
+$pageTitle = 'Postback Simulator';
+
+$user_type = 'admin';
+
+require_once __DIR__ . '/../../common/tools/postback-simulator.php';
+?>
+
+
+<?php
+/*
+$pathPrefix = '..';
 $activePage  = 'tools';
 $pageTitle   = 'Postback Simulator';
 include $pathPrefix . '/includes/head.php';
 include $pathPrefix . '/includes/topnav.php';
 
 
-?>
+
 
 <div class="container-fluid">
 
@@ -432,3 +444,5 @@ $('#affForm').on('submit', async function (e) {
     }
 });
 </script>
+*/
+?>

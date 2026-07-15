@@ -111,7 +111,7 @@ function url($path)
                     href="<?php echo url('reports/postback_logs.php'); ?>">Postback Logs</a>
                 <a class="dropdown-item require-permission" data-module="audit_logs"
                     href="<?php echo url('logs/audit_logs.php'); ?>">Audit Logs</a>
-                <a class="dropdown-item require-permission" data-module="impersonation_logs"
+                <a class="dropdown-item require-permission" data-module="impersonation"
                     href="<?php echo url('logs/impersonation_logs.php'); ?>">Impersonation Logs</a>
             </div>
         </li>
@@ -161,14 +161,14 @@ function url($path)
                 <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
             </a>
             <div class="dropdown-menu">
-                <a class="dropdown-item  require-permission" data-module="tools"
+                <a class="dropdown-item  require-permission" data-module="redirect_checker"
                     href="<?php echo url('redirect_checker/index.php'); ?>">Redirect Checker</a>
-                <a class="dropdown-item  require-permission" data-module="tools"
+                <a class="dropdown-item  require-permission" data-module="custom_domains"
                     href="<?php echo url('custom_domains/list.php'); ?>">Custom Domains</a>
-                <a class="dropdown-item  require-permission" data-module="tools"
+                <a class="dropdown-item  require-permission" data-module="postback-simulator"
                     href="<?php echo url('tools/postback-simulator.php'); ?>">Postback
                     Simulator</a>
-                <a class="dropdown-item  require-permission" data-module="tools"
+                <a class="dropdown-item  require-permission" data-module="fraud_detection"
                     href="<?php echo url('tools/fraud/index.php'); ?>">Fraud Detection</a>
             </div>
         </li>
