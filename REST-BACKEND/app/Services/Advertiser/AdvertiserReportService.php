@@ -3,6 +3,7 @@
 namespace App\Services\Advertiser;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use App\Services\Reports\BaseReportService;
 use App\DTOs\ReportFilterDTO;
 
@@ -162,9 +163,7 @@ class AdvertiserReportService extends BaseReportService
         $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);
 
         $results->getCollection()->transform(function ($row) {
-            if(isset($row->link_clicked_at)) $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
-            if(isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
-            return $row;
+            return $this->formatClickRow($row, Auth::user());
         });
 
         return [
@@ -191,10 +190,13 @@ class AdvertiserReportService extends BaseReportService
                 'affis.id as affiliate_id',
                 'affis.name as affiliate_name',
                 'offers.id as offer_id',
-                'offers.offer_name'
+                'offers.offer_name',
+                'ot.created_at as ot_click_time',
+                'ot.ip as ot_click_ip'
             )
             ->leftJoin('offers', 'conversions.offer_id', '=', 'offers.id')
             ->leftJoin('users as affis', 'conversions.affiliate_id', '=', 'affis.id')
+            ->leftJoin('offer_trackings as ot', 'conversions.tid', '=', 'ot.tid')
             ->where('conversions.advertiser_id', $advertiser_id);
 
         if ($request->from && $request->to) {
@@ -211,9 +213,7 @@ class AdvertiserReportService extends BaseReportService
         $results = $query->orderBy('conversions.id', 'desc')->paginate($limit);
 
         $results->getCollection()->transform(function ($row) {
-            if(isset($row->conversion_time)) $row->conversion_time = $this->formatUtcToLocal($row->conversion_time);
-            if(isset($row->created_at)) $row->created_at = $this->formatUtcToLocal($row->created_at);
-            return $row;
+            return $this->formatConversionRow($row, Auth::user());
         });
 
         return [

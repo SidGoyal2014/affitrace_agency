@@ -1,6 +1,7 @@
 <?php
 include $pathPrefix . '/includes/head.php';
 ?>
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap4.min.css">
 <script src="../../common/js/countries.js"></script>
 <script src="../../common/js/browsers.js"></script>
 <script src="../../common/js/os.js"></script>
@@ -107,11 +108,7 @@ include $pathPrefix . '/includes/head.php';
                                     <th>Revenue</th>
                                 </tr>
                             </thead>
-                            <tbody id="reportTableBody">
-                                <tr>
-                                    <td colspan="15" class="text-center">Loading...</td>
-                                </tr>
-                            </tbody>
+                            <tbody id="reportTableBody"></tbody>
                         </table>
                     </div>
 
@@ -124,6 +121,9 @@ include $pathPrefix . '/includes/head.php';
     <?php include $pathPrefix . '/includes/footer.php'; ?>
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap4.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
 
     <script>
 
@@ -143,11 +143,120 @@ include $pathPrefix . '/includes/head.php';
             if (!$('#from').val()) $('#from').val(formatDate(firstDay));
             if (!$('#to').val()) $('#to').val(formatDate(lastDay));
 
+            const tableColumns = [
+                { data: 'tid', title: 'Click ID' },
+                {
+                    data: null, title: 'Actions',
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row) {
+                        return `<button class="btn btn-info btn-sm view-details" data-id="${row.tid}">View Details</button>`;
+                    }
+                },
+                {
+                    data: null, title: 'Click Time',
+                    render: function (data, type, row) {
+                        const d = row.link_clicked_at || '-';
+                        return type === 'display' ? '<small>' + d + '</small>' : d;
+                    }
+                },
+                {
+                    data: 'offer_name', title: 'Offer',
+                    render: function (data, type, row) {
+                        if (type !== 'display') return (row.offer_id + ' ' + (row.offer_name || ''));
+                        return '<a href="../offers/edit.php?id=' + row.offer_id + '" title="' + (row.offer_name || '') + '">' + truncate(row.offer_name, 20) + '</a>';
+                    }
+                },
+                {
+                    data: 'aff_name', title: 'Affiliate',
+                    render: function (data, type, row) {
+                        if (type !== 'display') return (row.aff_id + ' ' + (row.aff_name || ''));
+                        return '<a href="../affiliates/edit.php?id=' + row.aff_id + '" title="' + (row.aff_name || '') + '">' + truncate(row.aff_name, 15) + '</a>';
+                    }
+                },
+                {
+                    data: 'advert_name', title: 'Advertiser',
+                    render: function (data, type, row) {
+                        if (type !== 'display') return (row.adv_id + ' ' + (row.advert_name || ''));
+                        return '<a href="../advertisers/edit.php?id=' + row.adv_id + '" title="' + (row.advert_name || '') + '">' + truncate(row.advert_name || 'N/A', 15) + '</a>';
+                    }
+                },
+                { data: 'ot_country', title: 'Country', defaultContent: '-' },
+                { data: 'ip', title: 'IP', defaultContent: '-' },
+                { data: 'device_name', title: 'Device', defaultContent: '-' },
+                { data: 'ot_os', title: 'OS', defaultContent: '-' },
+                { data: 'ot_browser', title: 'Browser', defaultContent: '-' },
+                { data: 'user_agent', title: 'User Agent', defaultContent: '-' },
+                { data: 'brand', title: 'Brand', defaultContent: '-' },
+                { data: 'currency', title: 'Currency', defaultContent: '-' },
+                { data: 'payout', title: 'Payout', defaultContent: '0.00' },
+                { data: 'revenue', title: 'Revenue', defaultContent: '0.00' },
+
+                // Additional columns (visible: false)
+                { data: 'session_id', title: 'Session ID', visible: false, defaultContent: '-' },
+                { data: 'browser_version', title: 'Browser Version', visible: false, defaultContent: '-' },
+                { data: 'screen_resolution', title: 'Screen Resolution', visible: false, defaultContent: '-' },
+                { 
+                    data: 'is_bot', title: 'Is Bot', visible: false,
+                    render: function(data) { return data ? 'Yes' : 'No'; }
+                },
+                { 
+                    data: 'is_vpn', title: 'Is VPN', visible: false,
+                    render: function(data) { return data ? 'Yes' : 'No'; }
+                },
+                { 
+                    data: 'is_datacenter', title: 'Is Datacenter', visible: false,
+                    render: function(data) { return data ? 'Yes' : 'No'; }
+                },
+                { data: 'carrier', title: 'Carrier', visible: false, defaultContent: '-' },
+                { data: 'region', title: 'Region', visible: false, defaultContent: '-' },
+                { data: 'city', title: 'City', visible: false, defaultContent: '-' },
+
+                // Sub parameters 1-10
+                { data: 'sub1', title: 'Sub 1', visible: false, defaultContent: '-' },
+                { data: 'sub2', title: 'Sub 2', visible: false, defaultContent: '-' },
+                { data: 'sub3', title: 'Sub 3', visible: false, defaultContent: '-' },
+                { data: 'sub4', title: 'Sub 4', visible: false, defaultContent: '-' },
+                { data: 'sub5', title: 'Sub 5', visible: false, defaultContent: '-' },
+                { data: 'sub6', title: 'Sub 6', visible: false, defaultContent: '-' },
+                { data: 'sub7', title: 'Sub 7', visible: false, defaultContent: '-' },
+                { data: 'sub8', title: 'Sub 8', visible: false, defaultContent: '-' },
+                { data: 'sub9', title: 'Sub 9', visible: false, defaultContent: '-' },
+                { data: 'sub10', title: 'Sub 10', visible: false, defaultContent: '-' }
+            ];
+
+            // Sync HTML thead with the JS columns config to support column toggles dynamically
+            const theadRow = $('#reportTable thead tr');
+            theadRow.empty();
+            tableColumns.forEach(col => {
+                theadRow.append(`<th>${col.title || ''}</th>`);
+            });
+
+            dtInstance = $('#reportTable').DataTable({
+                processing: true,
+                language: {
+                    emptyTable: 'No clicks found.',
+                    zeroRecords: 'No clicks found.',
+                    processing: '<div class="d-flex justify-content-center py-3"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div></div>'
+                },
+                dom: "<'row'<'col-sm-12 col-md-6'lB><'col-sm-12 col-md-6'f>>rtip",
+                buttons: [
+                    {
+                        extend: 'colvis',
+                        className: 'btn btn-outline-primary btn-sm',
+                        text: '<i class="fas fa-columns mr-1"></i> Columns'
+                    }
+                ],
+                columns: tableColumns,
+                order: [[0, 'desc']],
+                pageLength: 25
+            });
+
 
             // Populate Device dropdown
             API.fetchWithAuth('<?php echo $user_type; ?>/reports/devices').then(function (res) {
                 const sel = $('#device');
-                (res.data || []).forEach(function (d) {
+                ((res && Array.isArray(res.data)) ? res.data : []).forEach(function (d) {
                     sel.append('<option value="' + d.id + '">' + d.device_name + '</option>');
                 });
             }).catch(function (err) {
@@ -187,9 +296,6 @@ include $pathPrefix . '/includes/head.php';
         });
 
         async function loadReport(page) {
-            const tbody = $('#reportTableBody');
-            tbody.html('...');
-
             try {
                 const formData = new FormData(document.getElementById('filterForm'));
                 const formObj = Object.fromEntries(formData.entries());
@@ -200,77 +306,27 @@ include $pathPrefix . '/includes/head.php';
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formObj)
                 });
+                if (!response) {
+                    return;
+                }
                 //console.log(response);
                 renderTable(response);
 
             } catch (error) {
                 console.error("Report Error:", error);
-                tbody.html('<tr><td colspan="15" class="text-center text-danger">Failed to load data. Please try again.</td></tr>');
+                dtInstance.clear().draw();
+                Toast.error('Report Error', 'Failed to load data. Please try again.');
             }
         }
 
 
         function renderTable(response) {
-            if (dtInstance) { dtInstance.destroy(); dtInstance = null; }  // ← destroy FIRST
-
-            const tbody = $('#reportTableBody');
-            tbody.empty();
-
-            const rows = response.data;     // flat array directly
-
-            if (!rows || rows.length === 0) {
-                tbody.html('<tr><td colspan="15" class="text-center text-muted">No records found.</td></tr>');
-                if (dtInstance) { dtInstance.destroy(); dtInstance = null; }
-                return;
+            const rows = (response && Array.isArray(response.data)) ? response.data : [];
+            dtInstance.clear();
+            if (rows && rows.length > 0) {
+                dtInstance.rows.add(rows);
             }
-
-            rows.forEach(row => {
-                const dateStr = row.link_clicked_at || '-';
-                const tr = `
-                    <tr>
-                        <td>${row.tid}</td>
-                        <td>
-                            <button class="btn btn-info btn-sm view-details" data-id="${row.tid}">View Details</button>
-                        </td>                        
-                        <td><small>${dateStr}</small></td>
-                        <td>
-                            <a href="../offers/edit.php?id=${row.offer_id}" title="${row.offer_name || ''}">
-                                ${truncate(row.offer_name, 20)}
-                            </a>
-                        </td>
-                        <td>
-                            <a href="../affiliates/edit.php?id=${row.aff_id}" title="${row.aff_name || ''}">
-                                ${truncate(row.aff_name, 15)}
-                            </a>
-                        </td>
-                        <td>
-                            <a href="../advertisers/edit.php?id=${row.adv_id}" title="${row.advert_name || ''}">
-                                ${truncate(row.advert_name || 'N/A', 15)}
-                            </a>
-                        </td>
-                        <td>${row.ot_country || '-'}</td>
-                        <td>${row.ip || '-'}</td>
-                        <td>${row.device_name || '-'}</td>
-                        <td>${row.ot_os || '-'}</td>
-                        <td>${row.ot_browser || '-'}</td>
-                        <td>${row.user_agent || '-'}</td>
-                        <td>${row.brand || '-'}</td>
-                        <td>${row.currency || '-'}</td>
-                        <td>${row.payout || '-'}</td>
-                        <td>${row.revenue || '-'}</td>
-                    </tr>
-                `;
-                tbody.append(tr);
-            });
-
-            if (dtInstance) { dtInstance.destroy(); }
-            dtInstance = $('#reportTable').DataTable({
-                paging: true,
-                searching: true,
-                info: true,
-                ordering: true,
-                autoWidth: false
-            });
+            dtInstance.draw();
         }
 
 

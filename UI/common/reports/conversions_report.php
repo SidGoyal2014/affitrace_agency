@@ -1,6 +1,7 @@
 <?php
 include $pathPrefix . '/includes/head.php';
 ?>
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap4.min.css">
 
 <body id="page-top">
 
@@ -118,6 +119,9 @@ include $pathPrefix . '/includes/head.php';
     <?php include $pathPrefix . '/includes/footer.php'; ?>
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap4.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
 
     <script>
         let dt = null;
@@ -138,6 +142,182 @@ include $pathPrefix . '/includes/head.php';
             if (!$('#from').val()) $('#from').val(formatDate(firstDay));
             if (!$('#to').val()) $('#to').val(formatDate(lastDay));
 
+            const tableColumns = [
+                { data: 'tid', title: 'Conversion ID' },
+                {
+                    data: 'status', title: 'Status',
+                    render: function (data, type, row) {
+                        if (type !== 'display') return (row.status || '');
+                        return getStatusBadge(row.status);
+                    }
+                },
+                {
+                    data: null, title: 'Actions',
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row) {
+                        return getActionButtons(row);
+                    }
+                },
+                {
+                    data: null, title: 'Conversion Time',
+                    render: function (data, type, row) {
+                        const d = row.conversion_time || row.created_at || '-';
+                        return type === 'display' ? '<small>' + d + '</small>' : d;
+                    }
+                },
+                {
+                    data: 'offer_name', title: 'Offer',
+                    render: function (data, type, row) {
+                        if (type !== 'display') return (row.offer_id + ' ' + (row.offer_name || ''));
+                        return '<a href="../offers/edit.php?id=' + row.offer_id + '" title="' + (row.offer_name || '') + '">' + truncate(row.offer_name, 20) + '</a>';
+                    }
+                },
+                {
+                    data: 'affiliate_name', title: 'Affiliate',
+                    render: function (data, type, row) {
+                        if (type !== 'display') return (row.affiliate_id + ' ' + (row.affiliate_name || ''));
+                        return '<a href="../affiliates/edit.php?id=' + row.affiliate_id + '" title="' + (row.affiliate_name || '') + '">' + truncate(row.affiliate_name, 15) + '</a>';
+                    }
+                },
+                {
+                    data: 'advertiser_name', title: 'Advertiser',
+                    render: function (data, type, row) {
+                        if (type !== 'display') return (row.advertiser_id + ' ' + (row.advertiser_name || ''));
+                        return '<a href="../advertisers/edit.php?id=' + row.advertiser_id + '" title="' + (row.advertiser_name || '') + '">' + truncate(row.advertiser_name || 'N/A', 15) + '</a>';
+                    }
+                },
+                {
+                    data: 'event', title: 'Event',
+                    render: function (data, type, row) {
+                        if (type !== 'display') return (row.event || 'Conversion');
+                        return '<span class="badge badge-info">' + (row.event || 'Conversion') + '</span>';
+                    }
+                },
+                {
+                    data: 'revenue', title: 'Revenue',
+                    render: function (data, type, row) {
+                        if (type !== 'display') return parseFloat(row.revenue || 0);
+                        return '<span class="text-success font-weight-bold">' + row.currency + ' ' + parseFloat(row.revenue || 0).toFixed(2) + '</span>';
+                    }
+                },
+                {
+                    data: 'payout', title: 'Payout',
+                    render: function (data, type, row) {
+                        if (type !== 'display') return parseFloat(row.payout || 0);
+                        return '<span class="text-primary font-weight-bold">' + row.currency + ' ' + parseFloat(row.payout || 0).toFixed(2) + '</span>';
+                    }
+                },
+                { data: 'country', title: 'Country', defaultContent: '-' },
+                { data: 'device', title: 'Device', defaultContent: '-' },
+
+                // Additional columns (visible: false by default)
+                { data: 'aff_click_id', title: 'Affiliate Click ID', visible: false, defaultContent: '-' },
+                { data: 'click_id', title: 'Click ID', visible: false, defaultContent: '-' },
+                { data: 'transaction_id', title: 'Transaction ID', visible: false, defaultContent: '-' },
+                { data: 'session_id', title: 'Session ID', visible: false, defaultContent: '-' },
+                { data: 'rejection_reason', title: 'Rejection Reason', visible: false, defaultContent: '-' },
+                { data: 'status_changed_by', title: 'Status Changed By', visible: false, defaultContent: '-' },
+                { data: 'status_changed_at', title: 'Status Changed At', visible: false, defaultContent: '-' },
+                { 
+                    data: 'is_flagged', title: 'Flagged', visible: false, 
+                    render: function(data) { return data ? 'Yes' : 'No'; }
+                },
+                { data: 'flag_reason', title: 'Flag Reason', visible: false, defaultContent: '-' },
+                { data: 'click_time', title: 'Click Time', visible: false, defaultContent: '-' },
+                { data: 'click_to_conv_time', title: 'Click-to-Conv Time', visible: false, defaultContent: '-' },
+                { data: 'click_to_conv_display', title: 'Click-to-Conv Duration', visible: false, defaultContent: '-' },
+                { data: 'postback_fired_at', title: 'Postback Fired At', visible: false, defaultContent: '-' },
+                { data: 'postback_received_at', title: 'Postback Received At', visible: false, defaultContent: '-' },
+                { data: 'landing_page_id', title: 'Landing Page ID', visible: false, defaultContent: '-' },
+                { data: 'landing_page_url', title: 'Landing Page URL', visible: false, defaultContent: '-' },
+                { data: 'affiliate_manager_id', title: 'Affiliate Manager ID', visible: false, defaultContent: '-' },
+                { data: 'click_ip', title: 'Click IP', visible: false, defaultContent: '-' },
+                { data: 'conversion_ip', title: 'Conversion IP', visible: false, defaultContent: '-' },
+                { 
+                    data: 'ip_match', title: 'IP Match', visible: false,
+                    render: function(data) { return data ? 'Yes' : 'No'; }
+                },
+                { data: 'tracking_url', title: 'Tracking URL', visible: false, defaultContent: '-' },
+                { data: 'redirect_url', title: 'Redirect URL', visible: false, defaultContent: '-' },
+                { data: 'tracking_domain', title: 'Tracking Domain', visible: false, defaultContent: '-' },
+                { data: 'region', title: 'Region', visible: false, defaultContent: '-' },
+                { data: 'city', title: 'City', visible: false, defaultContent: '-' },
+                { data: 'carrier', title: 'Carrier', visible: false, defaultContent: '-' },
+                { data: 'connection_type', title: 'Connection Type', visible: false, defaultContent: '-' },
+                { data: 'device_type', title: 'Device Type', visible: false, defaultContent: '-' },
+                { data: 'device_id_raw', title: 'Raw Device ID', visible: false, defaultContent: '-' },
+                { data: 'os_version', title: 'OS Version', visible: false, defaultContent: '-' },
+                { data: 'browser_version', title: 'Browser Version', visible: false, defaultContent: '-' },
+                { data: 'screen_resolution', title: 'Screen Resolution', visible: false, defaultContent: '-' },
+                { data: 'fraud_score', title: 'Fraud Score', visible: false, defaultContent: '0' },
+                { data: 'fraud_reason', title: 'Fraud Reason', visible: false, defaultContent: '-' },
+                { 
+                    data: 'is_bot', title: 'Is Bot', visible: false,
+                    render: function(data) { return data ? 'Yes' : 'No'; }
+                },
+                { 
+                    data: 'is_vpn', title: 'Is VPN', visible: false,
+                    render: function(data) { return data ? 'Yes' : 'No'; }
+                },
+                { 
+                    data: 'is_datacenter', title: 'Is Datacenter', visible: false,
+                    render: function(data) { return data ? 'Yes' : 'No'; }
+                },
+                { 
+                    data: 'is_duplicate_ip', title: 'Is Duplicate IP', visible: false,
+                    render: function(data) { return data ? 'Yes' : 'No'; }
+                },
+                { 
+                    data: 'is_duplicate_device', title: 'Is Duplicate Device', visible: false,
+                    render: function(data) { return data ? 'Yes' : 'No'; }
+                },
+                { 
+                    data: 'geo_mismatch', title: 'Geo Mismatch', visible: false,
+                    render: function(data) { return data ? 'Yes' : 'No'; }
+                },
+                { data: 'ctit_flag', title: 'CTIT Flag', visible: false, defaultContent: '-' },
+                { data: 'attribution_type', title: 'Attribution Type', visible: false, defaultContent: '-' },
+                { data: 'impression_time', title: 'Impression Time', visible: false, defaultContent: '-' },
+                { data: 'view_to_click_time', title: 'View-to-Click Time', visible: false, defaultContent: '-' },
+                { data: 'attribution_window', title: 'Attribution Window', visible: false, defaultContent: '-' },
+                { data: 'postback_status', title: 'Postback Status', visible: false, defaultContent: '-' },
+                { data: 'postback_http_code', title: 'Postback HTTP Code', visible: false, defaultContent: '-' },
+                { data: 'postback_url_fired', title: 'Postback URL Fired', visible: false, defaultContent: '-' },
+                { data: 'postback_attempts', title: 'Postback Attempts', visible: false, defaultContent: '0' },
+                { data: 'adv_postback_url', title: 'Adv Postback URL', visible: false, defaultContent: '-' },
+
+                // Sub parameters 1-10
+                { data: 'aff_sub1', title: 'Aff Sub 1', visible: false, defaultContent: '-' },
+                { data: 'aff_sub2', title: 'Aff Sub 2', visible: false, defaultContent: '-' },
+                { data: 'aff_sub3', title: 'Aff Sub 3', visible: false, defaultContent: '-' },
+                { data: 'aff_sub4', title: 'Aff Sub 4', visible: false, defaultContent: '-' },
+                { data: 'aff_sub5', title: 'Aff Sub 5', visible: false, defaultContent: '-' },
+                { data: 'aff_sub6', title: 'Aff Sub 6', visible: false, defaultContent: '-' },
+                { data: 'aff_sub7', title: 'Aff Sub 7', visible: false, defaultContent: '-' },
+                { data: 'aff_sub8', title: 'Aff Sub 8', visible: false, defaultContent: '-' },
+                { data: 'aff_sub9', title: 'Aff Sub 9', visible: false, defaultContent: '-' },
+                { data: 'aff_sub10', title: 'Aff Sub 10', visible: false, defaultContent: '-' },
+
+                { data: 'adv_sub1', title: 'Adv Sub 1', visible: false, defaultContent: '-' },
+                { data: 'adv_sub2', title: 'Adv Sub 2', visible: false, defaultContent: '-' },
+                { data: 'adv_sub3', title: 'Adv Sub 3', visible: false, defaultContent: '-' },
+                { data: 'adv_sub4', title: 'Adv Sub 4', visible: false, defaultContent: '-' },
+                { data: 'adv_sub5', title: 'Adv Sub 5', visible: false, defaultContent: '-' },
+                { data: 'adv_sub6', title: 'Adv Sub 6', visible: false, defaultContent: '-' },
+                { data: 'adv_sub7', title: 'Adv Sub 7', visible: false, defaultContent: '-' },
+                { data: 'adv_sub8', title: 'Adv Sub 8', visible: false, defaultContent: '-' },
+                { data: 'adv_sub9', title: 'Adv Sub 9', visible: false, defaultContent: '-' },
+                { data: 'adv_sub10', title: 'Adv Sub 10', visible: false, defaultContent: '-' }
+            ];
+
+            // Sync HTML thead with the JS columns config to support column toggles dynamically
+            const theadRow = $('#reportTable thead tr');
+            theadRow.empty();
+            tableColumns.forEach(col => {
+                theadRow.append(`<th>${col.title || ''}</th>`);
+            });
+
             dt = $('#reportTable').DataTable({
                 processing: true,
                 language: {
@@ -145,75 +325,15 @@ include $pathPrefix . '/includes/head.php';
                     zeroRecords: 'No conversions found.',
                     processing: '<div class="d-flex justify-content-center py-3"><div class="spinner-border text-success" role="status"><span class="sr-only">Loading...</span></div></div>'
                 },
-                columns: [
-                    { data: 'tid', title: 'Conversion ID' },
+                dom: "<'row'<'col-sm-12 col-md-6'lB><'col-sm-12 col-md-6'f>>rtip",
+                buttons: [
                     {
-                        data: 'status', title: 'Status',
-                        render: function (data, type, row) {
-                            if (type !== 'display') return (row.status || '');
-                            return getStatusBadge(row.status);
-                        }
-                    },
-                    {
-                        data: null, title: 'Actions',
-                        orderable: false,
-                        searchable: false,
-                        render: function (data, type, row) {
-                            return getActionButtons(row);
-                        }
-                    },
-                    {
-                        data: null, title: 'Conversion Time',
-                        render: function (data, type, row) {
-                            const d = row.conversion_time || row.created_at || '-';
-                            return type === 'display' ? '<small>' + d + '</small>' : d;
-                        }
-                    },
-                    {
-                        data: 'offer_name', title: 'Offer',
-                        render: function (data, type, row) {
-                            if (type !== 'display') return (row.offer_id + ' ' + (row.offer_name || ''));
-                            return '<a href="../offers/edit.php?id=' + row.offer_id + '" title="' + (row.offer_name || '') + '">' + truncate(row.offer_name, 20) + '</a>';
-                        }
-                    },
-                    {
-                        data: 'affiliate_name', title: 'Affiliate',
-                        render: function (data, type, row) {
-                            if (type !== 'display') return (row.affiliate_id + ' ' + (row.affiliate_name || ''));
-                            return '<a href="../affiliates/edit.php?id=' + row.affiliate_id + '" title="' + (row.affiliate_name || '') + '">' + truncate(row.affiliate_name, 15) + '</a>';
-                        }
-                    },
-                    {
-                        data: 'advertiser_name', title: 'Advertiser',
-                        render: function (data, type, row) {
-                            if (type !== 'display') return (row.advertiser_id + ' ' + (row.advertiser_name || ''));
-                            return '<a href="../advertisers/edit.php?id=' + row.advertiser_id + '" title="' + (row.advertiser_name || '') + '">' + truncate(row.advertiser_name || 'N/A', 15) + '</a>';
-                        }
-                    },
-                    {
-                        data: 'event', title: 'Event',
-                        render: function (data, type, row) {
-                            if (type !== 'display') return (row.event || 'Conversion');
-                            return '<span class="badge badge-info">' + (row.event || 'Conversion') + '</span>';
-                        }
-                    },
-                    {
-                        data: 'revenue', title: 'Revenue',
-                        render: function (data, type, row) {
-                            if (type !== 'display') return parseFloat(row.revenue || 0);
-                            return '<span class="text-success font-weight-bold">' + row.currency + ' ' + parseFloat(row.revenue || 0).toFixed(2) + '</span>';
-                        }
-                    },
-                    {
-                        data: 'payout', title: 'Payout',
-                        render: function (data, type, row) {
-                            if (type !== 'display') return parseFloat(row.payout || 0);
-                            return '<span class="text-primary font-weight-bold">' + row.currency + ' ' + parseFloat(row.payout || 0).toFixed(2) + '</span>';
-                        }
-                    },
-                    { data: 'country', title: 'Country', defaultContent: '-' },
-                    { data: 'device', title: 'Device', defaultContent: '-' }
+                        extend: 'colvis',
+                        className: 'btn btn-outline-success btn-sm',
+                        text: '<i class="fas fa-columns mr-1"></i> Columns'
+                    }
                 ],
+                columns: tableColumns,
                 order: [[0, 'desc']],
                 pageLength: 25
             });

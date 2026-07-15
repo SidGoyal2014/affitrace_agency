@@ -108,6 +108,14 @@ class ReportExportService
 
         $columns = $export->columns ?? $this->getDefaultColumns($export->report_type);
 
+        $selectColumns = $columns;
+        if ($export->report_type === 'conversions') {
+            $selectColumns = array_unique(array_merge($columns, ['id', 'created_at', 'conversion_time', 'click_time', 'click_ip', 'conversion_ip', 'ip', 'tid']));
+            $query->with('click');
+        }
+
+        $user = \App\Models\User::find($export->user_id);
+
         // Open file for writing
         $handle = fopen($filePath, 'w');
 
@@ -120,9 +128,9 @@ class ReportExportService
             fputcsv($handle, $this->formatHeaders($columns));
 
             // Stream data using chunked queries - NEVER load all at once
-            $query->select($columns)->chunkById(1000, function ($rows) use ($handle, $columns) {
+            $query->select($selectColumns)->chunkById(1000, function ($rows) use ($handle, $columns, $user, $export) {
                 foreach ($rows as $row) {
-                    fputcsv($handle, $this->formatRow($row, $columns));
+                    fputcsv($handle, $this->formatRow($row, $columns, $user, $export->report_type));
                 }
             });
 
@@ -149,6 +157,14 @@ class ReportExportService
             return $this->exportCSV($export);
         }
 
+        $selectColumns = $columns;
+        if ($export->report_type === 'conversions') {
+            $selectColumns = array_unique(array_merge($columns, ['id', 'created_at', 'conversion_time', 'click_time', 'click_ip', 'conversion_ip', 'ip', 'tid']));
+            $query->with('click');
+        }
+
+        $user = \App\Models\User::find($export->user_id);
+
         $writer = new \OpenSpout\Writer\XLSX\Writer();
         $writer->openToFile($filePath);
 
@@ -158,9 +174,9 @@ class ReportExportService
             $writer->addRow($headerRow);
 
             // Stream data using chunked queries
-            $query->select($columns)->chunkById(1000, function ($rows) use ($writer, $columns) {
+            $query->select($selectColumns)->chunkById(1000, function ($rows) use ($writer, $columns, $user, $export) {
                 foreach ($rows as $row) {
-                    $dataRow = \OpenSpout\Common\Entity\Row::fromValues($this->formatRow($row, $columns));
+                    $dataRow = \OpenSpout\Common\Entity\Row::fromValues($this->formatRow($row, $columns, $user, $export->report_type));
                     $writer->addRow($dataRow);
                 }
             });
@@ -197,8 +213,80 @@ class ReportExportService
     /**
      * Format a row for export.
      */
-    protected function formatRow($row, array $columns): array
+    protected function formatRow($row, array $columns, $user = null, $reportType = ''): array
     {
+        // Apply masking to the Eloquent model / row
+        if ($reportType === 'conversions') {
+            $userType = $user ? $user->user_type : 'guest';
+            $isObserver = $user ? $user->isObserver() : false;
+
+            if ($userType === 'affiliate') {
+                $row->advertiser_id = null;
+                $row->advertiser_name = 'Advertiser';
+                $row->advertiser_price = 0;
+                $row->revenue = 0;
+                $row->revenue_usd = 0;
+                $row->profit = 0;
+                $row->margin_pct = 0;
+                $row->adv_sub1 = null; $row->adv_sub2 = null; $row->adv_sub3 = null; $row->adv_sub4 = null; $row->adv_sub5 = null;
+                $row->adv_sub6 = null; $row->adv_sub7 = null; $row->adv_sub8 = null; $row->adv_sub9 = null; $row->adv_sub10 = null;
+                $row->landing_page_id = null;
+                $row->landing_page_url = null;
+                $row->tracking_url = null;
+                $row->redirect_url = null;
+                $row->rejection_reason = null;
+            } elseif ($userType === 'advertiser') {
+                $row->affiliate_id = null;
+                $row->affiliate_name = 'Affiliate';
+                $row->affiliate_price = 0;
+                $row->payout = 0;
+                $row->payout_usd = 0;
+                $row->profit = 0;
+                $row->margin_pct = 0;
+                $row->aff_sub1 = null; $row->aff_sub2 = null; $row->aff_sub3 = null; $row->aff_sub4 = null; $row->aff_sub5 = null;
+                $row->aff_sub6 = null; $row->aff_sub7 = null; $row->aff_sub8 = null; $row->aff_sub9 = null; $row->aff_sub10 = null;
+                $row->postback_status = null;
+                $row->postback_fired_at = null;
+                $row->postback_received_at = null;
+                $row->postback_url_fired = null;
+                $row->postback_http_code = null;
+                $row->postback_attempts = 0;
+            }
+
+            if ($isObserver) {
+                $row->revenue = 0;
+                $row->payout = 0;
+                $row->revenue_usd = 0;
+                $row->payout_usd = 0;
+                $row->profit = 0;
+                $row->sale = 0;
+                $row->affiliate_price = 0;
+                $row->advertiser_price = 0;
+            }
+        } elseif ($reportType === 'clicks') {
+            $userType = $user ? $user->user_type : 'guest';
+            $isObserver = $user ? $user->isObserver() : false;
+
+            if ($userType === 'affiliate') {
+                $row->adv_id = null;
+                $row->advert_name = 'Advertiser';
+                $row->revenue = 0;
+                $row->revenue_usd = 0;
+            } elseif ($userType === 'advertiser') {
+                $row->aff_id = null;
+                $row->aff_name = 'Affiliate';
+                $row->payout = 0;
+                $row->payout_usd = 0;
+            }
+
+            if ($isObserver) {
+                $row->revenue = 0;
+                $row->payout = 0;
+                $row->revenue_usd = 0;
+                $row->payout_usd = 0;
+            }
+        }
+
         $data = [];
         foreach ($columns as $column) {
             $value = $row->{$column} ?? '';

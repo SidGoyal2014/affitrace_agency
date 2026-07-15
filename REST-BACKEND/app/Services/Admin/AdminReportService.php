@@ -130,19 +130,38 @@ class AdminReportService extends BaseReportService
      */
     public function allOffers()
     {
-        // Clicks from offer_trackings, conversions from conversions table
-        $data = DB::table('offers')
-            ->leftJoin('offer_trackings as ot', 'ot.offer_id', '=', 'offers.id')
-            ->leftJoin('conversions as conv', 'conv.offer_id', '=', 'offers.id')
-            ->select(
-                'offers.id',
-                'offers.offer_name',
-                DB::raw("COUNT(DISTINCT ot.tid) as total_clicks"),
-                DB::raw("COUNT(DISTINCT conv.id) as total_conversions")
-            )
-            ->groupBy('offers.id', 'offers.offer_name')
-            ->orderByRaw('total_clicks DESC')
-            ->paginate(50);
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $query = DB::table('offers');
+
+        if ($user && $user->isAdvertiserManager()) {
+            $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            $query->whereIn('offers.advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
+        }
+
+        $query->leftJoin('offer_trackings as ot', function($join) use ($user) {
+            $join->on('ot.offer_id', '=', 'offers.id');
+            if ($user && $user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $join->whereIn('ot.aff_id', count($assignedAffIds) ? $assignedAffIds : [-1]);
+            }
+        })
+        ->leftJoin('conversions as conv', function($join) use ($user) {
+            $join->on('conv.offer_id', '=', 'offers.id');
+            if ($user && $user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $join->whereIn('conv.affiliate_id', count($assignedAffIds) ? $assignedAffIds : [-1]);
+            }
+        })
+        ->select(
+            'offers.id',
+            'offers.offer_name',
+            DB::raw("COUNT(DISTINCT ot.tid) as total_clicks"),
+            DB::raw("COUNT(DISTINCT conv.id) as total_conversions")
+        )
+        ->groupBy('offers.id', 'offers.offer_name')
+        ->orderByRaw('total_clicks DESC');
+
+        $data = $query->paginate(50);
 
         return [
             'module_name' => "Clicks Report",
@@ -155,6 +174,18 @@ class AdminReportService extends BaseReportService
      */
     public function getOfferClicks($offer_id, $get_conversions)
     {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user && $user->isAdvertiserManager()) {
+            $offer = Offer::find($offer_id);
+            if (!$offer) {
+                return DataTables::of(DB::table('offer_trackings')->whereRaw('0 = 1'))->make(true);
+            }
+            $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            if (!in_array($offer->advertiser_id, $assignedAdvIds)) {
+                return DataTables::of(DB::table('offer_trackings')->whereRaw('0 = 1'))->make(true);
+            }
+        }
+
         $data = DB::table('offer_trackings')
             ->select([
                 '*',
@@ -176,6 +207,11 @@ class AdminReportService extends BaseReportService
             ->join('users as adverts', 'offer_trackings.adv_id', '=', 'adverts.id')
             ->where('offers.id', $offer_id);
 
+        if ($user && $user->isAffiliateManager()) {
+            $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            $data->whereIn('offer_trackings.aff_id', count($assignedAffIds) ? $assignedAffIds : [-1]);
+        }
+
         if ($get_conversions == "Y") {
             $data = $data->where('offer_trackings.aff_click_id', '!=', '');
         }
@@ -187,6 +223,12 @@ class AdminReportService extends BaseReportService
             ->editColumn('link_clicked_at', function ($row) {
                 return date("d-m-Y H:i:s", strtotime($row->link_clicked_at));
             })
+            ->editColumn('revenue_usd', function ($row) use ($user) {
+                return ($user && $user->isObserver()) ? 0 : ($row->revenue_usd ?? 0);
+            })
+            ->editColumn('payout_usd', function ($row) use ($user) {
+                return ($user && $user->isObserver()) ? 0 : ($row->payout_usd ?? 0);
+            })
             ->make(true);
     }
 
@@ -195,6 +237,20 @@ class AdminReportService extends BaseReportService
      */
     public function searchOfferClicks($request)
     {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user && $user->isAdvertiserManager()) {
+            $offer = Offer::find($request->offer_id);
+            $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            if (!$offer || !in_array($offer->advertiser_id, $assignedAdvIds)) {
+                return [
+                    'module_name' => "Offer Clicks Search",
+                    'offer_name' => '',
+                    'data' => [],
+                    'filters' => $request->all()
+                ];
+            }
+        }
+
         $data = DB::table('offer_trackings')
             ->select(
                 '*',
@@ -215,6 +271,11 @@ class AdminReportService extends BaseReportService
             ->join('users as affis', 'offer_trackings.aff_id', '=', 'affis.id')
             ->join('users as adverts', 'offer_trackings.adv_id', '=', 'adverts.id')
             ->where('offers.id', $request->offer_id);
+
+        if ($user && $user->isAffiliateManager()) {
+            $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            $data->whereIn('offer_trackings.aff_id', count($assignedAffIds) ? $assignedAffIds : [-1]);
+        }
 
         if ($request->from != "" && $request->to != "" && $request->from != $request->to) {
             $data = $data->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
@@ -241,6 +302,15 @@ class AdminReportService extends BaseReportService
         }
 
         $data = $data->orderBy('offer_trackings.id', 'desc')->get();
+
+        if ($user && $user->isObserver()) {
+            foreach ($data as $row) {
+                if (isset($row->revenue_usd)) $row->revenue_usd = 0;
+                if (isset($row->payout_usd)) $row->payout_usd = 0;
+                if (isset($row->revenue)) $row->revenue = 0;
+                if (isset($row->payout)) $row->payout = 0;
+            }
+        }
 
         $offer_name = '';
         $offer_data = DB::table('offers')->where('id', $request->offer_id)->first();
@@ -293,6 +363,17 @@ class AdminReportService extends BaseReportService
                 'C.created_at'
             );
 
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user) {
+            if ($user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('C.affiliate_id', count($assignedAffIds) ? $assignedAffIds : [-1]);
+            } elseif ($user->isAdvertiserManager()) {
+                $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('O.advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
+            }
+        }
+
         if ($request && $request->month) {
             $fromUtc = $this->getUtcStartOfDay(
                 \Carbon\Carbon::createFromFormat('Y-m', $request->month)->startOfMonth()->toDateString()
@@ -304,6 +385,13 @@ class AdminReportService extends BaseReportService
         }
 
         $data = $query->orderBy('C.created_at', 'desc')->get();
+
+        if ($user && $user->isObserver()) {
+            foreach ($data as $row) {
+                if (isset($row->amount)) $row->amount = 0;
+                if (isset($row->payout_usd)) $row->payout_usd = 0;
+            }
+        }
 
         return [
             'module_name' => "Payouts Report",
@@ -358,6 +446,17 @@ class AdminReportService extends BaseReportService
                 'C.created_at'
             );
 
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user) {
+            if ($user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('C.affiliate_id', count($assignedAffIds) ? $assignedAffIds : [-1]);
+            } elseif ($user->isAdvertiserManager()) {
+                $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('O.advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
+            }
+        }
+
         if ($request->from && $request->to) {
             $fromUtc = $this->getUtcStartOfDay($request->from);
             $toUtc = $this->getUtcEndOfDay($request->to);
@@ -365,6 +464,13 @@ class AdminReportService extends BaseReportService
         }
 
         $data = $query->orderBy('C.created_at', 'desc')->get();
+
+        if ($user && $user->isObserver()) {
+            foreach ($data as $row) {
+                if (isset($row->amount)) $row->amount = 0;
+                if (isset($row->payout_usd)) $row->payout_usd = 0;
+            }
+        }
 
         return [
             'module_name' => "All Payouts",
@@ -378,6 +484,15 @@ class AdminReportService extends BaseReportService
      */
     public function offerPayouts($oid)
     {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user && $user->isAdvertiserManager()) {
+            $offer = Offer::find($oid);
+            $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            if (!$offer || !in_array($offer->advertiser_id, $assignedAdvIds)) {
+                return ['module_name' => "Offer Payouts", 'offer_name' => '', 'oid' => $oid, 'data' => []];
+            }
+        }
+
         $data = $this->getPayoutsForOffer($oid);
         $of_name = '';
 
@@ -385,6 +500,14 @@ class AdminReportService extends BaseReportService
             $dataOffer = DB::select("select offer_name from offers where id =" . $oid);
             if (strlen($dataOffer[0]->offer_name) > 0) {
                 $of_name = $dataOffer[0]->offer_name;
+            }
+        }
+
+        if ($user && $user->isObserver()) {
+            foreach ($data as $row) {
+                if (isset($row->payout)) $row->payout = 0;
+                if (isset($row->payout_usd)) $row->payout_usd = 0;
+                if (isset($row->amount)) $row->amount = 0;
             }
         }
 
@@ -402,6 +525,20 @@ class AdminReportService extends BaseReportService
     public function searchOfferPayouts($request)
     {
         $oid = $request->oid;
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user && $user->isAdvertiserManager()) {
+            $offer = Offer::find($oid);
+            $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            if (!$offer || !in_array($offer->advertiser_id, $assignedAdvIds)) {
+                return [
+                    'module_name' => "Offer Payouts",
+                    'offer_name' => '',
+                    'data' => [],
+                    'filters' => $request->all()
+                ];
+            }
+        }
+
         $str = "";
 
         if ($request->from != "" && $request->to != "") {
@@ -432,6 +569,14 @@ class AdminReportService extends BaseReportService
             }
         }
 
+        if ($user && $user->isObserver()) {
+            foreach ($data as $row) {
+                if (isset($row->payout)) $row->payout = 0;
+                if (isset($row->payout_usd)) $row->payout_usd = 0;
+                if (isset($row->amount)) $row->amount = 0;
+            }
+        }
+
         return [
             'module_name' => "Offer Payouts",
             'offer_name' => $of_name,
@@ -445,6 +590,14 @@ class AdminReportService extends BaseReportService
      */
     public function affiliatePayouts($aid)
     {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user && $user->isAffiliateManager()) {
+            $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            if (!in_array($aid, $assignedAffIds)) {
+                return ['module_name' => "Affiliate Payouts", 'affiliate_name' => '', 'aid' => $aid, 'data' => []];
+            }
+        }
+
         $data = $this->getAffiliatePayouts($aid);
         $af_name = '';
 
@@ -452,6 +605,14 @@ class AdminReportService extends BaseReportService
             $dataOffer = DB::select("select name from users where id =" . $aid);
             if (strlen($dataOffer[0]->name) > 0) {
                 $af_name = $dataOffer[0]->name;
+            }
+        }
+
+        if ($user && $user->isObserver()) {
+            foreach ($data as $row) {
+                if (isset($row->payout)) $row->payout = 0;
+                if (isset($row->payout_usd)) $row->payout_usd = 0;
+                if (isset($row->amount)) $row->amount = 0;
             }
         }
 
@@ -469,6 +630,19 @@ class AdminReportService extends BaseReportService
     public function searchAffiliatePayouts($request)
     {
         $aid = $request->aid;
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user && $user->isAffiliateManager()) {
+            $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            if (!in_array($aid, $assignedAffIds)) {
+                return [
+                    'module_name' => "Affiliate Payouts",
+                    'affiliate_name' => '',
+                    'data' => [],
+                    'filters' => $request->all()
+                ];
+            }
+        }
+
         $str = "";
         if ($request->from != "" && $request->to != "") {
             $str = " AND OT.updated_at BETWEEN '" . $request->from . "' AND '" . $request->to . "'";
@@ -498,6 +672,14 @@ class AdminReportService extends BaseReportService
             }
         }
 
+        if ($user && $user->isObserver()) {
+            foreach ($data as $row) {
+                if (isset($row->payout)) $row->payout = 0;
+                if (isset($row->payout_usd)) $row->payout_usd = 0;
+                if (isset($row->amount)) $row->amount = 0;
+            }
+        }
+
         return [
             'module_name' => "Affiliate Payouts",
             'affiliate_name' => $af_name,
@@ -511,10 +693,7 @@ class AdminReportService extends BaseReportService
      */
     public function getClicksReport($request): array
     {
-
-        //\Log::info('Request Submitted Array', $request->all());
-
-
+        $user = \Illuminate\Support\Facades\Auth::user();
         $query = DB::table('offer_trackings')
             ->select(
                 '*',
@@ -534,6 +713,16 @@ class AdminReportService extends BaseReportService
             ->join('users as affis', 'offer_trackings.aff_id', '=', 'affis.id')
             ->join('users as adverts', 'offer_trackings.adv_id', '=', 'adverts.id');
 
+        if ($user) {
+            if ($user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('offer_trackings.aff_id', count($assignedAffIds) ? $assignedAffIds : [-1]);
+            } elseif ($user->isAdvertiserManager()) {
+                $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('offers.advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
+            }
+        }
+
         // Apply filters
         if ($request->from != "" && $request->to != "" && $request->from != $request->to) {
             $query = $query->whereBetween('offer_trackings.created_at', [$request->from, $request->to]);
@@ -542,8 +731,6 @@ class AdminReportService extends BaseReportService
             $query = $query->where('offer_trackings.created_at', $request->from);
 
         }
-
-
 
         if ($request->device) {
             $query = $query->where('offer_trackings.device_id', $request->device);
@@ -562,26 +749,14 @@ class AdminReportService extends BaseReportService
         if (isset($request->country) && $request->country != "") {
             $query = $query->where('offer_trackings.country', $arrC[$request->country]);
 
-        }/**/
-
-
-        /*$limit = min((int) ($request->limit ?? 50), 500);
-        $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);*/
+        }
 
         $results = $query->orderBy('offer_trackings.id', 'desc')
             ->get();
 
-
-
-
-
-        // Convert UTC timestamps to user's configured timezone
-        $results->transform(function ($row) {
-            if (isset($row->link_clicked_at))
-                $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
-            if (isset($row->created_at))
-                $row->created_at = $this->formatUtcToLocal($row->created_at);
-            return $row;
+        // Convert UTC timestamps to user's configured timezone and apply role masking
+        $results->transform(function ($row) use ($user) {
+            return $this->formatClickRow($row, $user);
         });
 
         return [
@@ -596,6 +771,7 @@ class AdminReportService extends BaseReportService
      */
     public function getConversionsReport($request): array
     {
+        $user = \Illuminate\Support\Facades\Auth::user();
         $query = DB::table('conversions')
             ->select(
                 'conversions.*',
@@ -612,11 +788,24 @@ class AdminReportService extends BaseReportService
                 'adverts.id as advertiser_id',
                 'adverts.name as advertiser_name',
                 'offers.id as offer_id',
-                'offers.offer_name'
+                'offers.offer_name',
+                'ot.created_at as ot_click_time',
+                'ot.ip as ot_click_ip'
             )
             ->leftJoin('offers', 'conversions.offer_id', '=', 'offers.id')
             ->leftJoin('users as affis', 'conversions.affiliate_id', '=', 'affis.id')
-            ->leftJoin('users as adverts', 'conversions.advertiser_id', '=', 'adverts.id');
+            ->leftJoin('users as adverts', 'conversions.advertiser_id', '=', 'adverts.id')
+            ->leftJoin('offer_trackings as ot', 'conversions.tid', '=', 'ot.tid');
+
+        if ($user) {
+            if ($user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('conversions.affiliate_id', count($assignedAffIds) ? $assignedAffIds : [-1]);
+            } elseif ($user->isAdvertiserManager()) {
+                $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('offers.advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
+            }
+        }
 
         // Apply filters
         if ($request->from && $request->to) {
@@ -639,13 +828,9 @@ class AdminReportService extends BaseReportService
 
         $results = $query->orderBy('conversions.id', 'desc')->get();
 
-        // Convert UTC timestamps to user's configured timezone
-        $results->transform(function ($row) {
-            if (isset($row->conversion_time))
-                $row->conversion_time = $this->formatUtcToLocal($row->conversion_time);
-            if (isset($row->created_at))
-                $row->created_at = $this->formatUtcToLocal($row->created_at);
-            return $row;
+        // Convert UTC timestamps and compute fallbacks / masking
+        $results->transform(function ($row) use ($user) {
+            return $this->formatConversionRow($row, $user);
         });
 
         return [
@@ -660,7 +845,8 @@ class AdminReportService extends BaseReportService
      */
     public function getDropdownData(): array
     {
-        // Distinct statuses from conversions
+        $user = \Illuminate\Support\Facades\Auth::user();
+
         // Distinct statuses from conversions
         $statuses = DB::table('conversions')
             ->distinct()
@@ -668,24 +854,41 @@ class AdminReportService extends BaseReportService
             ->toArray();
 
         // Offers list
-        $offers = DB::table('offers')
-            ->select('id', 'offer_name')
-            ->orderBy('offer_name')
-            ->get();
+        $offersQuery = DB::table('offers');
+        if ($user && $user->isAdvertiserManager()) {
+            $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            $offersQuery->whereIn('advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
+        } elseif ($user && $user->isAffiliateManager()) {
+            $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            $offersQuery->whereIn('id', function($q) use ($assignedAffIds) {
+                $q->select('offer_id')->from('offer_affiliates')->whereIn('affiliate_id', count($assignedAffIds) ? $assignedAffIds : [-1]);
+            });
+        }
+        $offers = $offersQuery->select('id', 'offer_name')->orderBy('offer_name')->get();
 
         // Affiliates list (users with role affiliate)
-        $affiliates = DB::table('users')
-            ->where('user_type', 'affiliate')
-            ->select('id', 'name')
-            ->orderBy('name')
-            ->get();
+        $affiliatesQuery = DB::table('users')->where('user_type', 'affiliate');
+        if ($user && $user->isAffiliateManager()) {
+            $affiliatesQuery->where('employee_id', (string) $user->id);
+        } elseif ($user && $user->isAdvertiserManager()) {
+            $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            $affiliatesQuery->whereIn('id', function($q) use ($assignedAdvIds) {
+                $q->select('affiliate_id')->from('offer_affiliates')
+                  ->join('offers', 'offer_affiliates.offer_id', '=', 'offers.id')
+                  ->whereIn('offers.advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
+            });
+        }
+        $affiliates = $affiliatesQuery->select('id', 'name')->orderBy('name')->get();
 
         // Advertisers list (users with role advertiser)
-        $advertisers = DB::table('users')
-            ->where('user_type', 'advertiser')
-            ->select('id', 'name')
-            ->orderBy('name')
-            ->get();
+        $advertisersQuery = DB::table('users')->where('user_type', 'advertiser');
+        if ($user && $user->isAdvertiserManager()) {
+            $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+            $advertisersQuery->whereIn('id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
+        } elseif ($user && $user->isAffiliateManager()) {
+            $advertisersQuery->whereRaw('0 = 1');
+        }
+        $advertisers = $advertisersQuery->select('id', 'name')->orderBy('name')->get();
 
         return [
             'statuses' => $statuses,
@@ -700,7 +903,8 @@ class AdminReportService extends BaseReportService
      */
     public function getConversionDetail($id): array
     {
-        $conversion = DB::table('conversions')
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $query = DB::table('conversions')
             ->select(
                 'conversions.*',
                 'offers.offer_name',
@@ -710,11 +914,29 @@ class AdminReportService extends BaseReportService
             ->leftJoin('offers', 'conversions.offer_id', '=', 'offers.id')
             ->leftJoin('users as affis', 'conversions.affiliate_id', '=', 'affis.id')
             ->leftJoin('users as adverts', 'conversions.advertiser_id', '=', 'adverts.id')
-            ->where('conversions.id', $id)
-            ->first();
+            ->where('conversions.id', $id);
+
+        if ($user) {
+            if ($user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('conversions.affiliate_id', count($assignedAffIds) ? $assignedAffIds : [-1]);
+            } elseif ($user->isAdvertiserManager()) {
+                $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                $query->whereIn('offers.advertiser_id', count($assignedAdvIds) ? $assignedAdvIds : [-1]);
+            }
+        }
+
+        $conversion = $query->first();
 
         if (!$conversion) {
             return ['success' => false, 'message' => 'Conversion not found'];
+        }
+
+        if ($user && $user->isObserver()) {
+            if (isset($conversion->revenue)) $conversion->revenue = 0;
+            if (isset($conversion->payout)) $conversion->payout = 0;
+            if (isset($conversion->revenue_usd)) $conversion->revenue_usd = 0;
+            if (isset($conversion->payout_usd)) $conversion->payout_usd = 0;
         }
 
         // Convert timestamps to local timezone if present
@@ -739,6 +961,21 @@ class AdminReportService extends BaseReportService
             return ['success' => false, 'message' => 'Conversion not found'];
         }
 
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user) {
+            if ($user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                if (!in_array($conversion->affiliate_id, $assignedAffIds)) {
+                    return ['success' => false, 'message' => 'Unauthorized'];
+                }
+            } elseif ($user->isAdvertiserManager()) {
+                $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                if (!in_array($conversion->advertiser_id, $assignedAdvIds)) {
+                    return ['success' => false, 'message' => 'Unauthorized'];
+                }
+            }
+        }
+
         $conversion->status = $status;
         $conversion->save();
 
@@ -759,6 +996,21 @@ class AdminReportService extends BaseReportService
 
         if (!$conversion) {
             return ['success' => false, 'message' => 'Conversion not found'];
+        }
+
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user) {
+            if ($user->isAffiliateManager()) {
+                $assignedAffIds = \App\Models\User::where('user_type', 'affiliate')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                if (!in_array($conversion->affiliate_id, $assignedAffIds)) {
+                    return ['success' => false, 'message' => 'Unauthorized'];
+                }
+            } elseif ($user->isAdvertiserManager()) {
+                $assignedAdvIds = \App\Models\User::where('user_type', 'advertiser')->where('employee_id', (string) $user->id)->pluck('id')->toArray();
+                if (!in_array($conversion->advertiser_id, $assignedAdvIds)) {
+                    return ['success' => false, 'message' => 'Unauthorized'];
+                }
+            }
         }
 
         $conversion->status = $status;

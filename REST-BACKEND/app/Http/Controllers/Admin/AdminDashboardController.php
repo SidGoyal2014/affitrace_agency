@@ -23,14 +23,14 @@ class AdminDashboardController extends Controller
 		return response()->json($this->dashboardService->getDashboardStats($user));
 	}
 
-	public function top_affiliates($dod = "Y")
+	public function top_affiliates(Request $request, $dod = "Y")
 	{
-		return response()->json($this->dashboardService->top_affiliates($dod));
+		return response()->json($this->dashboardService->top_affiliates($request->user(), $dod));
 	}
 
-	public function top_offers($dod = "Y")
+	public function top_offers(Request $request, $dod = "Y")
 	{
-		return response()->json($this->dashboardService->top_offers($dod));
+		return response()->json($this->dashboardService->top_offers($request->user(), $dod));
 	}
 
 	// Methods like get_clicks_message, get_category_wise_revenue, etc. are now private in Service and used by getDashboardStats. 
@@ -75,7 +75,7 @@ class AdminDashboardController extends Controller
 			}
 		}
 
-		$result = $this->dashboardService->getRevenuePayoutChartData($period, $from, $to);
+		$result = $this->dashboardService->getRevenuePayoutChartData($period, $from, $to, $request->user());
 		return response()->json($result);
 	}
 }
