@@ -85,9 +85,9 @@ function url($path)
                 <i class="fas fa-chevron-down ml-1" style="font-size: 0.625rem;"></i>
             </a>
             <div class="dropdown-menu">
-                <a class="dropdown-item require-permission" data-module="clicks"
+                <a class="dropdown-item require-permission" data-module="clicks_report"
                     href="<?php echo url('reports/clicks_report.php'); ?>">Clicks</a>
-                <a class="dropdown-item require-permission" data-module="conversions"
+                <a class="dropdown-item require-permission" data-module="conversions_report"
                     href="<?php echo url('reports/conversions_report.php'); ?>">Conversions</a>
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item require-permission" data-module="export_reports"
