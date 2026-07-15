@@ -477,23 +477,24 @@ include $pathPrefix . '/includes/head.php';
 
             // Load User Profile details
             const user = JSON.parse(localStorage.getItem('user'));
-            let designation = 'employee';
+            //console.log(user);
+            let roleName = 'employee';
             if (user) {
                 $('.user-name').text(user.name);
-                if (user.designation && user.designation.name) {
-                    designation = user.designation.name.toLowerCase();
+                if (user.role && user.role.name) {
+                    roleName = user.role.name.toLowerCase();
                 }
             }
 
             // Render Role Badge
             let badgeHtml = '';
-            if (designation.includes('affiliate manager')) {
+            if (roleName.includes('affiliate manager')) {
                 badgeHtml = '<span class="badge-role badge-role-am"><i class="fas fa-user-shield"></i> Affiliate Manager</span>';
-            } else if (designation.includes('advertiser manager')) {
+            } else if (roleName.includes('advertiser manager')) {
                 badgeHtml = '<span class="badge-role badge-role-adv"><i class="fas fa-briefcase"></i> Advertiser Manager</span>';
-            } else if (designation.includes('finance')) {
+            } else if (roleName.includes('finance')) {
                 badgeHtml = '<span class="badge-role badge-role-fin"><i class="fas fa-wallet"></i> Finance Manager</span>';
-            } else if (designation.includes('observer')) {
+            } else if (roleName.includes('observer')) {
                 badgeHtml = '<span class="badge-role badge-role-obs"><i class="fas fa-eye"></i> Observer Mode</span>';
             } else {
                 badgeHtml = `<span class="badge-role badge-role-am"><i class="fas fa-user-tie"></i> ${user.designation ? user.designation.name : 'Employee'}</span>`;
@@ -514,9 +515,9 @@ include $pathPrefix . '/includes/head.php';
             const statsContainer = $('#stats-grid-container');
             statsContainer.empty();
 
-            const isAM = designation.includes('affiliate manager');
-            const isAdvM = designation.includes('advertiser manager');
-            const isObserver = designation.includes('observer');
+            const isAM = roleName.includes('affiliate manager');
+            const isAdvM = roleName.includes('advertiser manager');
+            const isObserver = roleName.includes('observer');
 
             let cardData = [];
 
@@ -704,7 +705,7 @@ include $pathPrefix . '/includes/head.php';
             }
 
             // 2. Pending Payouts (for Affiliate Managers / Finance)
-            if (isAM || designation.includes('finance')) {
+            if (isAM || roleName.includes('finance')) {
                 try {
                     const payoutStats = await API.fetchWithAuth('admin/payouts/weekly-payouts/stats');
                     if (payoutStats && payoutStats.stats && payoutStats.stats.pending_count > 0) {
@@ -730,7 +731,7 @@ include $pathPrefix . '/includes/head.php';
             }
 
             // 3. Pending Invoices (for Advertiser Managers / Finance)
-            if (isAdvM || designation.includes('finance')) {
+            if (isAdvM || roleName.includes('finance')) {
                 try {
                     // Let's query list of invoices that are SENT/UNPAID
                     const invoiceData = await API.fetchWithAuth('admin/invoices?status=SENT');
