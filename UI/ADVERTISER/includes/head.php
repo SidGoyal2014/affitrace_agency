@@ -1,3 +1,6 @@
+<?php
+$pathCommonPrefix = $pathPrefix . '/../common';
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -11,8 +14,11 @@
 
     <title><?php echo isset($pageTitle) ? $pageTitle : 'Advertiser Dashboard'; ?></title>
 
+    <!-- Shared White-Label Branding Head Component -->
+    <?php include $pathCommonPrefix . '/includes/head_branding.php'; ?>
+
     <!-- Custom fonts for this template-->
-    <link href="<?php echo $pathPrefix; ?>/assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet"
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet"
         type="text/css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Legacy Google Font (keeping for safety until fully replaced) -->
@@ -21,18 +27,19 @@
         rel="stylesheet">
 
     <!-- Custom styles for this template-->
-    <link href="<?php echo $pathPrefix; ?>/assets/css/sb-admin-2.css" rel="stylesheet">
-    <link href="<?php echo $pathPrefix; ?>/assets/css/dropdown.css" rel="stylesheet">
-    <link href="<?php echo $pathPrefix; ?>/assets/css/arrow.css" rel="stylesheet">
-    <link href="<?php echo $pathPrefix; ?>/assets/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/css/sb-admin-2.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/css/dropdown.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/css/arrow.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/vendor/datatables/dataTables.bootstrap4.min.css"
+        rel="stylesheet">
 
-    <link href="<?php echo $pathPrefix; ?>/assets/css/tab.css" rel="stylesheet">
-    <link href="<?php echo $pathPrefix; ?>/assets/css/custom.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/css/tab.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/css/custom.css" rel="stylesheet">
 
     <!-- Modern Theme Overrides -->
-    <link href="<?php echo $pathPrefix; ?>/assets/css/modern-theme.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/css/modern-theme.css" rel="stylesheet">
 
     <!-- Toast Notifications -->
-    <link href="<?php echo $pathPrefix; ?>/assets/css/toast.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/css/toast.css" rel="stylesheet">
 
 </head>

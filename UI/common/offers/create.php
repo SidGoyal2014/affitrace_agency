@@ -14,7 +14,7 @@ include $pathPrefix . '/includes/head.php';
 
             <div class="page-header">
                 <h1>Create New Offer</h1>
-                <a href="approved.php" class="btn btn-outline-primary">
+                <a href="index.php" class="btn btn-outline-primary">
                     <i class="fas fa-arrow-left mr-2"></i> Back to Offers
                 </a>
             </div>
@@ -27,22 +27,22 @@ include $pathPrefix . '/includes/head.php';
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#tabTargeting">
+                    <a class="nav-link nav-disabled" href="#tabTargeting">
                         <i class="fas fa-crosshairs"></i> Targeting
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#tabAffiliates">
+                    <a class="nav-link nav-disabled" href="#tabAffiliates">
                         <i class="fas fa-users"></i> Affiliates
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#tabEvents">
+                    <a class="nav-link nav-disabled" href="#tabEvents">
                         <i class="fas fa-bullseye"></i> Events/Goals
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#tabMMP">
+                    <a class="nav-link nav-disabled" href="#tabMMP">
                         <i class="fas fa-share-alt"></i> MMP Config
                     </a>
                 </li>
@@ -103,8 +103,22 @@ include $pathPrefix . '/includes/head.php';
                                             <div class="form-group">
                                                 <label>Offer URL <span class="required-dot"></span></label>
                                                 <textarea name="offer_url" class="form-control" rows="2"
-                                                    placeholder="https://example.com/offer?click_id={tid}" required></textarea>
-                                                <span class="field-hint">Use <code>{tid}</code> for click tracking ID</span>
+                                                    placeholder="https://example.com/offer?click_id={tid}"
+                                                    required></textarea>
+                                                <span class="field-hint">Use <code>{tid}</code> for click tracking
+                                                    ID</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-md-12">
+                                            <small class="text-muted d-block mb-1">
+                                                <strong>Available Tokens:</strong> Click a token to insert it into the
+                                                Offer URL
+                                            </small>
+                                            <div id="offerUrlTokensContainer" class="row"
+                                                style="margin-left: 0px !important;">
+                                                <!-- Token buttons populated by JS -->
                                             </div>
                                         </div>
                                     </div>
@@ -118,37 +132,33 @@ include $pathPrefix . '/includes/head.php';
                                         <div class="section-icon"><i class="fas fa-dollar-sign"></i></div>
                                         <h6>Pricing Model</h6>
                                     </div>
-
-                                    <div class="field-group">
-                                        <div class="field-group-label">
-                                            <i class="fas fa-chart-line"></i> Revenue & Payout
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="pricing-pair">
-                                                    <div class="form-group">
-                                                        <label>Ad Model <span class="required-dot"></span></label>
-                                                        <select name="ad_model" class="form-control" required></select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label>Revenue</label>
-                                                        <input type="number" name="ad_pricing" class="form-control"
-                                                            step="0.01" value="0.00" placeholder="0.00">
-                                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="pricing-pair">
+                                                <div class="form-group">
+                                                    <label>Select Model <span class="required-dot"></span></label>
+                                                    <select name="ad_model" class="form-control" required></select>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="pricing-pair">
-                                                    <div class="form-group">
-                                                        <label>Aff Model <span class="required-dot"></span></label>
-                                                        <select name="aff_model" class="form-control" required></select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label>Payout</label>
-                                                        <input type="number" name="aff_pricing" class="form-control"
-                                                            step="0.01" value="0.00" placeholder="0.00">
-                                                    </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="pricing-pair">
+                                                <div class="form-group">
+                                                    <label>Revenue</label>
+                                                    <input type="number" name="ad_pricing" class="form-control"
+                                                        step="0.01" value="0.00" placeholder="0.00">
                                                 </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="pricing-pair">
+                                                <div class="form-group">
+                                                    <label>Payout</label>
+                                                    <input type="number" name="aff_pricing" class="form-control"
+                                                        step="0.01" value="0.00" placeholder="0.00">
+                                                </div>
+                                                <input type="hidden" name="aff_model" class="form-control"
+                                                    required></input>
                                             </div>
                                         </div>
                                     </div>
@@ -202,14 +212,18 @@ include $pathPrefix . '/includes/head.php';
                                     <div class="row mt-3">
                                         <div class="col-md-3">
                                             <div class="form-group">
-                                                <label><i class="fas fa-mouse-pointer mr-1 text-warning"></i> Clicks Cap <small class="text-muted">(blank = unlimited)</small></label>
-                                                <input type="number" name="clicks_cap" class="form-control" min="0" placeholder="Unlimited">
+                                                <label><i class="fas fa-mouse-pointer mr-1 text-warning"></i> Clicks Cap
+                                                    <small class="text-muted">(blank = unlimited)</small></label>
+                                                <input type="number" name="clicks_cap" class="form-control" min="0"
+                                                    placeholder="Unlimited">
                                             </div>
                                         </div>
                                         <div class="col-md-3">
                                             <div class="form-group">
-                                                <label><i class="fas fa-check-circle mr-1 text-success"></i> Conversions Cap <small class="text-muted">(blank = unlimited)</small></label>
-                                                <input type="number" name="conversions_cap" class="form-control" min="0" placeholder="Unlimited">
+                                                <label><i class="fas fa-check-circle mr-1 text-success"></i> Conversions
+                                                    Cap <small class="text-muted">(blank = unlimited)</small></label>
+                                                <input type="number" name="conversions_cap" class="form-control" min="0"
+                                                    placeholder="Unlimited">
                                             </div>
                                         </div>
                                     </div>
@@ -261,7 +275,7 @@ include $pathPrefix . '/includes/head.php';
 
                                 <!-- Submit -->
                                 <div class="form-submit-area">
-                                    <a href="approved.php" class="btn btn-outline-secondary">Cancel</a>
+                                    <a href="index.php" class="btn btn-outline-secondary">Cancel</a>
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-save"></i> Create Offer
                                     </button>
@@ -321,8 +335,7 @@ include $pathPrefix . '/includes/head.php';
                                     </select>
                                 </div>
                                 <div class="targeting-value">
-                                    <select name="target_state" class="form-control select2-state"
-                                        style="width: 100%;">
+                                    <select name="target_state" class="form-control select2-state" style="width: 100%;">
                                         <option value="">All States</option>
                                     </select>
                                 </div>
@@ -423,7 +436,8 @@ include $pathPrefix . '/includes/head.php';
                                             <tbody id="affiliateTableBody">
                                                 <tr>
                                                     <td colspan="3" class="text-center py-4 text-muted">
-                                                        <i class="fas fa-info-circle mr-2"></i>Save the offer first to manage affiliates
+                                                        <i class="fas fa-info-circle mr-2"></i>Save the offer first to
+                                                        manage affiliates
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -478,7 +492,8 @@ include $pathPrefix . '/includes/head.php';
                                     <tbody id="idListEvents">
                                         <tr>
                                             <td colspan="3" class="text-center py-4 text-muted">
-                                                <i class="fas fa-info-circle mr-2"></i>Save the offer first to manage events
+                                                <i class="fas fa-info-circle mr-2"></i>Save the offer first to manage
+                                                events
                                             </td>
                                         </tr>
                                     </tbody>
@@ -583,7 +598,7 @@ include $pathPrefix . '/includes/head.php';
 
             // Load initial data
             try {
-                const response = await API.fetchWithAuth('<?php echo $user_type;?>/offer/create');
+                const response = await API.fetchWithAuth('<?php echo $user_type; ?>/offer/create');
 
                 // Advertisers
                 const advSelect = $('select[name="advertiser_id"]');
@@ -595,9 +610,7 @@ include $pathPrefix . '/includes/head.php';
                 // Categories
                 const catSelect = $('select[name="category_id"]');
                 catSelect.empty().append('<option value="">Select Category</option>');
-                (response.arrCategories || []).forEach(cat => {
-                    catSelect.append(`<option value="${cat.id}">${cat.category_name}</option>`);
-                });
+                renderCategoryOptions(catSelect, response.arrCategories || []);
 
                 // Ad Models
                 const adModelSelect = $('select[name="ad_model"]');
@@ -607,7 +620,7 @@ include $pathPrefix . '/includes/head.php';
                 });
 
                 // Aff Models
-                const affModelSelect = $('select[name="aff_model"]');
+                const affModelSelect = $('select[name="ad_model"]');
                 affModelSelect.empty().append('<option value="">Select Model</option>');
                 (response.admodels || []).forEach(model => {
                     affModelSelect.append(`<option value="${model.id}">${model.name}</option>`);
@@ -649,6 +662,24 @@ include $pathPrefix . '/includes/head.php';
                         mmpSelect.append(`<option value="${m.id}">${m.name}</option>`);
                     });
                 }
+
+                // Offer URL Tokens
+                const urlContainer = $('#offerUrlTokensContainer').empty();
+                const tokenLinks = (response.offerTokens || []).map(token =>
+                    `<a href="#" class="offer-url-token" style="color: #e83e8c;" data-macro="{${token.token_micro}}">{${token.token_micro}}</a>`
+                ).join(', ');
+                urlContainer.html(tokenLinks);
+
+                // Click-to-insert: appends token as query parameter to offer_url
+                $(document).off('click.offerToken').on('click.offerToken', '.offer-url-token', function (e) {
+                    e.preventDefault();
+                    const macro = $(this).data('macro');
+                    const key = macro.replace('{', '').replace('}', '');
+                    const textarea = $('textarea[name="offer_url"]')[0];
+                    const separator = textarea.value.includes('?') ? '&' : '?';
+                    textarea.value = textarea.value + separator + key + '=' + macro;
+                    textarea.focus();
+                });
 
                 // Initialize Select2 after all options loaded
                 initSelect2();
@@ -703,7 +734,7 @@ include $pathPrefix . '/includes/head.php';
                     offer_url: $('textarea[name="offer_url"]').val(),
                     preview_url: $('input[name="preview_url"]').val(),
                     ad_model: $('select[name="ad_model"]').val(),
-                    aff_model: $('select[name="aff_model"]').val(),
+                    aff_model: $('select[name="ad_model"]').val(),
                     ad_pricing: parseFloat($('input[name="ad_pricing"]').val()).toFixed(2),
                     aff_pricing: parseFloat($('input[name="aff_pricing"]').val()).toFixed(2),
                     currency: $('select[name="currency"]').val(),
@@ -730,7 +761,7 @@ include $pathPrefix . '/includes/head.php';
                 };
 
                 try {
-                    const response = await API.fetchWithAuth('<?php echo $user_type;?>/offer/save', {
+                    const response = await API.fetchWithAuth('<?php echo $user_type; ?>/offer/save', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(formData)
@@ -738,7 +769,7 @@ include $pathPrefix . '/includes/head.php';
 
                     if (response.status === 1) {
                         $('#general-alert').html('<div class="alert alert-success">Offer created successfully! Redirecting...</div>');
-                        setTimeout(() => window.location.href = 'approved.php', 1500);
+                        setTimeout(() => window.location.href = 'index.php', 1500);
                     } else {
                         let errorMsg = 'Failed to create offer';
                         if (response.error) {

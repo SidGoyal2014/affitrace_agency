@@ -77,6 +77,16 @@ class TrackingService
             }
         }
 
+        // Affiliate global clicks cap enforcement
+        $affDetails = DB::table('affiliate_user_details')->where('user_id', $aid)->first();
+        if ($affDetails && !is_null($affDetails->global_clicks_cap)) {
+            $affClicksCount = DB::table('offer_trackings')->where('aff_id', $aid)->count();
+            if ($affClicksCount >= $affDetails->global_clicks_cap) {
+                Log::info("Affiliate {$aid} global clicks cap ({$affDetails->global_clicks_cap}) reached. Blocking click.");
+                return ['type' => 'redirect', 'url' => route('cap.clicks.reached')];
+            }
+        }
+
         $response = $this->is_matching_target($offer, $payoutRule, $arrBrowserData, $arrLocation);
 
         Log::info('' . json_encode($response));
@@ -137,7 +147,7 @@ class TrackingService
         $postbackOffer = Offer::find($click->offer_id);
         if ($postbackOffer && !is_null($postbackOffer->conversions_cap)) {
             $approvedCount = Conversion::where('offer_id', $click->offer_id)
-                ->where('status', 'approved')
+                ->whereIn('status', ['approved', 'confirmed'])
                 ->count();
             if ($approvedCount >= $postbackOffer->conversions_cap) {
                 // Record cap reached timestamp and reason on first hit only
@@ -147,6 +157,20 @@ class TrackingService
                     $postbackOffer->save();
                 }
                 Log::info("Offer {$click->offer_id} conversions cap ({$postbackOffer->conversions_cap}) reached. Blocking postback.");
+                $resp['message'] = 'conversions_cap_reached';
+                $resp['redirect'] = route('cap.conversions.reached');
+                return $resp;
+            }
+        }
+
+        // Affiliate global conversions cap enforcement (count only approved conversions)
+        $affDetails = DB::table('affiliate_user_details')->where('user_id', $click->aff_id)->first();
+        if ($affDetails && !is_null($affDetails->global_conversions_cap)) {
+            $affApprovedCount = Conversion::where('affiliate_id', $click->aff_id)
+                ->whereIn('status', ['approved', 'confirmed'])
+                ->count();
+            if ($affApprovedCount >= $affDetails->global_conversions_cap) {
+                Log::info("Affiliate {$click->aff_id} global conversions cap ({$affDetails->global_conversions_cap}) reached. Blocking postback.");
                 $resp['message'] = 'conversions_cap_reached';
                 $resp['redirect'] = route('cap.conversions.reached');
                 return $resp;
@@ -324,6 +348,40 @@ class TrackingService
             return $resp;
         }
 
+        // Per-offer conversions cap enforcement (count only approved conversions)
+        $postbackOffer = Offer::find($click->offer_id);
+        if ($postbackOffer && !is_null($postbackOffer->conversions_cap)) {
+            $approvedCount = Conversion::where('offer_id', $click->offer_id)
+                ->whereIn('status', ['approved', 'confirmed'])
+                ->count();
+            if ($approvedCount >= $postbackOffer->conversions_cap) {
+                // Record cap reached timestamp and reason on first hit only
+                if (is_null($postbackOffer->cap_reached_at)) {
+                    $postbackOffer->cap_reached_at     = now();
+                    $postbackOffer->cap_reached_reason = 'conversions';
+                    $postbackOffer->save();
+                }
+                Log::info("Offer {$click->offer_id} conversions cap ({$postbackOffer->conversions_cap}) reached. Blocking pixel conversion.");
+                $resp['message'] = 'conversions_cap_reached';
+                $resp['redirect'] = route('cap.conversions.reached');
+                return $resp;
+            }
+        }
+
+        // Affiliate global conversions cap enforcement (count only approved conversions)
+        $affDetails = DB::table('affiliate_user_details')->where('user_id', $click->aff_id)->first();
+        if ($affDetails && !is_null($affDetails->global_conversions_cap)) {
+            $affApprovedCount = Conversion::where('affiliate_id', $click->aff_id)
+                ->whereIn('status', ['approved', 'confirmed'])
+                ->count();
+            if ($affApprovedCount >= $affDetails->global_conversions_cap) {
+                Log::info("Affiliate {$click->aff_id} global conversions cap ({$affDetails->global_conversions_cap}) reached. Blocking pixel conversion.");
+                $resp['message'] = 'conversions_cap_reached';
+                $resp['redirect'] = route('cap.conversions.reached');
+                return $resp;
+            }
+        }
+
         // Create conversion record in conversions table
         $arrBrowserData = $this->getBrowswerData();
         $device_type = ucfirst($arrBrowserData['device_type']);
@@ -415,17 +473,37 @@ class TrackingService
         $ot->aff_id = $aid;
         $ot->event = '';
 
-        $ot->revenue = $offer->ad_pricing;
-        $ot->payout = $offer->aff_pricing;
+        // Apply payout override from payout_rules where event_id = 0
+        $overrideRule = DB::table('payout_rules')
+            ->where('offer_id', $oid)
+            ->where('event_id', 0)
+            ->get()
+            ->first(function ($rule) use ($aid) {
+                if (empty($rule->affiliate_id)) {
+                    return false;
+                }
+                $affIds = explode(',', $rule->affiliate_id);
+                return in_array((string)$aid, $affIds, true);
+            });
+
+        if ($overrideRule) {
+            $ot->payout = $overrideRule->payout_pricing;
+            $ot->revenue = $overrideRule->revenue_pricing;
+            $ot->currency = $overrideRule->currency ?? 'USD';
+            $ot->payout_usd = $overrideRule->payout_usd ?? \App\Utils\CurrencyUtils::getNewCurrencyValue($overrideRule->payout_pricing, $ot->currency);
+            $ot->revenue_usd = $overrideRule->revenue_usd ?? \App\Utils\CurrencyUtils::getNewCurrencyValue($overrideRule->revenue_pricing, $ot->currency);
+        } else {
+            $ot->revenue = $offer->ad_pricing;
+            $ot->payout = $offer->aff_pricing;
+            $ot->currency = $offer->currency;
+            $ot->revenue_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($offer->ad_pricing, $offer->currency);
+            $ot->payout_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($offer->aff_pricing, $offer->currency);
+        }
+
         $ot->tid = $click_id;
         $ot->aff_click_id = '';
         $ot->device_id = $this->get_visitor_device($device_type, 'Y');
         $ot->offer_name = $offer->offer_name;
-
-        $ot->currency = $offer->currency;
-
-        $ot->revenue_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($offer->ad_pricing, $offer->currency);
-        $ot->payout_usd = \App\Utils\CurrencyUtils::getNewCurrencyValue($offer->aff_pricing, $offer->currency);
 
         $ot->ip = $client_ip;
 

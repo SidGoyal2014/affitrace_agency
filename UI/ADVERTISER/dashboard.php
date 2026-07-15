@@ -1,5 +1,6 @@
 <?php
 $pathPrefix = '.';
+$pathCommonPrefix = $pathPrefix . '/../common';
 $activePage = 'dashboard';
 $pageTitle = 'Advertiser Dashboard';
 include $pathPrefix . '/includes/head.php';
@@ -41,7 +42,7 @@ include $pathPrefix . '/includes/head.php';
                     <div class="card-modern h-100">
                         <div class="stat-card">
                             <div class="stat-icon success">
-                                <i class="fas fa-dollar-sign"></i>
+                                <i class="fas fa-money-bill"></i>
                             </div>
                             <div class="stat-content">
                                 <div class="stat-label">Total Budget</div>
@@ -93,12 +94,13 @@ include $pathPrefix . '/includes/head.php';
         $(document).ready(async function () {
             try {
                 const data = await API.fetchWithAuth('advertiser/dashboard');
+                const cur = data.default_currency || 'USD';
 
                 // Update Stats
                 $('#total_offers').text(data.total_offers || 0);
-                $('#total_budget').text('$' + Number(data.total_budget || 0).toLocaleString());
+                $('#total_budget').text(Number(data.total_budget || 0).toLocaleString() + ' ' + cur);
                 $('#conversions').text(Number(data.conversions || 0).toLocaleString());
-                $('#pending_invoices').text('$' + Number(data.pending_invoices || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+                $('#pending_invoices').text(Number(data.pending_invoices || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + cur);
 
             } catch (error) {
                 console.error('Dashboard load failed:', error);

@@ -64,19 +64,22 @@ include $pathPrefix . '/includes/head.php';
                                     <div class="col-sm-6">
                                         <div class="form-group">
                                             <label><strong>IM Platform:</strong></label>
-                                            <input type="text" name="instant_messenger_name" id="instant_messenger_name" class="form-control">
+                                            <input type="text" name="instant_messenger_name" id="instant_messenger_name"
+                                                class="form-control">
                                         </div>
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="form-group">
                                             <label><strong>IM Handle:</strong></label>
-                                            <input type="text" name="instant_messenger_value" id="instant_messenger_value" class="form-control">
+                                            <input type="text" name="instant_messenger_value"
+                                                id="instant_messenger_value" class="form-control">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label><strong>New Password:</strong></label>
-                                    <input type="password" name="password" id="password" class="form-control" placeholder="Leave blank to keep current">
+                                    <input type="password" name="password" id="password" class="form-control"
+                                        placeholder="Leave blank to keep current">
                                 </div>
                                 <div class="form-group">
                                     <label><strong>Preferred Currency:</strong></label>
@@ -95,25 +98,29 @@ include $pathPrefix . '/includes/head.php';
                                 <h6 class="text-primary border-bottom pb-2">Tax Information</h6>
                                 <div class="form-group">
                                     <label><strong>Tax Display Name:</strong></label>
-                                    <input type="text" name="add_tax_basic_name" id="add_tax_basic_name" class="form-control" placeholder="e.g. GST/VAT">
+                                    <input type="text" name="add_tax_basic_name" id="add_tax_basic_name"
+                                        class="form-control" placeholder="e.g. GST/VAT">
                                 </div>
                                 <div class="row">
                                     <div class="col-sm-6">
                                         <div class="form-group">
                                             <label><strong>Tax Type:</strong></label>
-                                            <input type="text" name="add_tax_type" id="add_tax_type" class="form-control">
+                                            <input type="text" name="add_tax_type" id="add_tax_type"
+                                                class="form-control">
                                         </div>
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="form-group">
                                             <label><strong>Tax Number:</strong></label>
-                                            <input type="text" name="add_tax_number" id="add_tax_number" class="form-control">
+                                            <input type="text" name="add_tax_number" id="add_tax_number"
+                                                class="form-control">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label><strong>Tax Percentage (%):</strong></label>
-                                    <input type="number" name="add_tax" id="add_tax" class="form-control" step="0.01" min="0">
+                                    <input type="number" name="add_tax" id="add_tax" class="form-control" step="0.01"
+                                        min="0">
                                 </div>
                             </div>
 
@@ -165,13 +172,15 @@ include $pathPrefix . '/includes/head.php';
                                 </div>
                                 <div class="form-group">
                                     <label><strong>Payment Details (Bank/Wallet):</strong></label>
-                                    <textarea name="payment_details" id="payment_details" class="form-control" rows="4"></textarea>
+                                    <textarea name="payment_details" id="payment_details" class="form-control"
+                                        rows="4"></textarea>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg" id="btnSave">Save Profile Changes</button>
+                            <button type="submit" class="btn btn-primary btn-lg" id="btnSave">Save Profile
+                                Changes</button>
                         </div>
                     </form>
 
@@ -199,9 +208,11 @@ include $pathPrefix . '/includes/head.php';
             // Load Profile Data
             try {
                 const data = await API.fetchWithAuth('affiliate/profile');
-                
+
                 // Populate Dropdowns
-                populateSelect('time_zone', data.arrTimeZone || {}, data.aud?.time_zone);
+                //populateSelect('time_zone', data.arrTimeZone || {}, data.aud?.time_zone);
+                populateSelect('time_zone', TIMEZONE_LIST, data.aud?.time_zone || data.user?.timezone);
+
                 populateSelect('currency', data.arrCur || {}, data.aud?.currency);
                 populateSelect('country', data.arrCountry || {}, data.user?.country);
                 populateSelect('payment_method', data.pmtArray || {}, data.aud?.payment_method);
@@ -244,7 +255,7 @@ include $pathPrefix . '/includes/head.php';
 
                 // Collect all form data robustly
                 const formData = {};
-                $(this).find('input, select, textarea').each(function() {
+                $(this).find('input, select, textarea').each(function () {
                     if (this.name) {
                         formData[this.name] = this.value;
                     }
@@ -269,7 +280,7 @@ include $pathPrefix . '/includes/head.php';
                 } catch (error) {
                     console.error('Update failed:', error);
                     let msg = 'Failed to update profile.';
-                    
+
                     // Try to extract server error message
                     if (error.message) {
                         try {
@@ -283,14 +294,14 @@ include $pathPrefix . '/includes/head.php';
                             } else {
                                 msg = errData;
                             }
-                        } catch(e) { 
+                        } catch (e) {
                             // If not JSON, use the message directly
-                            msg = error.message; 
+                            msg = error.message;
                         }
                     } else if (error.statusText) {
                         msg = `Server Error: ${error.statusText}`;
                     }
-                    
+
                     $('#alert-container').html(`<div class="alert alert-danger">${msg}</div>`);
                 } finally {
                     $('#btnSave').prop('disabled', false).text('Save Profile Changes');
@@ -299,6 +310,7 @@ include $pathPrefix . '/includes/head.php';
         });
     </script>
 </body>
+
 </html>
 </body>
 

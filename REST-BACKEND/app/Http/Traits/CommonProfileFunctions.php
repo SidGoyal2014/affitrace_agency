@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\AffiliateUserDetail;
 use App\Models\AdvertiserUserDetail;
 
+
 trait CommonProfileFunctions
 {
 
@@ -19,8 +20,14 @@ trait CommonProfileFunctions
     function update_advertiser_profile(Request $request)
     {
         try {
-        
-            $uid = $request->filled('uid') ? (int) $request->uid : $request->user()->id;
+
+            // $uid = $request->filled('uid') ? (int) $request->uid : $request->user()->id;
+
+            $currentUser = $request->user();
+            $uid = ($currentUser && strtolower($currentUser->user_type) === 'admin')
+                ? ($request->filled('uid') ? (int) $request->uid : $currentUser->id)
+                : $currentUser->id;
+
 
             $validator = Validator::make(request()->all(), [
                 'name' => 'required|string|min:5',
@@ -41,41 +48,102 @@ trait CommonProfileFunctions
 
             $user = User::findOrFail($uid);
 
-            if ($request->has('name')) $user->name = $request->name;
-            if ($request->has('email')) $user->email = $request->email;
-            if ($request->has('phone')) $user->phone = $request->phone;
+            if ($request->has('name'))
+                $user->name = $request->name;
+            if ($request->has('email'))
+                $user->email = $request->email;
+            if ($request->has('phone'))
+                $user->phone = $request->phone;
 
             if ($request->has('password') && strlen(trim($request->password)) > 0) {
                 $user->password = Hash::make($request->password);
             }
 
-            if ($request->has('company')) $user->company = $request->company;
-            if ($request->has('instant_messenger_name')) $user->instant_messenger_name = $request->instant_messenger_name;
-            if ($request->has('instant_messenger_value')) $user->instant_messenger_value = $request->instant_messenger_value;
-            if ($request->has('address')) $user->address = $request->address;
-            if ($request->has('city')) $user->city = $request->city;
-            if ($request->has('state')) $user->state = $request->state;
-            if ($request->has('country')) $user->country = $request->country;
-            if ($request->has('zipcode')) $user->zipcode = $request->zipcode;
+            if ($request->has('company'))
+                $user->company = $request->company;
+            if ($request->has('instant_messenger_name'))
+                $user->instant_messenger_name = $request->instant_messenger_name;
+            if ($request->has('instant_messenger_value'))
+                $user->instant_messenger_value = $request->instant_messenger_value;
+            if ($request->has('address'))
+                $user->address = $request->address;
+            if ($request->has('city'))
+                $user->city = $request->city;
+            if ($request->has('state'))
+                $user->state = $request->state;
+            if ($request->has('country'))
+                $user->country = $request->country;
+            if ($request->has('zipcode'))
+                $user->zipcode = $request->zipcode;
+            if ($request->has('employee_id'))
+                $user->employee_id = $request->employee_id;
+
+            // Allow Admin & Employee to update status
+            $currentUserType = strtolower($request->user()->user_type);
+            if ($currentUserType === 'admin' || $currentUserType === 'employee') {
+                if ($request->has('status')) {
+                    $user->status = \App\Enums\UserStatus::tryFrom($request->status) ?? $user->status;
+                }
+            }
 
 
-            if ($request->has('timezone')) $user->timezone = $request->timezone;
-            elseif ($request->has('time_zone')) $user->timezone = $request->time_zone;
+            $tz = null;
+            if ($request->has('timezone')) {
+                $tz = $request->timezone ?: 'UTC';
+            } elseif ($request->has('time_zone')) {
+                $tz = $request->time_zone ?: 'UTC';
+            }
+            if ($tz !== null) {
+                $user->timezone = $tz;
+            }
+
+            // Fallback for legacy database rows where timezone column is null
+            if (empty($user->timezone)) {
+                $user->timezone = 'UTC';
+            }
+
 
             $user->save();
 
             $adud = AdvertiserUserDetail::firstOrNew(['user_id' => $uid]);
 
-            if ($request->has('currency')) $adud->currency = $request->currency;
-            if ($request->has('postback_ip_whitelist')) $adud->postback_ip_whitelist = $request->postback_ip_whitelist;
-            if ($request->has('time_zone')) $adud->time_zone = $request->time_zone;
-            if ($request->has('affiliate_block')) $adud->affiliate_block = $request->affiliate_block;
-            if ($request->has('affiliate_whitelist')) $adud->affiliate_whitelist = $request->affiliate_whitelist;
-            if ($request->has('private_note')) $adud->private_note = $request->private_note;
-            if ($request->has('additional_info')) $adud->additional_info = $request->additional_info;
-            if ($request->has('tax_details')) $adud->tax_details = $request->tax_details;
+            if ($request->has('currency'))
+                $adud->currency = $request->currency;
+            if ($request->has('postback_ip_whitelist'))
+                $adud->postback_ip_whitelist = $request->postback_ip_whitelist;
+            if ($request->has('time_zone'))
+                $adud->time_zone = $request->time_zone;
+            if ($request->has('affiliate_block'))
+                $adud->affiliate_block = $request->affiliate_block;
+            if ($request->has('affiliate_whitelist'))
+                $adud->affiliate_whitelist = $request->affiliate_whitelist;
+            if ($request->has('private_note'))
+                $adud->private_note = $request->private_note;
+            if ($request->has('additional_info'))
+                $adud->additional_info = $request->additional_info;
+            if ($request->has('tax_details'))
+                $adud->tax_details = $request->tax_details;
+            if ($request->has('tags'))
+                $adud->tags = $request->tags;
+            if ($request->has('status_reason'))
+                $adud->status_reason = $request->status_reason;
+
+            if ($tz !== null) {
+                $adud->time_zone = $tz;
+            }
 
             $adud->save();
+
+            // Audit Log: Advertiser profile updated
+            \App\Models\AuditLog::create([
+                'actor_id' => Auth::id(),
+                'action' => 'advertiser_profile_updated',
+                'details' => [
+                    'target_id' => $uid,
+                    'target_name' => $user->name,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
 
             return response()->json(['status' => 1, 'msg' => 'Profile Updated']);
 
@@ -96,13 +164,19 @@ trait CommonProfileFunctions
     {
         try {
 
-            $uid = $request->filled('uid') ? (int) $request->uid : $request->user()->id;
+            // $uid = $request->filled('uid') ? (int) $request->uid : $request->user()->id;
+
+            $currentUser = $request->user();
+            $uid = ($currentUser && strtolower($currentUser->user_type) === 'admin')
+                ? ($request->filled('uid') ? (int) $request->uid : $currentUser->id)
+                : $currentUser->id;
+
 
             $validator = Validator::make(request()->all(), [
                 'name' => 'required|string|min:5',
                 'phone' => 'nullable|string',
                 'company' => 'nullable|string',
-                'email' => 'unique:users,email,'.$uid,
+                'email' => 'unique:users,email,' . $uid,
                 'job_title' => 'nullable|string',
                 'instant_messenger_name' => 'nullable|string',
                 'instant_messenger_value' => 'nullable|string'
@@ -116,7 +190,7 @@ trait CommonProfileFunctions
                 return response()->json(['status' => 0, 'error' => $validator->errors()->toArray()], 422);
             }
 
-            
+
             $user = User::findOrFail($uid);
 
             if ($request->has('name'))
@@ -149,13 +223,27 @@ trait CommonProfileFunctions
             if ($request->has('zipcode'))
                 $user->zipcode = $request->zipcode;
 
-            // Allow Admin to update status
-            if ($request->user()->user_type === \App\Enums\UserType::Admin->value && $request->has('status')) {
-                $user->status = \App\Enums\UserStatus::tryFrom($request->status) ?? $user->status;
+            // Allow Admin & Employee to update status & manager
+            $currentUserType = strtolower($request->user()->user_type);
+            if ($currentUserType === 'admin' || $currentUserType === 'employee') {
+                if ($request->has('status')) {
+                    $user->status = \App\Enums\UserStatus::tryFrom($request->status) ?? $user->status;
+                }
+                if ($request->has('employee_id')) {
+                    $user->employee_id = $request->filled('employee_id') ? (string) $request->employee_id : null;
+                }
             }
 
-            if ($request->has('timezone')) $user->timezone = $request->timezone;
-            elseif ($request->has('time_zone')) $user->timezone = $request->time_zone;
+            $tz = null;
+            if ($request->has('timezone')) {
+                $tz = $request->timezone ?: 'UTC';
+            } elseif ($request->has('time_zone')) {
+                $tz = $request->time_zone ?: 'UTC';
+            }
+            if ($tz !== null) {
+                $user->timezone = $tz;
+            }
+
 
             $user->save();
 
@@ -166,7 +254,7 @@ trait CommonProfileFunctions
             if ($request->has('additional_tracking_url_tokens'))
                 $aud->additional_tracking_url_tokens = $request->additional_tracking_url_tokens;
             if ($request->has('time_zone'))
-                $aud->time_zone = $request->time_zone;
+                $aud->time_zone = $request->time_zone ?: 'UTC';
             if ($request->has('payment_method'))
                 $aud->payment_method = $request->payment_method;
             if ($request->has('payment_details'))
@@ -182,7 +270,63 @@ trait CommonProfileFunctions
             if ($request->has('add_tax'))
                 $aud->add_tax = $request->add_tax;
 
+            // Save new fields
+            if ($request->has('website'))
+                $aud->website = $request->website;
+            if ($request->has('traffic_source'))
+                $aud->traffic_source = $request->traffic_source;
+            if ($request->has('global_clicks_cap'))
+                $aud->global_clicks_cap = $request->filled('global_clicks_cap') ? (int) $request->global_clicks_cap : null;
+            if ($request->has('global_conversions_cap'))
+                $aud->global_conversions_cap = $request->filled('global_conversions_cap') ? (int) $request->global_conversions_cap : null;
+            if ($request->has('tags'))
+                $aud->tags = $request->tags;
+            if ($request->has('referred_by'))
+                $aud->referred_by = $request->filled('referred_by') ? (int) $request->referred_by : null;
+            if ($request->has('private_note'))
+                $aud->private_note = $request->private_note;
+
+            if ($tz !== null) {
+                $aud->time_zone = $tz;
+            }
+
             $aud->save();
+
+            // Save postback configuration if provided
+            if ($request->has('pb_url')) {
+                if ($request->filled('pb_url')) {
+                    \Illuminate\Support\Facades\DB::table('affiliate_postback_columns')->updateOrInsert(
+                        ['uid' => $uid],
+                        [
+                            'url' => $request->pb_url,
+                            'tid' => $request->pb_tid,
+                            'aff_id' => $request->pb_aff_id,
+                            'event_id' => $request->pb_event_id,
+                            'sub_aff_id' => $request->pb_sub_aff_id,
+                            'aff_sub1' => $request->pb_aff_sub1,
+                            'aff_sub2' => $request->pb_aff_sub2,
+                            'aff_sub3' => $request->pb_aff_sub3,
+                            'aff_sub4' => $request->pb_aff_sub4,
+                            'aff_sub5' => $request->pb_aff_sub5,
+                            'updated_at' => now()
+                        ]
+                    );
+                } else {
+                    \Illuminate\Support\Facades\DB::table('affiliate_postback_columns')->where('uid', $uid)->delete();
+                }
+            }
+
+
+            // Audit Log: Affiliate profile updated
+            \App\Models\AuditLog::create([
+                'actor_id' => Auth::id(),
+                'action' => 'affiliate_profile_updated',
+                'details' => [
+                    'target_id' => $uid,
+                    'target_name' => $user->name,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
 
             return response()->json(['status' => 1, 'msg' => 'Profile Updated']);
 
@@ -197,46 +341,101 @@ trait CommonProfileFunctions
 
     function update_employee_profile(Request $request)
     {
-            try {
-                $validator = Validator::make(request()->all(), [
-                    'name' => 'required|string|min:5',
-                    'phone' => 'nullable|string',
-                    'email' => 'unique:users,email,' . $request->uid,
-                ]);
+        try {
+            $validator = Validator::make(request()->all(), [
+                'name' => 'required|string|min:5',
+                'phone' => 'nullable|string',
+                'email' => 'unique:users,email,' . $request->uid,
+            ]);
 
-                if ($validator->fails()) {
-                    return response()->json(['status' => 0, 'error' => $validator->errors()->toArray()], 422);
-                }
-
-                $user = User::findOrFail($request->uid);
-
-                $user->name = $request->name;
-                $user->email = $request->email;
-                $user->phone = $request->phone;
-
-                if ($request->has('role_id')) {
-                    $user->role_id = $request->filled('role_id') ? $request->role_id : null;
-                }
-                if ($request->has('designation_id')) {
-                    $user->designation_id = $request->filled('designation_id') ? $request->designation_id : null;
-                }
-
-                if ($request->has('timezone')) $user->timezone = $request->timezone;
-                elseif ($request->has('time_zone')) $user->timezone = $request->time_zone;
-
-                if (strlen(trim($request->password)) > 0) {
-                    $user->password = Hash::make($request->password);
-                }
-
-                if ($request->user()->user_type === \App\Enums\UserType::Admin->value && $request->has('status')) {
-                    $user->status = \App\Enums\UserStatus::tryFrom($request->status) ?? $user->status;
-                }
-
-                $user->save();
-                return response()->json(['status' => 1, 'msg' => 'Employee Profile Updated']);
-            } catch (\Exception $e) {
-                return response()->json(['status' => 0, 'error' => $e->getMessage()], 500);
+            if ($validator->fails()) {
+                return response()->json(['status' => 0, 'error' => $validator->errors()->toArray()], 422);
             }
+
+            $user = User::findOrFail($request->uid);
+
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->phone = $request->phone;
+
+            /*if ($request->has('role_id')) {
+                $user->role_id = $request->filled('role_id') ? $request->role_id : null;
+            }
+            if ($request->has('designation_id')) {
+                $user->designation_id = $request->filled('designation_id') ? $request->designation_id : null;
+            }*/
+
+            $currentUser = $request->user();
+            // Prevent employees from self-updating their own roles or designations
+            if ($currentUser->id === $user->id) {
+                if ($request->has('role_id') || $request->has('designation_id')) {
+                    return response()->json(['status' => 0, 'error' => ['role_id' => ['You cannot modify your own role or designation.']]], 403);
+                }
+            }
+
+            // Only allow role changes if authenticated user is admin or has role management permissions
+            if ($request->has('role_id')) {
+                if (strtolower($currentUser->user_type) === 'admin' || $currentUser->hasModuleAccess('role_management', 'can_edit')) {
+                    if ($request->filled('role_id')) {
+                        $targetRole = \App\Models\Role::findOrFail($request->role_id);
+                        if ($targetRole->user_type !== 'employee') {
+                            return response()->json(['status' => 0, 'error' => ['role_id' => ['Target role must belong to employee user type.']]], 422);
+                        }
+                        $user->role_id = $request->role_id;
+                    } else {
+                        $user->role_id = null;
+                    }
+                } else {
+                    return response()->json(['status' => 0, 'error' => ['role_id' => ['Unauthorized role assignment.']]], 403);
+                }
+            }
+
+            if ($request->has('designation_id')) {
+                if (strtolower($currentUser->user_type) === 'admin' || $currentUser->hasModuleAccess('role_management', 'can_edit')) {
+                    $user->designation_id = $request->filled('designation_id') ? $request->designation_id : null;
+                } else {
+                    return response()->json(['status' => 0, 'error' => ['designation_id' => ['Unauthorized designation assignment.']]], 403);
+                }
+            }
+
+
+
+            if ($request->has('timezone'))
+                $user->timezone = $request->timezone;
+            elseif ($request->has('time_zone'))
+                $user->timezone = $request->time_zone;
+
+            if (strlen(trim($request->password)) > 0) {
+                $user->password = Hash::make($request->password);
+            }
+
+            if ($request->user()->user_type === \App\Enums\UserType::Admin->value && $request->has('status')) {
+                $user->status = \App\Enums\UserStatus::tryFrom($request->status) ?? $user->status;
+            }
+
+            // Fallback for legacy database rows where timezone column is null
+            if (empty($user->timezone)) {
+                $user->timezone = 'UTC';
+            }
+
+
+            $user->save();
+
+            // Audit Log: Employee profile updated
+            \App\Models\AuditLog::create([
+                'actor_id' => Auth::id(),
+                'action' => 'employee_profile_updated',
+                'details' => [
+                    'target_id' => $request->uid,
+                    'target_name' => $user->name,
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+
+            return response()->json(['status' => 1, 'msg' => 'Employee Profile Updated']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 0, 'error' => $e->getMessage()], 500);
+        }
     }
 
 } // CommonProfileFunctions

@@ -12,7 +12,7 @@ include $pathPrefix . '/includes/head.php';
     <main id="main-content">
         <div class="container-fluid">
 
-            <div class="page-header d-flex justify-content-between align-items-center">
+            <div class="page-header">
                 <h1>Browse Offers</h1>
             </div>
 
@@ -55,8 +55,7 @@ include $pathPrefix . '/includes/head.php';
 
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
 
-    <script src="<?php echo $pathPrefix; ?>/assets/vendor/datatables/jquery.dataTables.min.js"></script>
-    <script src="<?php echo $pathPrefix; ?>/assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
 
     <script>
         function normalizeStatus(status) {
@@ -106,8 +105,8 @@ include $pathPrefix . '/includes/head.php';
                     offer.offer_name || 'N/A',
                     offer.category_name || 'General',
                     offer.model_name,
-                    offer.currency +" " +(offer.aff_pricing || '0.00'),
-                    " Clicks: " + (offer.clicks_cap || 'N/A') +" Conversions: " +(offer.conversions_cap || 'N/A'),
+                    offer.currency + " " + (offer.aff_pricing || '0.00'),
+                    " Clicks: " + (offer.clicks_cap || 'N/A') + " Conversions: " + (offer.conversions_cap || 'N/A'),
                     offer.target_city || 'N/A',
                     offer.target_state || 'N/A',
                     offer.target_country || 'N/A',

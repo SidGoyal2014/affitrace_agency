@@ -17,7 +17,6 @@ include $pathPrefix . '/includes/head.php';
             <!-- Page Header -->
             <div class="page-header">
                 <h1>
-                    <i class="fas fa-bell mr-2 text-primary"></i>
                     Notifications
                     <span id="unread-badge" class="badge badge-danger ml-2" style="display:none; font-size:0.75rem; vertical-align: middle;"></span>
                 </h1>

@@ -8,8 +8,8 @@ include $pathPrefix . '/includes/head.php';
     <main id="main-content">
         <div class="container-fluid">
             <!-- Header -->
-            <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                <h1 class="h3 mb-0 text-gray-800">Edit Invoice: <span id="editInvoiceNumber">Loading...</span></h1>
+            <div class="page-header">
+                <h1>Edit Invoice: <span id="editInvoiceNumber">Loading...</span></h1>
                 <a href="index.php" class="btn btn-sm btn-secondary shadow-sm">
                     <i class="fas fa-arrow-left"></i> Back to List
                 </a>

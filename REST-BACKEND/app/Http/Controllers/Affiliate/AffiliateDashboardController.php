@@ -39,7 +39,7 @@ class AffiliateDashboardController extends Controller
 
 		foreach ($arr as $obj) {
 			$arrCats[] = $obj->category_name;
-			$arrRevenue[] = $obj->revenue;
+			$arrRevenue[] = \App\Utils\CurrencyUtils::convertFromUsdToDefault($obj->revenue);
 		}//foreach
 
 		$obj_offers = $service->get_affiliate_offers();
@@ -54,6 +54,7 @@ class AffiliateDashboardController extends Controller
 			'title' => ucfirst($logged_in_user_type) . ' Dashboard',
 			'module_name' => ucfirst($logged_in_user_type) . ' Dashboard',
 			'logged_in_user_type' => $logged_in_user_type,
+			'default_currency' => \App\Models\Setting::find(1)->default_currency ?? 'USD',
 			'all_offers' => $service->get_offers_assigned(),
 			'arr_affiliate_offers' => $arr_affiliate_offers,
 			'offers_assigned' => $service->get_offers_assigned(),

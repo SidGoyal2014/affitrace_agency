@@ -272,6 +272,18 @@ class InvoiceService
             $lineItemsHtml = '<tr><td colspan="4" style="text-align:center; color:#888;">No line items</td></tr>';
         }
 
+
+        $settings = \App\Models\Setting::find(1);
+        $platformName = $settings->platform_name ?? 'AffiTrace Agency';
+        $logoHtml = '';
+        $companyNameStyle = '';
+        if ($settings && $settings->platform_logo) {
+            $logoPath = storage_path('app/public/branding/' . $settings->platform_logo);
+            if (file_exists($logoPath)) {
+                $logoHtml = '<img src="' . $logoPath . '" style="max-height: 50px; margin-bottom: 10px;">';
+                $companyNameStyle = 'font-size: 14px; color: #666; font-weight: normal;';
+            }
+        }
         // Replace placeholders
         $replacements = [
             '{{invoice_number}}' => $invoice->invoice_number,
@@ -297,7 +309,37 @@ class InvoiceService
             '{{payment_method}}' => $invoice->payment_method ?? 'N/A',
             '{{notes}}' => nl2br(e($invoice->notes ?? '')),
             '{{terms}}' => nl2br(e($invoice->terms ?? '')),
+            '{{platform_name}}' => $platformName,
+            '{{platform_logo_html}}' => $logoHtml,
+            '{{company_name_style}}' => $companyNameStyle,
         ];
+
+        // Replace placeholders
+        /*$replacements = [
+            '{{invoice_number}}' => $invoice->invoice_number,
+            '{{from_company}}' => $invoice->from_company ?? 'N/A',
+            '{{from_address}}' => nl2br(e($invoice->from_address ?? '')),
+            '{{from_email}}' => $invoice->from_email ?? '',
+            '{{from_vat_id}}' => $invoice->from_vat_id ?? '',
+            '{{company_name}}' => $invoice->company_name ?? ($invoice->advertiser ? $invoice->advertiser->company : 'N/A'),
+            '{{to_address}}' => nl2br(e($invoice->to_address ?? '')),
+            '{{to_email}}' => $invoice->to_email ?? '',
+            '{{to_vat_id}}' => $invoice->to_vat_id ?? '',
+            '{{advertiser_name}}' => $invoice->company_name ?? ($invoice->advertiser ? $invoice->advertiser->company : 'N/A'),
+            '{{title}}' => $invoice->title ?? 'Invoice',
+            '{{invoice_date}}' => $invoice->invoice_date ? $invoice->invoice_date->format('Y-m-d') : 'N/A',
+            '{{due_date}}' => $invoice->due_date ? $invoice->due_date->format('Y-m-d') : 'N/A',
+            '{{line_items}}' => $lineItemsHtml,
+            '{{subtotal_amount}}' => number_format($invoice->subtotal_amount, 2),
+            '{{tax_percent}}' => number_format($invoice->tax_percent, 2),
+            '{{tax_amount}}' => number_format($invoice->tax_amount, 2),
+            '{{discount_amount}}' => number_format($invoice->discount_amount, 2),
+            '{{net_total}}' => number_format($invoice->net_total, 2),
+            '{{total_amount}}' => number_format($invoice->total_amount, 2),
+            '{{payment_method}}' => $invoice->payment_method ?? 'N/A',
+            '{{notes}}' => nl2br(e($invoice->notes ?? '')),
+            '{{terms}}' => nl2br(e($invoice->terms ?? '')),
+        ];*/
 
         return str_replace(array_keys($replacements), array_values($replacements), $html);
     }
@@ -345,25 +387,25 @@ class InvoiceService
         DB::transaction(function () use ($invoice, $payload, $actorId, &$transaction) {
             // 1. Create transaction receipt row
             $transaction = \App\Models\Transaction::create([
-                'invoice_id'          => $invoice->id,
-                'payment_type'        => 'Receipt',
-                'payment_mode'        => $payload['payment_mode'],
-                'payment_from'        => $payload['payment_from'],
-                'payment_to'          => $payload['payment_to'],
-                'transaction_amount'  => $payload['transaction_amount'],
-                'activity_date'       => $payload['activity_date'] ?? now(),
-                'transaction_code'    => $payload['transaction_code']    ?? null,
-                'manual_invoice_no'   => $payload['manual_invoice_no']   ?? null,
+                'invoice_id' => $invoice->id,
+                'payment_type' => 'Receipt',
+                'payment_mode' => $payload['payment_mode'],
+                'payment_from' => $payload['payment_from'],
+                'payment_to' => $payload['payment_to'],
+                'transaction_amount' => $payload['transaction_amount'],
+                'activity_date' => $payload['activity_date'] ?? now(),
+                'transaction_code' => $payload['transaction_code'] ?? null,
+                'manual_invoice_no' => $payload['manual_invoice_no'] ?? null,
                 'transaction_details' => $payload['transaction_details'] ?? '',
-                'subscription_id'     => 0,
-                'logged_in_user'      => $actorId,
-                'advertiser_id'       => $invoice->advertiser_id,
-                'affiliate_id'        => null, // Not applicable for Advertiser → Agency invoice receipts
+                'subscription_id' => 0,
+                'logged_in_user' => $actorId,
+                'advertiser_id' => $invoice->advertiser_id,
+                'affiliate_id' => null, // Not applicable for Advertiser → Agency invoice receipts
             ]);
 
             // 2. Mark invoice as paid
             $invoice->update([
-                'status'  => \App\Enums\InvoiceStatus::Paid->value,
+                'status' => \App\Enums\InvoiceStatus::Paid->value,
                 'paid_at' => now(),
             ]);
         });

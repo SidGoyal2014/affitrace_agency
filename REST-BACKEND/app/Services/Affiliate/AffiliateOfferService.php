@@ -84,13 +84,10 @@ class AffiliateOfferService
             ->where('offer_affiliates.affiliate_id', $affiliateId)
             ->get()->toArray();
 
-        // Append EAI to tracking links if they exist (though this method doesn't select tracking_url yet?)
-        // The frontend for 'Offers Approved' has a 'Get Link' button that calls tracking_url endpoint.
-        // But the user said "offer url doesn't have the eai... in the below link".
-        // The link provided was `offers_approved.php`.
-        // The frontend table doesn't show the link directly, it shows a button.
-        // So the EAI is likely missing in the MODAL which calls `tracking_url`.
-        // I will update this method anyway if needed, but the main fix is in `getTrackingUrlDetails`.
+        foreach ($offers as $offer) {
+            $offer->payout_usd = \App\Utils\CurrencyUtils::convertFromUsdToDefault($offer->payout_usd);
+            $offer->revenue_usd = \App\Utils\CurrencyUtils::convertFromUsdToDefault($offer->revenue_usd);
+        }
 
         return $offers;
     }
@@ -131,6 +128,9 @@ class AffiliateOfferService
                     PR.offer_id = " . $offerId;
 
         $offerEvents = DB::select($sql);
+        foreach ($offerEvents as $evt) {
+            $evt->payout_usd = \App\Utils\CurrencyUtils::convertFromUsdToDefault($evt->payout_usd ?? 0);
+        }
 
         return [
             'module_name' => 'Tracking Url',

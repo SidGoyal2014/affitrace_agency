@@ -28,13 +28,13 @@ class ImpersonationController extends Controller
         }
 
         return response()->json([
-            'message'       => $result['message'],
-            'token'         => $result['token'],
-            'token_type'    => $result['token_type'],
-            'user'          => $result['user'],
-            'expires_in'    => $result['expires_in'],
-            'log_id'        => $result['log_id'],
-            'impersonator'  => $result['impersonator'],
+            'message' => $result['message'],
+            'token' => $result['token'],
+            'token_type' => $result['token_type'],
+            'user' => $result['user'],
+            'expires_in' => $result['expires_in'],
+            'log_id' => $result['log_id'],
+            'impersonator' => $result['impersonator'],
         ]);
     }
 
@@ -58,6 +58,7 @@ class ImpersonationController extends Controller
     /**
      * List impersonation audit logs.
      */
+    /*
     public function logs(Request $request)
     {
         $filters = $request->only(['impersonator_id', 'impersonated_id']);
@@ -65,4 +66,5 @@ class ImpersonationController extends Controller
 
         return response()->json($logs);
     }
+    */
 }

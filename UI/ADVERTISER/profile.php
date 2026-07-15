@@ -251,4 +251,4 @@ include $pathPrefix . '/includes/head.php';
     </script>
 </body>
 
-</html>
+</html>

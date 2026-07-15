@@ -15,7 +15,7 @@ include $pathPrefix . '/includes/head.php';
         <div class="container-fluid">
 
             <!-- Page Header -->
-            <div class="page-header">
+            <div class="d-flex align-items-center justify-content-between mb-4">
                 <h1>Roles</h1>
                 <a href="<?php echo $pathPrefix; ?>/roles/create.php" class="btn btn-primary">
                     <i class="fas fa-plus mr-2"></i> Create Role

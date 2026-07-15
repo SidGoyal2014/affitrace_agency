@@ -41,9 +41,9 @@ class ImpersonationService
         $log = ImpersonationLog::create([
             'impersonator_id' => $admin->id,
             'impersonated_id' => $targetUser->id,
-            'started_at'      => now(),
-            'ip_address'      => $ipAddress,
-            'notified'        => false,
+            'started_at' => now(),
+            'ip_address' => $ipAddress,
+            'notified' => false,
         ]);
 
         // Notify the impersonated user via email
@@ -52,7 +52,7 @@ class ImpersonationService
                 'Your account on Affitrace was accessed by an administrator (' . $admin->name . ') at ' . now()->format('d M Y, h:i A') . '. If you did not request this, please contact support.',
                 function ($message) use ($targetUser) {
                     $message->to($targetUser->email)
-                            ->subject('Affitrace: Your account was accessed by an administrator');
+                        ->subject('Affitrace: Your account was accessed by an administrator');
                 }
             );
             $log->update(['notified' => true]);
@@ -61,15 +61,15 @@ class ImpersonationService
         }
 
         return [
-            'status'        => true,
-            'message'       => 'Impersonation started',
-            'token'         => $impersonationToken,
-            'token_type'    => 'Bearer',
-            'user'          => $targetUser,
-            'expires_in'    => 60, // minutes
-            'log_id'        => $log->id,
-            'impersonator'  => [
-                'id'   => $admin->id,
+            'status' => true,
+            'message' => 'Impersonation started',
+            'token' => $impersonationToken,
+            'token_type' => 'Bearer',
+            'user' => $targetUser,
+            'expires_in' => 60, // minutes
+            'log_id' => $log->id,
+            'impersonator' => [
+                'id' => $admin->id,
                 'name' => $admin->name,
             ],
             'code' => 200
@@ -104,6 +104,7 @@ class ImpersonationService
     /**
      * Get paginated logs.
      */
+    /*
     public function getLogs(array $filters = [], $perPage = 25)
     {
         $query = ImpersonationLog::with(['impersonator:id,name,email', 'impersonated:id,name,email,user_type'])
@@ -119,4 +120,5 @@ class ImpersonationService
 
         return $query->paginate($perPage);
     }
+    */
 }

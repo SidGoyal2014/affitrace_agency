@@ -15,7 +15,7 @@ include $pathPrefix . '/includes/head.php';
         <div class="container-fluid">
 
             <!-- Page Header -->
-            <div class="page-header">
+            <div class="d-flex align-items-center justify-content-between mb-4">
                 <h1>Edit Role</h1>
                 <a href="<?php echo $pathPrefix; ?>/roles/list.php" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left mr-2"></i> Back to Roles

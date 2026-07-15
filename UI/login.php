@@ -1,3 +1,6 @@
+<?php
+$pathCommonPrefix = 'common';
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -12,13 +15,14 @@
     <title>Login - Affitrace</title>
 
     <!-- Custom fonts for this template-->
-    <link href="ADMIN/assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet"
+        type="text/css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Custom styles for this template-->
-    <link href="ADMIN/assets/css/sb-admin-2.css" rel="stylesheet">
-    <link href="ADMIN/assets/css/custom.css" rel="stylesheet">
-    <link href="ADMIN/assets/css/modern-theme.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/css/sb-admin-2.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/css/custom.css" rel="stylesheet">
+    <link href="<?php echo $pathCommonPrefix; ?>/assets/css/modern-theme.css" rel="stylesheet">
 </head>
 
 <body
@@ -37,14 +41,15 @@
                         <!-- Brand -->
                         <div class="text-center mb-4">
                             <i class="fab fa-hive" style="font-size: 3rem; color: var(--primary-main);"></i>
-                            <h1 class="h4 mt-3 mb-2" style="font-weight: 600; color: var(--text-primary);">Affitrace</h1>
+                            <h1 class="h4 mt-3 mb-2" style="font-weight: 600; color: var(--text-primary);">Affitrace
+                            </h1>
                             <p class="text-muted">Sign in to your account</p>
                         </div>
 
                         <form class="user" id="loginForm">
                             <div class="form-group">
                                 <label>Log In As</label>
-                                <select name="user_type" class="form-control" id="user_type" required 
+                                <select name="user_type" class="form-control" id="user_type" required
                                     style="border-radius: 0.5rem; height: calc(1.5em + 1rem + 2px);">
                                     <option value="" disabled selected>Select User Type</option>
                                     <option value="admin">Administrator</option>
@@ -53,7 +58,7 @@
                                     <option value="employee">Employee</option>
                                 </select>
                             </div>
-                            
+
                             <div class="form-group">
                                 <label>Agency ID</label>
                                 <input type="text" name="eai" class="form-control" id="eai"
@@ -101,14 +106,14 @@
     </div>
 
     <!-- Bootstrap core JavaScript-->
-    <script src="ADMIN/assets/vendor/jquery/jquery.min.js"></script>
-    <script src="ADMIN/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="<?php echo $pathCommonPrefix; ?>/assets/vendor/jquery/jquery.min.js"></script>
+    <script src="<?php echo $pathCommonPrefix; ?>/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <!-- Use ADMIN's api.js -->
-    <script src="ADMIN/assets/js/api.js"></script>
+    <script src="<?php echo $pathCommonPrefix; ?>/assets/js/api.js"></script>
 
     <script>
         $(document).ready(function () {
-            
+
             $('#loginForm').on('submit', async function (e) {
                 e.preventDefault();
                 $('#btnLogin').prop('disabled', true).text('Signing in...');
@@ -122,9 +127,9 @@
                 };
 
                 if (!formData.user_type) {
-                     $('#alert-container').html(`<div class="alert alert-warning">Please select a user type.</div>`);
-                     $('#btnLogin').prop('disabled', false).text('Sign In');
-                     return;
+                    $('#alert-container').html(`<div class="alert alert-warning">Please select a user type.</div>`);
+                    $('#btnLogin').prop('disabled', false).text('Sign In');
+                    return;
                 }
 
                 try {
@@ -149,8 +154,21 @@
                             // Admin goes to ADMIN panel
                             window.location.href = 'ADMIN/dashboard.php';
                         }
+
+
+                        // Load branding details on login response to cache them
+                        if (data.branding) {
+                            localStorage.setItem('branding_settings', JSON.stringify(data.branding));
+                        } else {
+                            // Backup: load branding from API
+                            await loadBranding(formData.eai);
+                        }
+
+
+
+
                     } else {
-                         throw new Error('Login failed: Invalid response');
+                        throw new Error('Login failed: Invalid response');
                     }
 
                 } catch (error) {
@@ -164,7 +182,119 @@
                     $('#btnLogin').prop('disabled', false).text('Sign In');
                 }
             });
+
+
+
+
+            // Dynamic White-Label Settings Application
+            async function loadBranding(agencyId) {
+                if (!agencyId) return;
+                try {
+                    const response = await fetch(`${API_BASE_URL}/branding`, {
+                        headers: {
+                            'X-Agency-ID': agencyId,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.status === 1 && data.branding) {
+                            localStorage.setItem('branding_settings', JSON.stringify(data.branding));
+                            applyBranding(data.branding);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to load branding:', e);
+                }
+            }
+
+            function applyBranding(branding) {
+                const name = branding.platform_name || 'Affitrace';
+                const logo = branding.platform_logo;
+                const primary = branding.primary_color || '#6366F1';
+                const secondary = branding.secondary_color || '#1E293B';
+                const accent = branding.accent_color || '#10B981';
+                const favicon = branding.platform_favicon;
+
+                document.title = `Login - ${name}`;
+
+                const brandContainer = $('.text-center.mb-4');
+                if (brandContainer.length > 0) {
+                    if (logo) {
+                        const logoUrl = `${API_BASE_URL}/../storage/branding/${logo}`;
+                        brandContainer.html(`
+                        <img src="${logoUrl}" alt="${name}" style="max-height: 80px; width: auto; max-width: 250px; margin-bottom: 1rem;">
+                        <p class="text-muted">Sign in to your account</p>
+                    `);
+                    } else {
+                        brandContainer.html(`
+                        <i class="fab fa-hive" style="font-size: 3rem; color: var(--primary-main);"></i>
+                        <h1 class="h4 mt-3 mb-2" style="font-weight: 600; color: var(--text-primary);">${name}</h1>
+                        <p class="text-muted">Sign in to your account</p>
+                    `);
+                    }
+                }
+
+                let style = $('#dynamic-branding-styles');
+                if (style.length === 0) {
+                    style = $('<style id="dynamic-branding-styles"></style>').appendTo('head');
+                }
+                style.html(`
+                :root {
+                    --primary-main: ${primary} !important;
+                    --primary-light: ${primary}ee !important;
+                    --primary-dark: ${primary}dd !important;
+                    --secondary-main: ${secondary} !important;
+                    --secondary-light: ${secondary}ee !important;
+                    --secondary-dark: ${secondary}dd !important;
+                    --success-main: ${accent} !important;
+                }
+                .btn-primary {
+                    background-color: ${primary} !important;
+                    border-color: ${primary} !important;
+                }
+                .btn-primary:hover {
+                    background-color: ${primary}ee !important;
+                    border-color: ${primary}ee !important;
+                }
+            `);
+
+                if (favicon) {
+                    const faviconUrl = `${API_BASE_URL}/../storage/branding/${favicon}`;
+                    let link = $("link[rel~='icon']");
+                    if (link.length === 0) {
+                        link = $('<link rel="icon">').appendTo('head');
+                    }
+                    link.attr('href', faviconUrl);
+                }
+
+                $('.text-center.mt-4 span').text(`© ${new Date().getFullYear()} ${branding.custom_copyright ?? (name + '. All rights reserved.')}`);
+            }
+
+            // Listen for Agency ID changes
+            $('#eai').on('change blur keyup', function () {
+                const eai = $(this).val().trim();
+                if (eai.length >= 2) {
+                    loadBranding(eai);
+                }
+            });
+
+            // Initialize branding if agency ID is cached in localStorage
+            const cachedEai = localStorage.getItem('agency_id');
+            if (cachedEai) {
+                $('#eai').val(cachedEai);
+                loadBranding(cachedEai);
+            }
+
+
+
+
         });
+
+
+
+
+
     </script>
 </body>
 

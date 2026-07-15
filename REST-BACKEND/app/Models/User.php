@@ -67,6 +67,26 @@ class User extends Authenticatable
         return $this->belongsTo(Designation::class);
     }
 
+    public function isAffiliateManager(): bool
+    {
+        return $this->designation && strtolower($this->designation->name) === 'affiliate manager';
+    }
+
+    public function isAdvertiserManager(): bool
+    {
+        return $this->designation && strtolower($this->designation->name) === 'advertiser manager';
+    }
+
+    public function isFinanceManager(): bool
+    {
+        return $this->designation && strtolower($this->designation->name) === 'finance manager';
+    }
+
+    public function isObserver(): bool
+    {
+        return $this->designation && strtolower($this->designation->name) === 'observer';
+    }
+
     // ─── RBAC Helpers ─────────────────────────────────────
 
     /**
@@ -85,12 +105,35 @@ class User extends Authenticatable
             return true;
         }
 
-        // No role assigned = no access
-        if (!$this->role_id || !$this->role) {
+        $roleId = $this->role_id;
+        $role = $this->role;
+
+        // Fallback to the default role of this user type if no role is explicitly assigned
+        if (!$roleId) {
+            $defaultRole = Role::where('user_type', $this->user_type)
+                ->where('is_default', true)
+                ->first();
+            if ($defaultRole) {
+                $roleId = $defaultRole->id;
+                $role = $defaultRole;
+            }
+        }
+
+        // No role assigned = no access (Uses the fallback $roleId local variable)
+        if (!$roleId) {
             return false;
         }
 
-        $module = $this->role->modules()->where('slug', $moduleSlug)->first();
+        // Avoid N+1 queries by accessing lazy loaded modules relation collection
+        if ($role && !$role->relationLoaded('modules')) {
+            $role->loadMissing('modules');
+        }
+
+        if (!$role) {
+            return false;
+        }
+
+        $module = $role->modules->firstWhere('slug', $moduleSlug);
 
         if (!$module) {
             return false;
@@ -98,6 +141,7 @@ class User extends Authenticatable
 
         return (bool) $module->pivot->{$action};
     }
+
 
     /**
      * Check if this user can impersonate other users.
@@ -127,28 +171,51 @@ class User extends Authenticatable
         // Admin gets all permissions
         if (strtolower($this->user_type) === 'admin') {
             return Module::all()->mapWithKeys(function ($module) {
-                return [$module->slug => [
-                    'can_view'   => true,
-                    'can_create' => true,
-                    'can_edit'   => true,
-                    'can_delete' => true,
-                ]];
+                return [
+                    $module->slug => [
+                        'can_view' => true,
+                        'can_create' => true,
+                        'can_edit' => true,
+                        'can_delete' => true,
+                    ]
+                ];
             })->toArray();
         }
 
-        if (!$this->role_id || !$this->role) {
+        $role = $this->role;
+        $roleId = $this->role_id;
+
+        // Fallback to the default role of this user type if no role is explicitly assigned
+        if (!$roleId) {
+            $defaultRole = Role::where('user_type', $this->user_type)
+                ->where('is_default', true)
+                ->first();
+            if ($defaultRole) {
+                $role = $defaultRole;
+                $roleId = $defaultRole->id;
+            }
+        }
+
+        if (!$roleId || !$role) {
             return [];
         }
 
-        return $this->role->modules->mapWithKeys(function ($module) {
-            return [$module->slug => [
-                'can_view'   => (bool) $module->pivot->can_view,
-                'can_create' => (bool) $module->pivot->can_create,
-                'can_edit'   => (bool) $module->pivot->can_edit,
-                'can_delete' => (bool) $module->pivot->can_delete,
-            ]];
+        if (!$role->relationLoaded('modules')) {
+            $role->loadMissing('modules');
+        }
+
+        return $role->modules->mapWithKeys(function ($module) {
+            return [
+                $module->slug => [
+                    'can_view' => (bool) $module->pivot->can_view,
+                    'can_create' => (bool) $module->pivot->can_create,
+                    'can_edit' => (bool) $module->pivot->can_edit,
+                    'can_delete' => (bool) $module->pivot->can_delete,
+                ]
+            ];
         })->toArray();
     }
+
 
     public function receivedNotifications(): HasMany
     {

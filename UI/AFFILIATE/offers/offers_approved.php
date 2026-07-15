@@ -108,12 +108,13 @@ include $pathPrefix . '/includes/head.php';
             try {
                 const response = await API.fetchWithAuth('affiliate/offers/approved');
                 const offers = response.offers || [];
+                const cur = response.default_currency || 'USD';
 
                 const data = offers.map(offer => [
                     offer.id,
                     offer.offer_name,
                     offer.category_name || 'General',
-                    '$' + (offer.payout_usd || '0.00'),
+                    (offer.payout_usd || '0.00') + ' ' + cur,
                     '<span class="badge badge-success">Active</span>',
                     `<button class="btn btn-primary btn-sm" onclick="openTrackingModal(${offer.id})">Get Link</button>`
                 ]);
@@ -136,6 +137,7 @@ include $pathPrefix . '/includes/head.php';
 
             try {
                 const data = await API.fetchWithAuth(`affiliate/offers/tracking-url/${oid}`);
+                const cur = data.default_currency || 'USD';
 
                 if (data.offer) {
                     $('#tracking_url').val(data.offer.tracking_url || 'No URL found');
@@ -145,7 +147,7 @@ include $pathPrefix . '/includes/head.php';
                     let eventsHtml = '';
                     if (data.offerEvents && data.offerEvents.length > 0) {
                         data.offerEvents.forEach(evt => {
-                            eventsHtml += `<li>${evt.event_name} (Payout: $${evt.payout})</li>`;
+                            eventsHtml += `<li>${evt.event_name} (Payout: ${evt.payout_usd || '0.00'} ${cur})</li>`;
                         });
                     } else {
                         eventsHtml = '<li>Default Conversion</li>';

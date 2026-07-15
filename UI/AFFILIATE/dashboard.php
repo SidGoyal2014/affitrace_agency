@@ -1,5 +1,6 @@
 <?php
 $pathPrefix = '.';
+$pathCommonPrefix = $pathPrefix . '/../common';
 $activePage = 'dashboard';
 $pageTitle = 'Affiliate Dashboard';
 include $pathPrefix . '/includes/head.php';
@@ -41,7 +42,7 @@ include $pathPrefix . '/includes/head.php';
                     <div class="card-modern h-100">
                         <div class="stat-card">
                             <div class="stat-icon success">
-                                <i class="fas fa-dollar-sign"></i>
+                                <i class="fas fa-money-bill"></i>
                             </div>
                             <div class="stat-content">
                                 <div class="stat-label">Month's Earnings</div>
@@ -196,7 +197,7 @@ include $pathPrefix . '/includes/head.php';
     <?php include $pathPrefix . '/includes/scripts.php'; ?>
 
     <!-- Page level plugins -->
-    <script src="<?php echo $pathPrefix; ?>/assets/vendor/chart.js/Chart.min.js"></script>
+    <script src="<?php echo $pathCommonPrefix; ?>/assets/vendor/chart.js/Chart.min.js"></script>
 
     <script>
         // Format numbers to 2 decimal places
@@ -230,14 +231,15 @@ include $pathPrefix . '/includes/head.php';
         $(document).ready(async function () {
             try {
                 const data = await API.fetchWithAuth('affiliate/dashboard');
+                const cur = data.default_currency || 'USD';
 
                 // Update Stats
                 $('#total_offers').text(data.all_offers ? data.all_offers.length : 0);
 
                 // Use the backend provided dynamic values
-                $('#monthly_revenue').text('$' + (data.month_earnings || '0.00'));
-                $('#today_revenue').text('$' + (data.today_earnings || '0.00'));
-                $('#total_earnings').text('$' + (data.total_earnings || '0.00'));
+                $('#monthly_revenue').text((data.month_earnings || '0.00') + ' ' + cur);
+                $('#today_revenue').text((data.today_earnings || '0.00') + ' ' + cur);
+                $('#total_earnings').text((data.total_earnings || '0.00') + ' ' + cur);
                 $('#total_clicks').text(data.total_clicks || 0);
                 $('#total_conversions').text(data.total_conversions || 0);
 
@@ -275,7 +277,7 @@ include $pathPrefix . '/includes/head.php';
                         layout: { padding: { left: 10, right: 25, top: 25, bottom: 0 } },
                         scales: {
                             xAxes: [{ time: { unit: 'date' }, gridLines: { display: false, drawBorder: false }, ticks: { maxTicksLimit: 7 } }],
-                            yAxes: [{ ticks: { maxTicksLimit: 5, padding: 10, callback: function (value) { return '$' + number_format(value); } }, gridLines: { color: "rgb(234, 236, 244)", zeroLineColor: "rgb(234, 236, 244)", drawBorder: false, borderDash: [2], zeroLineBorderDash: [2] } }],
+                            yAxes: [{ ticks: { maxTicksLimit: 5, padding: 10, callback: function (value) { return number_format(value) + ' ' + cur; } }, gridLines: { color: "rgb(234, 236, 244)", zeroLineColor: "rgb(234, 236, 244)", drawBorder: false, borderDash: [2], zeroLineBorderDash: [2] } }],
                         },
                         legend: { display: false },
                         tooltips: {
@@ -292,7 +294,7 @@ include $pathPrefix . '/includes/head.php';
                             intersect: false,
                             mode: 'index',
                             caretPadding: 10,
-                            callbacks: { label: function (tooltipItem, chart) { var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || ''; return datasetLabel + ': $' + number_format(tooltipItem.yLabel); } }
+                            callbacks: { label: function (tooltipItem, chart) { var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || ''; return datasetLabel + ': ' + number_format(tooltipItem.yLabel) + ' ' + cur; } }
                         }
                     }
                 });
@@ -348,7 +350,7 @@ include $pathPrefix . '/includes/head.php';
                                     <div class="py-2">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
                                             <strong class="text-primary">${offer.offer_name}</strong>
-                                            <span class="badge badge-success">$${offer.offer_price_usd || '0.00'}</span>
+                                            <span class="badge badge-success">${offer.payout_usd || '0.00'} ${cur}</span>
                                         </div>
                                         <div class="small text-muted mb-2">
                                             Category: <strong>${offer.category_name || 'Uncategorized'}</strong>

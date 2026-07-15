@@ -177,31 +177,50 @@ class CurrencyUtils
 
     public static function getNewCurrencyValue($amount, $from)
     {
-        // Base is USD
+        return self::convertToUsd($amount, $from);
+    }
+
+    public static function convertToUsd($amount, $from)
+    {
         $from = strtoupper($from);
-
         if ($from === 'USD') {
-            return $amount;
+            return (float) $amount;
         }
-
-        if (Config('app.env') == 'local' || !env('CURRENCY_RAPID_API_KEY')) {
-            if (isset(self::$rates[$from])) {
-                return $amount / self::$rates[$from];
-            }
-        }
-
-        // Return original if no conversion found, or maybe fallback to 1? 
-        // Existing logic returned 1, which implies 1:1. 
-        // Let's stick safe and return calculated amount or fallback.
-
         if (isset(self::$rates[$from])) {
-            // Rate is value in FromCurrency per 1 USD. e.g. 0.85 EUR = 1 USD. Wait no.
-            // API response: rates: { EUR: 0.853 } means 1 USD = 0.853 EUR.
-            // So to convert EUR to USD: Amount / Rate. e.g. 10 EUR / 0.853 = $11.72
-            return $amount / self::$rates[$from];
+            return (float) $amount / self::$rates[$from];
         }
+        return (float) $amount;
+    }
 
-        return $amount; // Fallback to 1:1 if unknown
+    public static function convertFromUsd($amount, $to)
+    {
+        $to = strtoupper($to);
+        if ($to === 'USD') {
+            return (float) $amount;
+        }
+        if (isset(self::$rates[$to])) {
+            return (float) $amount * self::$rates[$to];
+        }
+        return (float) $amount;
+    }
+
+    public static function getDefaultCurrency()
+    {
+        try {
+            $setting = \App\Models\Setting::find(1);
+            if ($setting && !empty($setting->default_currency)) {
+                return strtoupper($setting->default_currency);
+            }
+        } catch (\Exception $e) {
+            // fallback
+        }
+        return 'USD';
+    }
+
+    public static function convertFromUsdToDefault($amount)
+    {
+        $default = self::getDefaultCurrency();
+        return self::convertFromUsd($amount, $default);
     }
 
     public static function getCurrency()

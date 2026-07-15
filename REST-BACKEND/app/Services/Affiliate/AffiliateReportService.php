@@ -394,9 +394,7 @@ class AffiliateReportService extends BaseReportService
         $results = $query->orderBy('offer_trackings.id', 'desc')->paginate($limit);
         
         $results->getCollection()->transform(function ($row) {
-            $row->link_clicked_at = $this->formatUtcToLocal($row->link_clicked_at);
-            $row->created_at = $this->formatUtcToLocal($row->created_at);
-            return $row;
+            return $this->formatClickRow($row, Auth::user());
         });
 
         return [
@@ -413,17 +411,20 @@ class AffiliateReportService extends BaseReportService
     {
         $query = DB::table('conversions')
             ->select(
-            'conversions.*',
-            'conversions.id as conv_id',
-            'conversions.created_at as conversion_time',
-            'conversions.country',
-            'conversions.device',
-            'conversions.event',
-            'conversions.payout',
-            'offers.id as offer_id',
-            'offers.offer_name'
-        )
+                'conversions.*',
+                'conversions.id as conv_id',
+                'conversions.created_at as conversion_time',
+                'conversions.country',
+                'conversions.device',
+                'conversions.event',
+                'conversions.payout',
+                'offers.id as offer_id',
+                'offers.offer_name',
+                'ot.created_at as ot_click_time',
+                'ot.ip as ot_click_ip'
+            )
             ->leftJoin('offers', 'conversions.offer_id', '=', 'offers.id')
+            ->leftJoin('offer_trackings as ot', 'conversions.tid', '=', 'ot.tid')
             ->where('conversions.affiliate_id', $aid);
 
         if ($request->from && $request->to) {
@@ -440,9 +441,7 @@ class AffiliateReportService extends BaseReportService
         $results = $query->orderBy('conversions.id', 'desc')->paginate($limit);
 
         $results->getCollection()->transform(function ($row) {
-            $row->conversion_time = $this->formatUtcToLocal($row->conversion_time);
-            $row->created_at = $this->formatUtcToLocal($row->created_at);
-            return $row;
+            return $this->formatConversionRow($row, Auth::user());
         });
 
         return [

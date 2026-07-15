@@ -14,7 +14,7 @@ include $pathPrefix . '/includes/head.php';
 
             <div class="page-header">
                 <h1>Edit Offer</h1>
-                <a href="approved.php" class="btn btn-outline-primary">
+                <a href="index.php" class="btn btn-outline-primary">
                     <i class="fas fa-arrow-left mr-2"></i> Back to Offers
                 </a>
             </div>
@@ -103,6 +103,17 @@ include $pathPrefix . '/includes/head.php';
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="row mt-2">
+                                        <div class="col-md-12">
+                                            <small class="text-muted d-block mb-1">
+                                                <strong>Available Tokens:</strong> Click a token to insert it into the
+                                                Offer URL
+                                            </small>
+                                            <div id="offerUrlTokensContainer" class="row">
+                                                <!-- Token buttons populated by JS -->
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <hr class="form-divider">
@@ -113,37 +124,33 @@ include $pathPrefix . '/includes/head.php';
                                         <div class="section-icon"><i class="fas fa-dollar-sign"></i></div>
                                         <h6>Pricing Model</h6>
                                     </div>
-
-                                    <div class="field-group">
-                                        <div class="field-group-label">
-                                            <i class="fas fa-chart-line"></i> Revenue & Payout
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="pricing-pair">
-                                                    <div class="form-group">
-                                                        <label>Ad Model</label>
-                                                        <select name="ad_model" class="form-control"></select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label>Revenue</label>
-                                                        <input type="number" name="ad_pricing" class="form-control"
-                                                            step="0.01">
-                                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="pricing-pair">
+                                                <div class="form-group">
+                                                    <label>Select Model <span class="required-dot"></span></label>
+                                                    <select name="ad_model" class="form-control" required></select>
                                                 </div>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="pricing-pair">
-                                                    <div class="form-group">
-                                                        <label>Aff Model</label>
-                                                        <select name="aff_model" class="form-control"></select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label>Payout</label>
-                                                        <input type="number" name="aff_pricing" class="form-control"
-                                                            step="0.01">
-                                                    </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="pricing-pair">
+                                                <div class="form-group">
+                                                    <label>Revenue</label>
+                                                    <input type="number" name="ad_pricing" class="form-control"
+                                                        step="0.01">
                                                 </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="pricing-pair">
+                                                <div class="form-group">
+                                                    <label>Payout</label>
+                                                    <input type="number" name="aff_pricing" class="form-control"
+                                                        step="0.01">
+                                                </div>
+                                                <input type="hidden" name="aff_model" class="form-control"
+                                                    required></input>
                                             </div>
                                         </div>
                                     </div>
@@ -195,14 +202,18 @@ include $pathPrefix . '/includes/head.php';
                                     <div class="row mt-3">
                                         <div class="col-md-3">
                                             <div class="form-group">
-                                                <label><i class="fas fa-mouse-pointer mr-1 text-warning"></i> Clicks Cap <small class="text-muted">(blank = unlimited)</small></label>
-                                                <input type="number" name="clicks_cap" class="form-control" min="0" placeholder="Unlimited">
+                                                <label><i class="fas fa-mouse-pointer mr-1 text-warning"></i> Clicks Cap
+                                                    <small class="text-muted">(blank = unlimited)</small></label>
+                                                <input type="number" name="clicks_cap" class="form-control" min="0"
+                                                    placeholder="Unlimited">
                                             </div>
                                         </div>
                                         <div class="col-md-3">
                                             <div class="form-group">
-                                                <label><i class="fas fa-check-circle mr-1 text-success"></i> Conversions Cap <small class="text-muted">(blank = unlimited)</small></label>
-                                                <input type="number" name="conversions_cap" class="form-control" min="0" placeholder="Unlimited">
+                                                <label><i class="fas fa-check-circle mr-1 text-success"></i> Conversions
+                                                    Cap <small class="text-muted">(blank = unlimited)</small></label>
+                                                <input type="number" name="conversions_cap" class="form-control" min="0"
+                                                    placeholder="Unlimited">
                                             </div>
                                         </div>
                                     </div>
@@ -309,7 +320,7 @@ include $pathPrefix . '/includes/head.php';
                                     </div>
                                     <div class="targeting-value">
                                         <select name="target_country" class="form-control select2-country"
-                                            style="width: 100%;">
+                                            style="width: 100%;" multiple>
                                             <option value="">Global (All Countries)</option>
                                         </select>
                                     </div>
@@ -326,9 +337,9 @@ include $pathPrefix . '/includes/head.php';
                                             <option value="block">Block</option>
                                         </select>
                                     </div>
-                                    <div class="targeting-value">
-                                        <select name="target_state" class="form-control select2-state"
-                                            style="width: 100%;">
+                                    <div class="targeting-value" id="stateFieldWrapper">
+                                        <select name="target_state" id="stateSelect" class="form-control select2-state"
+                                            style="width: 100%;" multiple>
                                             <option value="">All States</option>
                                         </select>
                                     </div>
@@ -561,7 +572,7 @@ include $pathPrefix . '/includes/head.php';
             }
             if (!offerId) {
                 Toast.error('Error', 'No offer ID specified');
-                window.location.href = 'approved.php';
+                window.location.href = 'index.php';
                 return;
             }
 
@@ -573,11 +584,13 @@ include $pathPrefix . '/includes/head.php';
             // Initialize Select2 for ALL dropdowns (searchable)
             $('select.form-control').each(function () {
                 const $el = $(this);
+                if ($el.data('select2')) return;
                 const opts = {
                     theme: 'bootstrap4',
                     width: '100%',
                     allowClear: true,
-                    dropdownParent: $el.parent()
+                    dropdownParent: $(document.body)
+                    //dropdownParent: $el.parent()
                 };
 
                 const firstOpt = $el.find('option[value=""]');
@@ -604,10 +617,13 @@ include $pathPrefix . '/includes/head.php';
                 });
             });
 
+            // Force Select2 to sync with pre-selected values set before initialization
+            if ($('#stateSelect').length) {
+                $('#stateSelect').trigger('change');
+            }
+
             // Event Listeners for Cascading
-            $('select[name="target_country"]').on('change', function () {
-                populateStateDropdown($(this).val());
-            });
+            $('select[name="target_country"]').on('change', handleCountryChange);
 
             // ScrollSpy for Sections
             $(window).on('scroll', function () {
@@ -658,7 +674,7 @@ include $pathPrefix . '/includes/head.php';
 
         async function loadOfferData() {
             try {
-                const response = await API.fetchWithAuth(`<?php echo $user_type;?>/offer/edit/${offerId}`);
+                const response = await API.fetchWithAuth(`<?php echo $user_type; ?>/offer/edit/${offerId}`);
                 const offer = response.offer;
 
                 // General Tab
@@ -677,9 +693,12 @@ include $pathPrefix . '/includes/head.php';
 
                 // Dropdowns
                 populateSelect('advertiser_id', response.advertisers, 'id', 'name', offer.advertiser_id);
-                populateSelect('category_id', response.arrCategories, 'id', 'category_name', offer.category_id);
+
+                const catSel = $('select[name="category_id"]').empty().append('<option value="">Select Category</option>');
+                renderCategoryOptions(catSel, response.arrCategories || [], offer.category_id);
+
                 populateSelect('ad_model', response.admodels, 'id', 'name', offer.ad_model);
-                populateSelect('aff_model', response.admodels, 'id', 'name', offer.aff_model);
+                populateSelect('aff_model', response.admodels, 'id', 'name', offer.ad_model);
 
                 const curSelect = $('select[name="currency"]').empty();
 
@@ -704,23 +723,30 @@ include $pathPrefix . '/includes/head.php';
                 });
 
                 // Pre-select values
-                if (offer.target_country) {
-                    let val = offer.target_country;
-                    if (val.includes(',')) {
-                        val = val.split(',')[0].trim();
-                    }
-                    countrySelect.val(val).trigger('change');
-                } else {
-                    countrySelect.val("").trigger('change');
-                }
+
+                const savedCountryCodes = offer.target_country
+                    ? offer.target_country.split(',').map(s => s.trim()).filter(s => s)
+                    : [];
+                countrySelect.val(savedCountryCodes).trigger('change');
+                // trigger('change') fires handleCountryChange which swaps state to input or select
+
                 $('select[name="state_permission"]').val(offer.state_permission || 'allow');
 
-                // Populate State and City
-                let savedState = offer.target_state ? offer.target_state.split(',')[0].trim() : '';
-                let savedCity = offer.target_city ? offer.target_city.split(',')[0].trim() : '';
+                const savedState = offer.target_state || '';
+                const savedCity = offer.target_city || '';
 
-                populateStateDropdown(countrySelect.val(), savedState);
+                if (savedCountryCodes.length > 1) {
+                    // State field is now a text input (swapped by handleCountryChange above)
+                    $('input[name="target_state"]').val(savedState);
+                } else {
+                    // State field is a select
+                    const stateValues = savedState ? savedState.split(',').map(s => s.trim()).filter(s => s) : [];
+                    populateStateDropdown(savedCountryCodes[0] || '', stateValues);
+                }
+
                 $('input[name="target_city"]').val(savedCity);
+
+
 
                 $('select[name="city_permission"]').val(offer.city_permission || 'allow');
                 $('select[name="device_permission"]').val(offer.device_permission || 'allow');
@@ -761,25 +787,77 @@ include $pathPrefix . '/includes/head.php';
             }
         }
 
-        function populateStateDropdown(countryCode, selectedState = null) {
-            const stateSelect = $('select[name="target_state"]');
-            if (selectedState === null) selectedState = stateSelect.val();
+        function populateStateDropdown(countryCode, selectedStates = []) {
+            const $sel = $('#stateSelect');
+            if (!$sel.length) return;
 
-            stateSelect.empty().append('<option value="">All States</option>');
-
+            $sel.empty().append('<option value="">All States</option>');
             if (countryCode && typeof LOCATIONS !== 'undefined' && LOCATIONS[countryCode]) {
-                const states = Object.keys(LOCATIONS[countryCode]);
-                states.forEach(state => {
-                    stateSelect.append(new Option(state, state));
+                Object.keys(LOCATIONS[countryCode]).forEach(stateName => {
+                    $sel.append(new Option(stateName, stateName));
                 });
             }
-
-            if (selectedState) {
-                stateSelect.val(selectedState).trigger('change.select2');
+            if (selectedStates && selectedStates.length) {
+                // Add any custom/saved values not in the dropdown list
+                selectedStates.forEach(v => {
+                    if (v && !$sel.find('option[value="' + v + '"]').length) {
+                        $sel.append(new Option(v, v));
+                    }
+                });
+                $sel.val(selectedStates).trigger('change');
             }
         }
 
+        function handleCountryChange() {
+            const selected = ($('select[name="target_country"]').val() || []).filter(v => v !== '');
+            const $wrapper = $('#stateFieldWrapper');
 
+            if (selected.length > 1) {
+                // Multiple countries — swap to text input
+                if ($('#stateSelect').length) {
+                    if ($('#stateSelect').data('select2')) {
+                        $('#stateSelect').select2('destroy');
+                    }
+                    const prevVal = $('select[name="target_state"]').val();
+                    const textVal = Array.isArray(prevVal) ? prevVal.filter(v => v).join(',') : (prevVal || '');
+                    $('#stateSelect').remove();
+                    $wrapper.append(
+                        '<input type="text" name="target_state" id="stateInput" class="form-control"' +
+                        ' placeholder="e.g., Maharashtra, California (comma separated)" value="' + textVal + '">'
+                    );
+                }
+            } else {
+                // Single or no country — use select dropdown
+                const countryCode = selected[0] || '';
+                if ($('#stateInput').length) {
+                    const prevVal = $('#stateInput').val();
+                    $('#stateInput').remove();
+                    $wrapper.append(
+                        '<select name="target_state" id="stateSelect" class="form-control select2-state" style="width:100%;" multiple>' +
+                        '<option value="">All States</option></select>'
+                    );
+                    $('#stateSelect').select2({
+                        theme: 'bootstrap4',
+                        width: '100%',
+                        allowClear: true,
+                        dropdownParent: $(document.body),
+                        placeholder: 'All States',
+                        tags: true
+                    });
+                    populateStateDropdown(countryCode);
+                    if (prevVal) {
+                        prevVal.split(',').map(s => s.trim()).forEach(v => {
+                            if (v && !$('#stateSelect option[value="' + v + '"]').length) {
+                                $('#stateSelect').append(new Option(v, v));
+                            }
+                        });
+                        $('#stateSelect').val(prevVal.split(',').map(s => s.trim())).trigger('change');
+                    }
+                } else {
+                    populateStateDropdown(countryCode);
+                }
+            }
+        }
 
         function loadAffiliates(affiliates, assignments, offer) {
             const assigned = {};
@@ -833,19 +911,41 @@ include $pathPrefix . '/includes/head.php';
 
         function loadTokens(tokens) {
             const container = $('#tokensListContainer').empty();
+            const urlContainer = $('#offerUrlTokensContainer').empty();
+
             tokens.forEach(token => {
+                const macro = `{${token.token_micro}}`;
+
+                // Existing: checkbox tokens for tracking URL (Affiliates tab)
                 container.append(`
-                    <div class="col-md-6 mb-2">
-                        <div class="d-flex align-items-center">
-                            <input type="checkbox" class="token-checkbox mr-2" data-macro="{${token.token_micro}}">
-                            <code class="mr-2">{${token.token_micro}}</code>
-                            <small class="text-muted">${token.token_desc || ''}</small>
-                        </div>
-                    </div>
-                `);
+            <div class="col-md-6 mb-2">
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" class="token-checkbox mr-2" data-macro="${macro}">
+                    <code class="mr-2">${macro}</code>
+                    <small class="text-muted">${token.token_desc || ''}</small>
+                </div>
+            </div>
+        `);
             });
 
+            // Comma-separated clickable tokens for offer URL
+            const tokenLinks = tokens.map(token =>
+                `<a href="#" class="offer-url-token" style="color: #e83e8c;" data-macro="{${token.token_micro}}">{${token.token_micro}}</a>`
+            ).join(', ');
+            urlContainer.html(tokenLinks);
+
             $('.token-checkbox').on('change', updateTrackingURL);
+
+            // Click-to-insert: appends token as query parameter to offer_url
+            $(document).off('click.offerToken').on('click.offerToken', '.offer-url-token', function (e) {
+                e.preventDefault();
+                const macro = $(this).data('macro');
+                const key = macro.replace('{', '').replace('}', '');
+                const textarea = $('textarea[name="offer_url"]')[0];
+                const separator = textarea.value.includes('?') ? '&' : '?';
+                textarea.value = textarea.value + separator + key + '=' + macro;
+                textarea.focus();
+            });
         }
 
         function updatePixelCodeDisplay() {
@@ -890,7 +990,7 @@ include $pathPrefix . '/includes/head.php';
         $('#frmOffer').on('submit', async function (e) {
             e.preventDefault();
             try {
-                const res = await API.fetchWithAuth('<?php echo $user_type;?>/offer/update_offer', {
+                const res = await API.fetchWithAuth('<?php echo $user_type; ?>/offer/update_offer', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -902,7 +1002,7 @@ include $pathPrefix . '/includes/head.php';
                         offer_url: $('textarea[name="offer_url"]').val(),
                         ad_model: $('select[name="ad_model"]').val(),
                         ad_pricing: $('input[name="ad_pricing"]').val(),
-                        aff_model: $('select[name="aff_model"]').val(),
+                        aff_model: $('select[name="ad_model"]').val(),
                         aff_pricing: $('input[name="aff_pricing"]').val(),
                         currency: $('select[name="currency"]').val(),
                         campaign_start_date: $('input[name="campaign_start_date"]').val(),
@@ -922,17 +1022,27 @@ include $pathPrefix . '/includes/head.php';
         $('#frmTargeting').on('submit', async function (e) {
             e.preventDefault();
             try {
-                const res = await API.fetchWithAuth('<?php echo $user_type;?>/offer/update-targetting', {
+                const res = await API.fetchWithAuth('<?php echo $user_type; ?>/offer/update-targetting', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         offer_id: offerId,
                         country_permission: $('select[name="country_permission"]').val() || 'allow',
-                        target_country: $('select[name="target_country"]').val(),
+                        target_country: (() => {
+                            const val = $('select[name="target_country"]').val() || [];
+                            return val.filter(v => v !== '').join(',') || '';
+                        })(),
+
                         state_permission: $('select[name="state_permission"]').val(),
-                        target_state: $('select[name="target_state"]').val(),
+                        target_state: (() => {
+                            const $input = $('input[name="target_state"]');
+                            if ($input.length) return $input.val() || '';
+                            const val = $('select[name="target_state"]').val();
+                            return Array.isArray(val) ? val.filter(v => v !== '').join(',') : (val || '');
+                        })(),
+
                         city_permission: $('select[name="city_permission"]').val(),
-                        target_city: $('select[name="target_city"]').val(),
+                        target_city: $('input[name="target_city"]').val(),
                         device_permission: $('select[name="device_permission"]').val(),
                         target_device: $('select[name="target_device"]').val(),
                         browser_permission: $('select[name="browser_permission"]').val(),
@@ -948,7 +1058,7 @@ include $pathPrefix . '/includes/head.php';
         $('#frmMMP').on('submit', async function (e) {
             e.preventDefault();
             try {
-                const res = await API.fetchWithAuth('<?php echo $user_type;?>/offer/update-mmp-details', {
+                const res = await API.fetchWithAuth('<?php echo $user_type; ?>/offer/update-mmp-details', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -978,7 +1088,7 @@ include $pathPrefix . '/includes/head.php';
         // Actions
         async function assignOffer(oid, aid) {
             try {
-                const res = await API.fetchWithAuth(`<?php echo $user_type;?>/offer/assign/${oid}/${aid}`);
+                const res = await API.fetchWithAuth(`<?php echo $user_type; ?>/offer/assign/${oid}/${aid}`);
                 if (res.status === 1) {
                     Toast.success('Success', 'Affiliate assigned successfully');
                     await loadOfferData();
@@ -990,7 +1100,7 @@ include $pathPrefix . '/includes/head.php';
         async function unassignOffer(oid, aid) {
             if (!confirm("Unassign this affiliate?")) return;
             try {
-                const res = await API.fetchWithAuth(`<?php echo $user_type;?>/offer/unassign/${oid}/${aid}`);
+                const res = await API.fetchWithAuth(`<?php echo $user_type; ?>/offer/unassign/${oid}/${aid}`);
                 if (res.status === 1) {
                     Toast.success('Success', 'Affiliate unassigned successfully');
                     await loadOfferData();
@@ -1070,7 +1180,7 @@ include $pathPrefix . '/includes/head.php';
             if (eid) {
                 $('#eventModalTitle').text('Edit Event');
                 $('#eventModalSaveBtn').text('Update Event');
-                API.fetchWithAuth(`<?php echo $user_type;?>/offer/get-event/${eid}`).then(res => {
+                API.fetchWithAuth(`<?php echo $user_type; ?>/offer/get-event/${eid}`).then(res => {
                     if (!res || !res.event) {
                         Toast.error('Error', 'Failed to load event data');
                         return;
@@ -1107,13 +1217,13 @@ include $pathPrefix . '/includes/head.php';
             try {
                 let res;
                 if (eid) {
-                    res = await API.fetchWithAuth('<?php echo $user_type;?>/offer/update-event', {
+                    res = await API.fetchWithAuth('<?php echo $user_type; ?>/offer/update-event', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ id: eid, offer_id: offerId, event_name: name, event_token: token, revenue: revenue || null, payout: payout || null })
                     });
                 } else {
-                    res = await API.fetchWithAuth('<?php echo $user_type;?>/offer/save-event', {
+                    res = await API.fetchWithAuth('<?php echo $user_type; ?>/offer/save-event', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ offer_id: offerId, event_name: name, event_token: token, revenue: revenue || null, payout: payout || null })
@@ -1140,7 +1250,7 @@ include $pathPrefix . '/includes/head.php';
 
         function deleteEvent(eid) {
             if (!confirm("Delete this event?")) return;
-            API.fetchWithAuth(`<?php echo $user_type;?>/offer/remove-event/${offerId}/${eid}`).then(async res => {
+            API.fetchWithAuth(`<?php echo $user_type; ?>/offer/remove-event/${offerId}/${eid}`).then(async res => {
                 if (res.status === 1) {
                     Toast.success('Success', 'Event deleted successfully');
                     await loadOfferData();
@@ -1152,7 +1262,8 @@ include $pathPrefix . '/includes/head.php';
 </body>
 
 <!-- Event Create/Edit Modal -->
-<div class="modal fade" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalTitle" aria-hidden="true">
+<div class="modal fade" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalTitle"
+    aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -1168,27 +1279,32 @@ include $pathPrefix . '/includes/head.php';
 
                     <div class="form-group">
                         <label>Event Name <span class="text-danger">*</span></label>
-                        <input type="text" id="eventModalName" class="form-control" placeholder="e.g. Purchase, Registration">
+                        <input type="text" id="eventModalName" class="form-control"
+                            placeholder="e.g. Purchase, Registration">
                     </div>
 
                     <div class="form-group">
                         <label>Event Token <span class="text-danger">*</span></label>
-                        <input type="text" id="eventModalToken" class="form-control" placeholder="e.g. purchase or reg_complete">
-                        <small class="text-muted">Only letters, numbers, and underscores. Used in postback URL as <code>event_id=purchase</code>.</small>
+                        <input type="text" id="eventModalToken" class="form-control"
+                            placeholder="e.g. purchase or reg_complete">
+                        <small class="text-muted">Only letters, numbers, and underscores. Used in postback URL as
+                            <code>event_id=purchase</code>.</small>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Revenue <small class="text-muted">(optional)</small></label>
-                                <input type="number" id="eventModalRevenue" class="form-control" step="0.01" min="0" placeholder="Override offer revenue">
+                                <input type="number" id="eventModalRevenue" class="form-control" step="0.01" min="0"
+                                    placeholder="Override offer revenue">
                                 <small class="text-muted">Leave blank to use offer default.</small>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>Payout <small class="text-muted">(optional)</small></label>
-                                <input type="number" id="eventModalPayout" class="form-control" step="0.01" min="0" placeholder="Override affiliate payout">
+                                <input type="number" id="eventModalPayout" class="form-control" step="0.01" min="0"
+                                    placeholder="Override affiliate payout">
                                 <small class="text-muted">Leave blank to use offer default.</small>
                             </div>
                         </div>
@@ -1197,9 +1313,11 @@ include $pathPrefix . '/includes/head.php';
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="eventModalSaveBtn" onclick="saveEventModal()">Create Event</button>
+                <button type="button" class="btn btn-primary" id="eventModalSaveBtn" onclick="saveEventModal()">Create
+                    Event</button>
             </div>
         </div>
     </div>
 </div>
+
 </html>
