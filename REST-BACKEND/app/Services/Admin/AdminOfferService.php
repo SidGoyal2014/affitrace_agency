@@ -507,14 +507,14 @@ class AdminOfferService
         $query = OfferAffiliate::where('offer_id', $oid)->where('affiliate_id', $aid);
 
         if ($query->exists()) {
-            $query->update(['request_status' => 'Accepted', 'request_made' => 'N', 'tracking_url' => $turl]);
+            $query->update(['request_status' => \App\Enums\OfferRequest::Accepted->value, 'request_made' => 'N', 'tracking_url' => $turl]);
         } else {
             $oa = new OfferAffiliate();
             $oa->offer_id = $oid;
             $oa->affiliate_id = $aid;
             $oa->tracking_url = $turl;
             $oa->request_made = 'N';
-            $oa->request_status = 'Accepted';
+            $oa->request_status = \App\Enums\OfferRequest::Accepted;
             $oa->save();
         }
 
@@ -537,7 +537,7 @@ class AdminOfferService
     {
         OfferAffiliate::where("offer_id", $oid)
             ->where("affiliate_id", $aid)
-            ->update(['request_status' => 'Rejected']);
+            ->update(['request_status' => \App\Enums\OfferRequest::Rejected->value]);
 
         // Audit Log: Offer application rejected
         \App\Models\AuditLog::create([
@@ -557,7 +557,7 @@ class AdminOfferService
     {
         OfferAffiliate::where("offer_id", $oid)
             ->where("affiliate_id", $aid)
-            ->update(['request_status' => 'Unassigned', 'tracking_url' => Null]);
+            ->update(['request_status' => \App\Enums\OfferRequest::Unassigned->value, 'tracking_url' => Null]);
 
         // Audit Log: Offer unassigned
         \App\Models\AuditLog::create([

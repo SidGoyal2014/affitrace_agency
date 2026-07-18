@@ -42,6 +42,7 @@ class AffiliateReportService extends BaseReportService
 				ot.offer_id = offers.id AND ot.aff_id = " . $aid . "
 			WHERE
 				offer_affiliates.affiliate_id = " . $aid . " 
+				AND offer_affiliates.request_status = '" . \App\Enums\OfferRequest::Accepted->value . "'
 			GROUP BY
 				offers.id, offers.offer_name
 			Order By 
