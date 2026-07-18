@@ -50,15 +50,29 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         // 1. Validate Input
-        $validator = Validator::make($request->all(), [
-            //'eai' => 'required', // Agency ID / Username
+        $settings = \App\Models\Setting::find(1);
+        $isRecaptchaEnabled = (bool) ($settings->is_recaptcha_enabled ?? false);
+        $secret = $settings->recaptcha_secret_key ?? env('RECAPTCHA_SECRET_KEY');
+        
+        $rules = [
             'email' => 'required|email',
             'password' => 'required|string',
             'user_type' => 'required|string'
-        ]);
+        ];
+
+        if ($isRecaptchaEnabled && !empty($secret)) {
+            $rules['recaptcha_token'] = 'required|string';
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Validate Google reCAPTCHA
+        if ($isRecaptchaEnabled && !empty($secret) && !$this->verifyRecaptcha($request->recaptcha_token)) {
+            return response()->json(['error' => 'reCAPTCHA verification failed. Please try again.'], 422);
         }
 
         // 2. Authenticate (DB connection is already set by api.tenant middleware)
@@ -138,6 +152,7 @@ class AuthController extends Controller
             'support_email' => $settings->support_email ?? null,
             'custom_copyright' => $settings->custom_copyright ?? null,
             'recaptcha_site_key' => $settings->recaptcha_site_key ?? env('RECAPTCHA_SITE_KEY'),
+            'is_recaptcha_enabled' => (bool) ($settings->is_recaptcha_enabled ?? false),
         ];
         return response()->json([
             'status' => 1,

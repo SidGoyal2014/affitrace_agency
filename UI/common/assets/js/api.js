@@ -6,7 +6,7 @@ const API = {
 
     // --- Authentication ---
 
-    login: async (email, password, user_type, eai) => {
+    login: async (email, password, user_type, eai, recaptcha_token = null) => {
         try {
             const response = await fetch(`${API_BASE_URL}/login`, {
                 method: 'POST',
@@ -15,7 +15,7 @@ const API = {
                     'Accept': 'application/json',
                     'X-Agency-ID': eai // <--- Explicitly send Agency ID
                 },
-                body: JSON.stringify({ email, password, user_type, eai })
+                body: JSON.stringify({ email, password, user_type, eai, recaptcha_token })
             });
 
             const data = await response.json();

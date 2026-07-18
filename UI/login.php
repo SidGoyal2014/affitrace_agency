@@ -82,6 +82,10 @@ $pathCommonPrefix = 'common';
                                 </div>
                             </div>
 
+                            <div id="recaptcha-container" class="form-group d-none">
+                                <div id="login-recaptcha" style="display: flex; justify-content: center; margin-bottom: 15px;"></div>
+                            </div>
+
                             <div id="alert-container"></div>
 
                             <button type="submit" class="btn btn-primary btn-block" id="btnLogin">Sign In</button>
@@ -113,6 +117,7 @@ $pathCommonPrefix = 'common';
 
     <script>
         $(document).ready(function () {
+            let recaptchaWidgetId = null;
 
             $('#loginForm').on('submit', async function (e) {
                 e.preventDefault();
@@ -132,10 +137,19 @@ $pathCommonPrefix = 'common';
                     return;
                 }
 
+                // Check reCAPTCHA verification if visible
+                let recaptchaToken = null;
+                if ($('#recaptcha-container').is(':visible') && typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null) {
+                    recaptchaToken = grecaptcha.getResponse(recaptchaWidgetId);
+                    if (!recaptchaToken) {
+                        $('#alert-container').html(`<div class="alert alert-warning">Please complete the reCAPTCHA verification.</div>`);
+                        $('#btnLogin').prop('disabled', false).text('Sign In');
+                        return;
+                    }
+                }
+
                 try {
-                    // API.login expects arguments, not object, based on previous file viewing
-                    // API.login signature: async (email, password, user_type, eai)
-                    const data = await API.login(formData.email, formData.password, formData.user_type, formData.eai);
+                    const data = await API.login(formData.email, formData.password, formData.user_type, formData.eai, recaptchaToken);
 
                     // Check response for redirect logic
                     if (data && data.user) {
@@ -155,7 +169,6 @@ $pathCommonPrefix = 'common';
                             window.location.href = 'ADMIN/dashboard.php';
                         }
 
-
                         // Load branding details on login response to cache them
                         if (data.branding) {
                             localStorage.setItem('branding_settings', JSON.stringify(data.branding));
@@ -163,9 +176,6 @@ $pathCommonPrefix = 'common';
                             // Backup: load branding from API
                             await loadBranding(formData.eai);
                         }
-
-
-
 
                     } else {
                         throw new Error('Login failed: Invalid response');
@@ -180,11 +190,11 @@ $pathCommonPrefix = 'common';
                     $('#alert-container').html(`<div class="alert alert-danger">${msg}</div>`);
                 } finally {
                     $('#btnLogin').prop('disabled', false).text('Sign In');
+                    if (typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null) {
+                        grecaptcha.reset(recaptchaWidgetId);
+                    }
                 }
             });
-
-
-
 
             // Dynamic White-Label Settings Application
             async function loadBranding(agencyId) {
@@ -215,8 +225,38 @@ $pathCommonPrefix = 'common';
                 const secondary = branding.secondary_color || '#1E293B';
                 const accent = branding.accent_color || '#10B981';
                 const favicon = branding.platform_favicon;
+                const recaptchaSiteKey = branding.is_recaptcha_enabled ? branding.recaptcha_site_key : null;
 
                 document.title = `Login - ${name}`;
+
+                // Handle Google reCAPTCHA
+                if (recaptchaSiteKey) {
+                    $('#recaptcha-container').removeClass('d-none');
+                    if (typeof grecaptcha === 'undefined') {
+                        if (!$('script[src*="recaptcha/api.js"]').length) {
+                            const script = document.createElement('script');
+                            script.src = 'https://www.google.com/recaptcha/api.js?onload=onLoginRecaptchaLoad&render=explicit';
+                            script.async = true;
+                            script.defer = true;
+                            document.head.appendChild(script);
+
+                            window.onLoginRecaptchaLoad = function () {
+                                renderRecaptcha(recaptchaSiteKey);
+                            };
+                        }
+                    } else {
+                        renderRecaptcha(recaptchaSiteKey);
+                    }
+                } else {
+                    $('#recaptcha-container').addClass('d-none');
+                    if (recaptchaWidgetId !== null) {
+                        try {
+                            grecaptcha.reset(recaptchaWidgetId);
+                        } catch (e) {}
+                    }
+                    $('#login-recaptcha').empty();
+                    recaptchaWidgetId = null;
+                }
 
                 const brandContainer = $('.text-center.mb-4');
                 if (brandContainer.length > 0) {
@@ -271,6 +311,15 @@ $pathCommonPrefix = 'common';
                 $('.text-center.mt-4 span').text(`© ${new Date().getFullYear()} ${branding.custom_copyright ?? (name + '. All rights reserved.')}`);
             }
 
+            function renderRecaptcha(siteKey) {
+                if (typeof grecaptcha !== 'undefined' && $('#login-recaptcha').is(':empty')) {
+                    recaptchaWidgetId = grecaptcha.render('login-recaptcha', {
+                        'sitekey': siteKey,
+                        'theme': 'light'
+                    });
+                }
+            }
+
             // Listen for Agency ID changes
             $('#eai').on('change blur keyup', function () {
                 const eai = $(this).val().trim();
@@ -285,10 +334,6 @@ $pathCommonPrefix = 'common';
                 $('#eai').val(cachedEai);
                 loadBranding(cachedEai);
             }
-
-
-
-
         });
 
 
