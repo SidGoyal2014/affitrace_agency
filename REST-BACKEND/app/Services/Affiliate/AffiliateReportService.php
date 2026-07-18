@@ -450,4 +450,44 @@ class AffiliateReportService extends BaseReportService
             'filters' => $request->all()
         ];
     }
+
+    /**
+     * Get postback logs report for affiliate
+     */
+    public function getPostbacksReport($request, $aid): array
+    {
+        $query = DB::table('affiliate_postback_logs as apl')
+            ->select(
+                'apl.id',
+                'apl.conversion_id',
+                'apl.url_fired',
+                'apl.http_status',
+                'apl.response_body',
+                'apl.created_at'
+            )
+            ->where('apl.affiliate_id', $aid);
+
+        if ($request->from && $request->to) {
+            $query->whereBetween('apl.created_at', [
+                $this->getUtcStartOfDay($request->from), 
+                $this->getUtcEndOfDay($request->to)
+            ]);
+        }
+
+        $limit = $request->limit ?? 50;
+        $results = $query->orderBy('apl.id', 'desc')->paginate($limit);
+
+        $results->getCollection()->transform(function ($row) {
+            if (isset($row->created_at)) {
+                $row->created_at = $this->formatUtcToLocal($row->created_at);
+            }
+            return $row;
+        });
+
+        return [
+            'module_name' => 'Postback Logs',
+            'data' => $results,
+            'filters' => $request->all()
+        ];
+    }
 }

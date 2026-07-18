@@ -72,5 +72,10 @@ class AffiliateReportController extends Controller
 	{
 		return response()->json($service->getClickDetail($id, Auth::id(), 'affiliate'));
 	}
+
+	public function postbacks_report(Request $request, AffiliateReportService $service)
+	{
+		return response()->json($service->getPostbacksReport($request, Auth::id()));
+	}
 }
 

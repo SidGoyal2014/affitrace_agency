@@ -106,6 +106,85 @@ const API = {
         localStorage.removeItem('agency_id');
     },
 
+    // --- Public Registration & Password Recovery ---
+    getCountries: async (eai) => {
+        const response = await fetch(`${API_BASE_URL}/countries`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Agency-ID': eai
+            }
+        });
+        return response.json();
+    },
+
+    register: async (eai, data) => {
+        const response = await fetch(`${API_BASE_URL}/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Agency-ID': eai
+            },
+            body: JSON.stringify(data)
+        });
+        const resData = await response.json();
+        if (!response.ok) {
+            throw new Error(resData.error || resData.message || 'Registration failed');
+        }
+        return resData;
+    },
+
+    verifyEmailOtp: async (eai, email, otp) => {
+        const response = await fetch(`${API_BASE_URL}/verify-email-otp`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Agency-ID': eai
+            },
+            body: JSON.stringify({ email, otp })
+        });
+        const resData = await response.json();
+        if (!response.ok) {
+            throw new Error(resData.error || resData.message || 'Verification failed');
+        }
+        return resData;
+    },
+
+    forgotPassword: async (eai, email) => {
+        const response = await fetch(`${API_BASE_URL}/forgot-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Agency-ID': eai
+            },
+            body: JSON.stringify({ email })
+        });
+        const resData = await response.json();
+        if (!response.ok) {
+            throw new Error(resData.error || resData.message || 'Request failed');
+        }
+        return resData;
+    },
+
+    resetPassword: async (eai, data) => {
+        const response = await fetch(`${API_BASE_URL}/reset-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Agency-ID': eai
+            },
+            body: JSON.stringify(data)
+        });
+        const resData = await response.json();
+        if (!response.ok) {
+            throw new Error(resData.error || resData.message || 'Reset failed');
+        }
+        return resData;
+    },
+
     // --- Data Fetching ---
 
     fetchWithAuth: async (endpoint, options = {}) => {

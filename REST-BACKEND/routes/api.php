@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Route;
 // Public Authentication
 Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login']);
 Route::get('branding', [App\Http\Controllers\Api\AuthController::class, 'get_branding']);
+Route::get('countries', [App\Http\Controllers\Api\AuthController::class, 'countries']);
+Route::post('register', [App\Http\Controllers\Api\AuthController::class, 'register'])->middleware('throttle:5,1');
+Route::post('verify-email-otp', [App\Http\Controllers\Api\AuthController::class, 'verify_email_otp'])->middleware('throttle:5,1');
+Route::post('forgot-password', [App\Http\Controllers\Api\AuthController::class, 'forgot_password'])->middleware('throttle:5,1');
+Route::post('reset-password', [App\Http\Controllers\Api\AuthController::class, 'reset_password'])->middleware('throttle:5,1');
 
 // Public Tracking (Server-to-Server)
 // api.tenant is now in Kernel, so it applies to all API routes
@@ -330,6 +335,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('reports/clicks', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'clicks_report']);
             Route::post('reports/conversions', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'conversions_report']);
             Route::get('reports/click-detail/{id}', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'click_detail']);
+            Route::post('reports/postbacks', [App\Http\Controllers\Affiliate\AffiliateReportController::class, 'postbacks_report']);
         });
 
         // Offers
@@ -343,8 +349,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Profile
         Route::get('profile', [App\Http\Controllers\Affiliate\AffiliateController::class, 'profile']);
         Route::post('profile', [App\Http\Controllers\Affiliate\AffiliateController::class, 'update_profile']);
+        Route::post('profile/change-password', [App\Http\Controllers\Affiliate\AffiliateController::class, 'change_password']);
         Route::get('postback-cols', [App\Http\Controllers\Affiliate\AffiliateController::class, 'a_postback_cols']);
         Route::post('postback-cols', [App\Http\Controllers\Affiliate\AffiliateController::class, 'update_a_postback_cols']);
+        Route::get('payouts/history', [App\Http\Controllers\Affiliate\AffiliateController::class, 'payout_history']);
+        Route::post('payouts/request', [App\Http\Controllers\Affiliate\AffiliateController::class, 'request_payout']);
+        Route::post('payouts/method', [App\Http\Controllers\Affiliate\AffiliateController::class, 'update_payout_method']);
+        Route::post('settings/telegram', [App\Http\Controllers\Affiliate\AffiliateController::class, 'update_telegram_settings']);
     });
 
     // Advertiser Routes

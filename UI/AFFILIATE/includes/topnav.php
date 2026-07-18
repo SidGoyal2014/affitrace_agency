@@ -86,6 +86,14 @@ function url($path)
             </a>
         </li>
 
+        <!-- Wallet -->
+        <li class="nav-item <?php echo isActiveNav('wallet', $activePage); ?>">
+            <a class="nav-link" href="<?php echo url('wallet.php'); ?>">
+                <i class="fas fa-wallet"></i>
+                Wallet
+            </a>
+        </li>
+
         <!-- Offers Dropdown -->
         <li class="nav-item <?php echo isActiveNav('offers', $activePage); ?>">
             <a class="nav-link" href="#" data-toggle="dropdown">
@@ -112,6 +120,7 @@ function url($path)
                 <a class="dropdown-item" href="<?php echo url('reports/clicks.php'); ?>">Clicks</a>
                 <a class="dropdown-item" href="<?php echo url('reports/conversions.php'); ?>">Conversions</a>
                 <a class="dropdown-item" href="<?php echo url('reports/payouts.php'); ?>">Payouts</a>
+                <a class="dropdown-item" href="<?php echo url('reports/postback_logs.php'); ?>">Postback Logs</a>
             </div>
         </li>
 
