@@ -1,0 +1,258 @@
+<?php
+$pathPrefix = '..';
+$activePage = 'reports';
+$pageTitle = 'Postback Logs';
+include $pathPrefix . '/includes/head.php';
+?>
+
+<body id="page-top">
+
+    <?php include $pathPrefix . '/includes/topnav.php'; ?>
+
+    <main id="main-content">
+        <div class="container-fluid">
+
+            <div class="page-header">
+                <h1>Postback Logs</h1>
+            </div>
+
+            <!-- Filter Panel -->
+            <div class="card mb-4 border-left-primary">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
+                    data-toggle="collapse" data-target="#filterBody" aria-expanded="true" style="cursor: pointer;">
+                    <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
+                    <i class="fas fa-filter text-gray-400"></i>
+                </div>
+                <div class="card-body collapse show" id="filterBody">
+                    <form id="filterForm">
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="from">From Date</label>
+                                <input type="date" class="form-control" id="from" name="from">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="to">To Date</label>
+                                <input type="date" class="form-control" id="to" name="to">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="limit">Rows per page</label>
+                                <select class="form-control" id="limit" name="limit">
+                                    <option value="25">25</option>
+                                    <option value="50" selected>50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary btn-block">
+                                    <i class="fas fa-search mr-2"></i> Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Data Table Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Postback Delivery Logs</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover" id="reportTable" width="100%">
+                            <thead>
+                                <tr>
+                                    <th>Log ID</th>
+                                    <th>Time</th>
+                                    <th>Conversion ID</th>
+                                    <th>HTTP Status</th>
+                                    <th>URL Fired</th>
+                                    <th>Response Body</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row align-items-center mt-3">
+                        <div class="col-md-6 text-muted">
+                            Showing <span id="startEntry">0</span> to <span id="endEntry">0</span> of <span
+                                id="totalEntries">0</span> entries
+                        </div>
+                        <div class="col-md-6">
+                            <nav>
+                                <ul class="pagination justify-content-end mb-0" id="pagination"></ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Details Modal -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Postback Log Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Fired Target URL:</label>
+                        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap; word-break: break-all;" id="modalUrl"></pre>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Response Body:</label>
+                        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap; word-break: break-all;" id="modalResponse"></pre>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <?php include $pathPrefix . '/includes/footer.php'; ?>
+    <?php include $pathPrefix . '/includes/scripts.php'; ?>
+
+    <script>
+        let currentPage = 1;
+
+        $(document).ready(function () {
+            // Set default dates to current month
+            const date = new Date();
+            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+            const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            const formatDate = (d) => d.toISOString().split('T')[0];
+
+            if (!$('#from').val()) $('#from').val(formatDate(firstDay));
+            if (!$('#to').val()) $('#to').val(formatDate(lastDay));
+
+            loadReport(1);
+
+            $('#filterForm').on('submit', function (e) {
+                e.preventDefault();
+                loadReport(1);
+            });
+        });
+
+        async function loadReport(page) {
+            currentPage = page;
+            const tbody = $('#reportTableBody');
+            tbody.html('<tr><td colspan="6" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>');
+
+            try {
+                const formData = new FormData(document.getElementById('filterForm'));
+                const formObj = Object.fromEntries(formData.entries());
+                formObj.page = page;
+
+                const response = await API.fetchWithAuth('affiliate/reports/postbacks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formObj)
+                });
+
+                renderTable(response);
+            } catch (error) {
+                console.error("Postback Report Error:", error);
+                tbody.html('<tr><td colspan="6" class="text-center text-danger">Failed to load data.</td></tr>');
+            }
+        }
+
+        function renderTable(response) {
+            const tbody = $('#reportTableBody');
+            tbody.empty();
+
+            const result = response.data;
+            const rows = result.data;
+
+            if (!rows || rows.length === 0) {
+                tbody.html('<tr><td colspan="6" class="text-center text-muted">No postback logs found.</td></tr>');
+                updatePagination(result);
+                return;
+            }
+
+            rows.forEach(row => {
+                let statusBadge = '';
+                const code = parseInt(row.http_status);
+                if (code >= 200 && code < 300) {
+                    statusBadge = `<span class="badge badge-success">${code} OK</span>`;
+                } else if (code >= 300 && code < 400) {
+                    statusBadge = `<span class="badge badge-info">${code} Redirect</span>`;
+                } else {
+                    statusBadge = `<span class="badge badge-danger">${code || 'Failed'}</span>`;
+                }
+
+                // Shorten response and url for display
+                const shortUrl = row.url_fired ? (row.url_fired.length > 50 ? row.url_fired.substring(0, 50) + '...' : row.url_fired) : '-';
+                const shortResponse = row.response_body ? (row.response_body.length > 40 ? row.response_body.substring(0, 40) + '...' : row.response_body) : '-';
+
+                // Escaped string for JS calls
+                const escapedUrl = encodeURIComponent(row.url_fired || '');
+                const escapedResponse = encodeURIComponent(row.response_body || '');
+
+                const tr = `
+                    <tr>
+                        <td>#${row.id}</td>
+                        <td><small>${row.created_at || '-'}</small></td>
+                        <td>${row.conversion_id || '-'}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <span class="text-dark cursor-pointer font-weight-bold" onclick="showDetails('${escapedUrl}', '${escapedResponse}')" title="Click to view full URL">
+                                ${shortUrl} <i class="fas fa-eye ml-1 text-primary small"></i>
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-muted cursor-pointer" onclick="showDetails('${escapedUrl}', '${escapedResponse}')" title="Click to view full response">
+                                ${shortResponse}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(tr);
+            });
+
+            updatePagination(result);
+        }
+
+        function showDetails(url, response) {
+            $('#modalUrl').text(decodeURIComponent(url));
+            $('#modalResponse').text(decodeURIComponent(response) || 'Empty Response');
+            $('#detailsModal').modal('show');
+        }
+
+        function updatePagination(meta) {
+            $('#startEntry').text(meta.from || 0);
+            $('#endEntry').text(meta.to || 0);
+            $('#totalEntries').text(meta.total || 0);
+
+            const pagination = $('#pagination');
+            pagination.empty();
+
+            if (!meta.last_page || meta.last_page <= 1) return;
+
+            if (meta.current_page > 1) {
+                pagination.append(`<li class="page-item"><a class="page-link" href="#" onclick="loadReport(${meta.current_page - 1}); return false;">Previous</a></li>`);
+            }
+            for (let i = Math.max(1, meta.current_page - 2); i <= Math.min(meta.last_page, meta.current_page + 2); i++) {
+                const active = i === meta.current_page ? 'active' : '';
+                pagination.append(`<li class="page-item ${active}"><a class="page-link" href="#" onclick="loadReport(${i}); return false;">${i}</a></li>`);
+            }
+            if (meta.current_page < meta.last_page) {
+                pagination.append(`<li class="page-item"><a class="page-link" href="#" onclick="loadReport(${meta.current_page + 1}); return false;">Next</a></li>`);
+            }
+        }
+    </script>
+</body>
+
+</html>

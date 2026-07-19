@@ -76,7 +76,8 @@ class AffiliateDashboardService
                 FROM 
                     offer_affiliates 
                 WHERE
-                    affiliate_id = " . Auth::id();
+                    affiliate_id = " . Auth::id() . "
+                    AND request_status = '" . \App\Enums\OfferRequest::Accepted->value . "'";
 
         $data = DB::select($sql);
         return $data[0] ?? null;
@@ -103,7 +104,8 @@ class AffiliateDashboardService
                     ON 
                         offers.category_id = categories.id
                     WHERE 
-                        offer_affiliates.affiliate_id = " . Auth::id();
+                        offer_affiliates.affiliate_id = " . Auth::id() . "
+                        AND offer_affiliates.request_status = '" . \App\Enums\OfferRequest::Accepted->value . "'";
 
             $offers = DB::select($sql);
             foreach ($offers as $offer) {

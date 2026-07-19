@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 /**
  * @group Authentication
@@ -46,15 +50,29 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         // 1. Validate Input
-        $validator = Validator::make($request->all(), [
-            //'eai' => 'required', // Agency ID / Username
+        $settings = \App\Models\Setting::find(1);
+        $isRecaptchaEnabled = (bool) ($settings->is_recaptcha_enabled ?? false);
+        $secret = $settings->recaptcha_secret_key ?? env('RECAPTCHA_SECRET_KEY');
+        
+        $rules = [
             'email' => 'required|email',
             'password' => 'required|string',
             'user_type' => 'required|string'
-        ]);
+        ];
+
+        if ($isRecaptchaEnabled && !empty($secret)) {
+            $rules['recaptcha_token'] = 'required|string';
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Validate Google reCAPTCHA
+        if ($isRecaptchaEnabled && !empty($secret) && !$this->verifyRecaptcha($request->recaptcha_token)) {
+            return response()->json(['error' => 'reCAPTCHA verification failed. Please try again.'], 422);
         }
 
         // 2. Authenticate (DB connection is already set by api.tenant middleware)
@@ -133,6 +151,8 @@ class AuthController extends Controller
             'accent_color' => $settings->accent_color ?? '#10B981',
             'support_email' => $settings->support_email ?? null,
             'custom_copyright' => $settings->custom_copyright ?? null,
+            'recaptcha_site_key' => $settings->recaptcha_site_key ?? env('RECAPTCHA_SITE_KEY'),
+            'is_recaptcha_enabled' => (bool) ($settings->is_recaptcha_enabled ?? false),
         ];
         return response()->json([
             'status' => 1,
@@ -282,5 +302,252 @@ class AuthController extends Controller
             'message' => 'Timezone updated successfully',
             'timezone' => $user->timezone
         ]);
+    }
+
+    /**
+     * Get list of countries.
+     */
+    public function countries()
+    {
+        $countries = \App\Utils\IpLocationUtils::getCountry();
+        unset($countries['ALL']);
+        return response()->json($countries);
+    }
+
+    /**
+     * Public registration endpoint.
+     */
+    public function register(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',
+            'phone' => 'required|string|max:30',
+            'country' => 'required|string|max:100',
+            'traffic_source' => 'required|string|max:255',
+            'terms' => 'accepted',
+            'recaptcha_token' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Validate Google reCAPTCHA
+        if (!$this->verifyRecaptcha($request->recaptcha_token)) {
+            return response()->json(['error' => 'reCAPTCHA verification failed. Please try again.'], 422);
+        }
+
+        // Generate 6-digit OTP
+        $otp = rand(100000, 999999);
+        $email = $request->email;
+
+        // Cache OTP and registration data for 10 minutes
+        \Illuminate\Support\Facades\Cache::put('email_otp_' . $email, $otp, now()->addMinutes(10));
+        \Illuminate\Support\Facades\Cache::put('pending_registration_' . $email, $request->except(['password', 'password_confirmation', 'recaptcha_token']) + ['password' => $request->password], now()->addMinutes(10));
+
+        try {
+            Mail::raw("Your AffiTrace email verification code is: $otp", function ($message) use ($email) {
+                $message->to($email)->subject("Verify Your Email Address - AffiTrace");
+            });
+        } catch (\Exception $e) {
+            Log::error('Failed to send verification email: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to send verification email. Please check your SMTP configuration.'], 500);
+        }
+
+        return response()->json([
+            'status' => 'otp_sent',
+            'email' => $email,
+            'message' => 'A verification code has been sent to your email address.'
+        ]);
+    }
+
+    /**
+     * Verify email OTP and complete signup.
+     */
+    public function verify_email_otp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'otp' => 'required|string|size:6'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $email = $request->email;
+        $cachedOtp = \Illuminate\Support\Facades\Cache::get('email_otp_' . $email);
+
+        if (!$cachedOtp || $cachedOtp != $request->otp) {
+            return response()->json(['error' => 'Invalid or expired verification code.'], 422);
+        }
+
+        $regData = \Illuminate\Support\Facades\Cache::get('pending_registration_' . $email);
+        if (!$regData) {
+            return response()->json(['error' => 'Registration session expired. Please sign up again.'], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $userCode = strtoupper(Str::random(10));
+
+            $user = new User();
+            $user->name = $regData['name'];
+            $user->email = $regData['email'];
+            $user->password = Hash::make($regData['password']);
+            $user->phone = $regData['phone'];
+            $user->country = $regData['country'];
+            $user->user_type = 'affiliate';
+            $user->status = \App\Enums\UserStatus::Pending->value;
+            $user->code = $userCode;
+            $user->timezone = 'UTC';
+            $user->save();
+
+            $details = new \App\Models\AffiliateUserDetail();
+            $details->user_id = $user->id;
+            $details->traffic_source = $regData['traffic_source'];
+            $details->payout_threshold = 50.00;
+            $details->save();
+
+            \App\Models\AuditLog::create([
+                'actor_id' => $user->id,
+                'action' => 'affiliate_registration',
+                'details' => [
+                    'email' => $user->email,
+                    'user_type' => 'affiliate',
+                ],
+                'ip_address' => $request->ip(),
+            ]);
+
+            DB::commit();
+
+            \Illuminate\Support\Facades\Cache::forget('email_otp_' . $email);
+            \Illuminate\Support\Facades\Cache::forget('pending_registration_' . $email);
+
+            return response()->json([
+                'message' => 'Registration completed successfully! Your account is pending administrator approval.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Registration creation failed: ' . $e->getMessage());
+            return response()->json(['error' => 'An error occurred during account creation. Please try again.'], 500);
+        }
+    }
+
+    /**
+     * Send password reset link email.
+     */
+    public function forgot_password(Request $request, \App\Services\ForgotPasswordService $fpService)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email'
+        ]);
+
+        if ($validator->fails()) {
+            \Illuminate\Support\Facades\Log::warning('Password reset validation failed', [
+                'errors' => $validator->errors()->toArray(),
+                'email' => $request->email,
+                'db_name' => \Illuminate\Support\Facades\DB::connection()->getDatabaseName()
+            ]);
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $user = \App\Models\User::where('email', $request->email)->first();
+            $agencyId = $request->header('X-Agency-ID')
+                ?? $request->input('eai')
+                ?? \Illuminate\Support\Facades\DB::connection()->getDatabaseName();
+
+            $frontendUrl = env('FRONTEND_URL');
+            if (empty($frontendUrl)) {
+                $referer = $request->header('Referer');
+                if (!empty($referer)) {
+                    $parts = parse_url($referer);
+                    $path = $parts['path'] ?? '';
+                    $pos = strpos($path, '/UI');
+                    if ($pos !== false) {
+                        $basePath = substr($path, 0, $pos + 3);
+                    } else {
+                        $basePath = '/UI';
+                    }
+                    $frontendUrl = ($parts['scheme'] ?? 'http') . '://' . ($parts['host'] ?? 'localhost') . (!empty($parts['port']) ? ':' . $parts['port'] : '') . $basePath;
+                } else {
+                    $frontendUrl = 'http://localhost/affitrace/UI';
+                }
+            }
+
+            $settings = \App\Models\Setting::find(1);
+            $platformName = $settings->platform_name ?? 'AffiTrace Agency';
+
+            $token = $fpService->generateResetToken($request->email);
+            $resetUrl = rtrim($frontendUrl, '/') . '/forgot_password.php?eai=' . urlencode($agencyId) . '&token=' . urlencode($token) . '&email=' . urlencode($request->email);
+
+            $fpService->sendResetLinkEmail($request->email, $token, $resetUrl, $platformName);
+
+            return response()->json(['message' => 'We have e-mailed your password reset link!']);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Forgot password failed: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            return response()->json(['error' => 'Failed to send password reset email.'], 500);
+        }
+    }
+
+    /**
+     * Reset password using token.
+     */
+    public function reset_password(Request $request, \App\Services\ForgotPasswordService $fpService)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+            'token' => 'required|string',
+            'password' => 'required|string|min:6|confirmed',
+            'password_confirmation' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $verifyToken = $fpService->verifyToken($request->email, $request->token);
+
+        if (!$verifyToken) {
+            return response()->json(['error' => 'Invalid or expired password reset token.'], 422);
+        }
+
+        try {
+            $fpService->resetPassword($request->email, $request->password);
+            return response()->json(['message' => 'Your password has been changed!']);
+        } catch (\Exception $e) {
+            Log::error('Password reset failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to reset password.'], 500);
+        }
+    }
+
+    /**
+     * Helper to verify reCAPTCHA.
+     */
+    protected function verifyRecaptcha($token)
+    {
+        $settings = \App\Models\Setting::find(1);
+        $secret = $settings->recaptcha_secret_key ?? env('RECAPTCHA_SECRET_KEY');
+
+        if (empty($secret)) {
+            return true;
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret' => $secret,
+                'response' => $token,
+            ]);
+            return $response->json()['success'] ?? false;
+        } catch (\Exception $e) {
+            Log::error('reCAPTCHA verification failed: ' . $e->getMessage());
+            return false;
+        }
     }
 }

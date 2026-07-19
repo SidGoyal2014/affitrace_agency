@@ -85,7 +85,7 @@ class AffiliateDashboardController extends Controller
 			$rec->offer_id = $oid;
 			$rec->affiliate_id = Auth::id();
 			$rec->request_made = 'Y';
-			$rec->request_status = 'Pending';
+			$rec->request_status = \App\Enums\OfferRequest::Pending;
 			$rec->save();
 
 			return response()->json(['message' => 'Approval request sent successfully']);

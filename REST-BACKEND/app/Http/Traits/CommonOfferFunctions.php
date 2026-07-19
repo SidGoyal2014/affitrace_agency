@@ -20,6 +20,7 @@ trait CommonOfferFunctions
 			->join('offer_affiliates', 'offers.id', '=', 'offer_affiliates.offer_id')
 			->select('offers.*', 'ad_models.name')
 			->where('offer_affiliates.affiliate_id', $affilate_id)
+			->where('offer_affiliates.request_status', \App\Enums\OfferRequest::Accepted->value)
 			->get()->toArray();
 
 		return $offers;

@@ -76,7 +76,9 @@
                         <div class="text-center">
                             <a class="small" href="../ADMIN/login.php">Admin Login</a>
                             <span class="mx-2 text-muted">|</span>
-                            <a class="small" href="#">Forgot Password?</a>
+                            <a class="small" href="forgot_password.php">Forgot Password?</a>
+                            <span class="mx-2 text-muted">|</span>
+                            <a class="small" href="register.php">Create an Account</a>
                         </div>
 
                     </div>

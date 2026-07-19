@@ -48,12 +48,12 @@ class AffiliateOfferService
             ->first();
 
         if ($offerAffiliate) {
-            if (strcasecmp((string) $offerAffiliate->request_status, 'Accepted') === 0) {
+            if ($offerAffiliate->request_status === \App\Enums\OfferRequest::Accepted) {
                 return ['status' => 1, 'message' => 'Offer is already approved for you', 'code' => 200];
             }
 
             $offerAffiliate->request_made = 'Y';
-            $offerAffiliate->request_status = 'Pending';
+            $offerAffiliate->request_status = \App\Enums\OfferRequest::Pending;
             $offerAffiliate->tracking_url = null;
             $offerAffiliate->save();
 
@@ -64,7 +64,7 @@ class AffiliateOfferService
         $rec->offer_id = $offerId;
         $rec->affiliate_id = $affiliateId;
         $rec->request_made = 'Y';
-        $rec->request_status = 'Pending';
+        $rec->request_status = \App\Enums\OfferRequest::Pending;
         $rec->tracking_url = null;
         $rec->save();
 
@@ -82,6 +82,7 @@ class AffiliateOfferService
             ->join('offer_affiliates', 'offers.id', '=', 'offer_affiliates.offer_id')
             ->select('offers.*', 'ad_models.name as model_name')
             ->where('offer_affiliates.affiliate_id', $affiliateId)
+            ->where('offer_affiliates.request_status', \App\Enums\OfferRequest::Accepted->value)
             ->get()->toArray();
 
         foreach ($offers as $offer) {
@@ -106,6 +107,7 @@ class AffiliateOfferService
             ->select('offers.*', 'ad_models.name as model_name', 'offer_affiliates.tracking_url', 'category_name')
             ->where('offer_affiliates.affiliate_id', $affiliateId)
             ->where('offer_affiliates.offer_id', $offerId)
+            ->where('offer_affiliates.request_status', \App\Enums\OfferRequest::Accepted->value)
             ->get();
 
         if (isset($offer[0]) && !empty($offer[0]->tracking_url) && $eai) {

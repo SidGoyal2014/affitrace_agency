@@ -8,4 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class OfferAffiliate extends Model
 {
     use HasFactory;
+
+    protected $casts = [
+        'request_status' => \App\Enums\OfferRequest::class,
+    ];
 }
