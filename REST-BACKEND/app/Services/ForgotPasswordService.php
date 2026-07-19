@@ -28,7 +28,7 @@ class ForgotPasswordService
 
     public function sendResetLinkEmail($email, $token, $resetUrl, $platformName)
     {
-        $templatePath = base_path('../UI/common/resources/templates/email/forgetPassword.html');
+        $templatePath = resource_path('views/emails/forgetPassword.html');
         if (!file_exists($templatePath)) {
             throw new \Exception("Password reset email template not found at: " . $templatePath);
         }
