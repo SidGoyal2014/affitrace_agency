@@ -94,7 +94,7 @@ $pathCommonPrefix = 'common';
                         <hr class="my-4">
 
                         <div class="text-center">
-                            <a class="small" href="#">Forgot Password?</a>
+                            <a class="small" href="#" id="lnkForgotPassword">Forgot Password?</a>
                         </div>
 
                     </div>
@@ -334,6 +334,13 @@ $pathCommonPrefix = 'common';
                 $('#eai').val(cachedEai);
                 loadBranding(cachedEai);
             }
+
+            // Listen for Forgot Password click
+            $('#lnkForgotPassword').on('click', function (e) {
+                e.preventDefault();
+                const eai = $('#eai').val().trim();
+                window.location.href = eai ? `forgot_password.php?eai=${encodeURIComponent(eai)}` : 'forgot_password.php';
+            });
         });
 
 

@@ -447,16 +447,51 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
+            \Illuminate\Support\Facades\Log::warning('Password reset validation failed', [
+                'errors' => $validator->errors()->toArray(),
+                'email' => $request->email,
+                'db_name' => \Illuminate\Support\Facades\DB::connection()->getDatabaseName()
+            ]);
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
         try {
+            $user = \App\Models\User::where('email', $request->email)->first();
+            $agencyId = $request->header('X-Agency-ID')
+                ?? $request->input('eai')
+                ?? \Illuminate\Support\Facades\DB::connection()->getDatabaseName();
+
+            $frontendUrl = env('FRONTEND_URL');
+            if (empty($frontendUrl)) {
+                $referer = $request->header('Referer');
+                if (!empty($referer)) {
+                    $parts = parse_url($referer);
+                    $path = $parts['path'] ?? '';
+                    $pos = strpos($path, '/UI');
+                    if ($pos !== false) {
+                        $basePath = substr($path, 0, $pos + 3);
+                    } else {
+                        $basePath = '/UI';
+                    }
+                    $frontendUrl = ($parts['scheme'] ?? 'http') . '://' . ($parts['host'] ?? 'localhost') . (!empty($parts['port']) ? ':' . $parts['port'] : '') . $basePath;
+                } else {
+                    $frontendUrl = 'http://localhost/affitrace/UI';
+                }
+            }
+
+            $settings = \App\Models\Setting::find(1);
+            $platformName = $settings->platform_name ?? 'AffiTrace Agency';
+
             $token = $fpService->generateResetToken($request->email);
-            $fpService->sendResetLinkEmail($request->email, $token);
+            $resetUrl = rtrim($frontendUrl, '/') . '/forgot_password.php?eai=' . urlencode($agencyId) . '&token=' . urlencode($token) . '&email=' . urlencode($request->email);
+
+            $fpService->sendResetLinkEmail($request->email, $token, $resetUrl, $platformName);
 
             return response()->json(['message' => 'We have e-mailed your password reset link!']);
         } catch (\Exception $e) {
-            Log::error('Forgot password failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Forgot password failed: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
             return response()->json(['error' => 'Failed to send password reset email.'], 500);
         }
     }
